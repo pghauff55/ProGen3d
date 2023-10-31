@@ -163,6 +163,11 @@ WindowsXS Xlength ->  T ( Xlength/2.0-0.8 0 1 )   | T ( -0.9 0 0 ) [  S ( 0.8 0.
 
 SectionY CenterHeight CenterHeight Ylength ->   [ BodyY ] [ Yend ] | [ WindowsYE ] [ WindowsYW ]  T ( 0 1 0 )  
 WindowsYE Ylength ->  T ( -1 0 Ylength/2.0-0.8 )   | T ( 0 0 -0.9 ) [  S ( 0.01 0.95 0.8 ) T ( 0 0 0.9 ) I ( Cube ) ]  
-WindowsYW Ylength ->  T ( 1 0 Ylength/2.0-0.8 )   | T ( 0 0 -0.9 ) [  S ( 0.01 0.95 0.8 ) T ( 0 0 0.9 ) I ( Cube ) ]  
+WindowsYW Ylength ->  T ( 1 0 Ylength/2.0-0.8 )   | T ( 0 0 -0.9 ) [  S ( 0.01 0.95 0.8 ) T ( 0 0 0.9 ) I ( Cube ) ]
+
+<div align="center">
+    <img src="Screenshot from 2023-10-31 10-41-28.png" width="1200px"</img> 
+</div>
+
 
 ```
