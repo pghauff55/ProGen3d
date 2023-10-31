@@ -4,6 +4,8 @@
 ProGen3d is a grammar that uses variables and symbolic math objects for calculations.
 Based on https://github.com/santipaprika/procedural-buildings and https://github.com/mathSlib-dev/mathSlib .
 
+Uses glm vector math, SoiL.h texture loading, Imath vector math, and Glut glu opengl.
+
 ### Variables
 
 R variable_name ( min max )
