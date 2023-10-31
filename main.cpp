@@ -1,991 +1,822 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <iostream>
+
 #include <list>
 #include <string>
 #include <unordered_map>
 #include <stack>
 #include <vector>
 
+
+
+#include <stdio.h>
+#include <bits/stdc++.h>
+#include <termios.h>
+#include <cstdlib>
+#include <ctime>
+#include <algorithm>
+
+// openGL and related includes
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glut.h>
+#include <SOIL/SOIL.h>
+
 #include "PLYWriter.h"
 #include "Context.h"
 #include "Scope.h"
-
+#include "Grammar.h"
 #include "MathParser.h"
 #include "LBAssembler.h"
 
 
 
 
-
-bool checkAlpha(std::string str){
-    for(int i = 0; i < str.size(); i++)
-        if( !isalpha(str[i]) || !isspace(str[i]) )
-            return true;
-    return false;
-}
-bool isnumber(const std::string& s)
-{
-    std::string::const_iterator it = s.begin();
-    while (it != s.end() && ( (*it)=='-' || (*it)=='.' || std::isdigit(*it)) ) ++it;
-    return !s.empty() && it == s.end();
-}
+#define STB_IMAGE_IMPLEMENTATION
+#include "stbimage/stb_image.h"
 
 
-class Variable{
-	public:
-	std::string var_name;
-	float value;
-	int instance_count=0;
-	Variable(std::string name,float min,float max){
-		this->var_name=name;
-		this->min=min;
-		this->max=max;
-		this->value=rand()/(float)RAND_MAX*(max-min)+min;
-	}
-	Variable(std::string name,float value){
-		this->var_name=name;
-		this->min=0;
-		this->max=0;
-		this->value=value;
-	}
-	float getValue(){
-		//this->value=rand()/(float)RAND_MAX*(max-min)+min;
-		return this->value;
-	}
-	float getRandom(){
-		
-		return rand()/(float)RAND_MAX*(max-min)+min;
-	}
-	float min,max;
-};
-
-
-    std::vector<Variable *> variable_list;
-    
-int findVariable(std::string var_name){
-	std::cout<<"Searching Back for "<<var_name<<std::endl;
-	for(int i=variable_list.size()-1;i>=0;i--){
-	
-		if(variable_list[i]->var_name.compare(var_name)==0) {
-	
-			std::cout<<"Found "<<var_name<<"="<<variable_list[i]->value<<std::endl;
-		return i;
-		}
-	
-	}
-	return -1;
-}
-int findVariableForward(std::string var_name){
-	std::cout<<"Searching Forward for "<<var_name<<std::endl;
-	for(int i=0;i<variable_list.size();i++){
-	
-		if(variable_list[i]->var_name.compare(var_name)==0) {
-	
-			std::cout<<"Found "<<var_name<<"="<<variable_list[i]->value<<std::endl;
-		return i;
-		}
-	
-	}
-	
-	return -1;
-}
-
-void removeVariable(std::string var_name){
-	
-	
-	for(int i=variable_list.size()-1;i>=0;i--){
-		if(variable_list[i]->var_name.compare(var_name)==0) {
-			if(variable_list[i]->max==variable_list[i]->min){
-				variable_list.erase (variable_list.begin()+i);
-				return;
-			}
-		}
-		
-	}
-	
-}
-
-
-    
-void addVariable(std::string var_name,float min,float max){
-	
-	
-	int index=findVariableForward(var_name);
-	if(index==-1){
-		Variable *var=new Variable(var_name,min,max);
-		var->value=var->getRandom();
-		variable_list.push_back(var);
-	}
-	
-	
-}
-
-void addVariable(std::string var_name){
-	
-	std::cout<<"Adding variable "<<var_name;
-	int index=findVariableForward(var_name);
-	if(index!=-1){
-	
-		Variable *var=new Variable(var_name,variable_list[index]->getRandom());
-		var->instance_count=variable_list[index]->instance_count+1;
-		variable_list.push_back(var);
-		std::cout<<" SUCCESS"<<var->instance_count<<std::endl;
-	}
-	else 
-		std::cout<<" FAILED"<<std::endl;
-}
-    
-    
-class Token{
-	public:
-	Token(Token *t){
-		this->token_name=t->token_name;
-		for(int i=0;i<t->arguments.size();i++){
-			this->arguments.push_back(t->arguments[i]);
-		}
-		this->var_names[0]=t->var_names[0];
-		this->var_names[1]=t->var_names[1];
-		this->var_names[2]=t->var_names[2];
-		this->var_name=t->var_name;
-		
-		this->instance_type=t->instance_type;
-		
-	}
-	Token(std::string token_name){
-		this->token_name=token_name;
-	}
-	Token(std::string token_name,int instance_count){
-		this->token_name=token_name;
-		this->instance_count=instance_count;
-	}
-	void addArgument(float value){
-		
-		arguments.push_back(value);
-	}
-	void addInstanceType(std::string instance){
-		
-			this->instance_type=instance;
-	}
-	int getArgCount(){
-		return arguments.size();
-	}
-	std::string isRule(){
-		
-		if(token_name!="{" && token_name!="}" && token_name!="+" && token_name!="*" && token_name!="[" && token_name!="]" && instance_type=="" && arguments.size()==0)return token_name;
-		else return "";
-	}
-	void print(){
-		std::cout<<"Token: "<<token_name<<" -> ";
-		if(var_name!="")std::cout<<var_name<<":";
-		if(arguments.size()>0){
-			std::cout<<" ( ";
-			for(int i=0;i<arguments.size();i++){
-			std::cout<<arguments[i]<<" ";
-			}
-			std::cout<<" ) ";
-		}
-		if(var_names[0]!=""){
-		
-		}
-		if(var_names[1]!=""){
-	            	
-		}
-		if(var_names[2]!=""){
-		
-		}
-		
-		std::cout<<"["<<var_names[0]<<" "<<var_names[1]<<" "<<var_names[2]<<"]";
-		if(instance_type!=""){
-			std::cout<<instance_type<<":"<<instance_type;
-		}
-		std::cout<<std::endl;
-		
-	}
-	
-	void performAction(Context &context);
-	
-	
-	std::string token_name;
-	std::vector<float> arguments;
-	std::string instance_type;
-	int instance_count=0;
-	std::string var_name;
-	std::string var_names[3];
-	bool modify[3];
-	bool divideby2[3];
-};
-
-class Rule {
-	public:
-	Rule(std::string rule_name,int repeat){
-		this->rule_name=rule_name;
-		this->repeat=repeat;
-		this->count=0;
-	}
-	void addToken(Token *token,int section){
-		
-		section_tokens[section].push_back(token);
-		
-		if(section==1){
-		  tokens.push_back(token);	
-		}
-		
-	}
-	bool increment(){
-		if(repeat==0)return false;
-		count++;
-		if(count==repeat)return false;
-		else return true;
-	}
-	
-	int repeat=1,count=0;
-	std::string rule_name;
-	std::vector<Token *> tokens,section_tokens[3];
-	std::string var_name;
-	std::string var_names[10];
-	bool modify;
-	bool divideby2;
-	int var_counter=0;
-	float probability=1.0f;
-};
-
-
-
-std::string MathS2(std::string input){
-		mathS::Assembler assembler;
-				std::cout<<"IN:"<<input<<";";
-			//replace variables with floats
-		for(int i=variable_list.size()-1;i>=0;i--){
-			std::string str2 = variable_list[i]->var_name;
-					
-		      if(input.find(str2)!=-1){
-				  std::cout<<"===="<<str2;
-				  input.replace(input.find(str2),str2.length(),std::to_string(variable_list[i]->value));	
-				 break;
-			  }
-		}
-		std::cout<<"IN:"<<input<<";";
-		
-			//replace variables with floats
-		for(int i=variable_list.size()-1;i>=0;i--){
-			std::string str2 = variable_list[i]->var_name;
-					
-		      if(input.find(str2)!=-1){
-				  std::cout<<"===="<<str2;
-				  input.replace(input.find(str2),str2.length(),std::to_string(variable_list[i]->value));	
-				 break;
-			  }
-		}
-		std::cout<<"IN:"<<input<<";";
-		
-		std::vector<std::string> params = {};
-		auto mobj = mathS::Parse(input);
-		auto f = assembler.Assemble(mobj, params);
-				
-		std::cout<<"mathS2 :"<<f({})->GetString()<<std::endl;
-	
-	std::string out=f({})->GetString();
-	if(isnumber(out))
-		return out;
-	else
-	return input;
-}
-
-std::string MathS(std::string input){
-		mathS::Assembler assembler;
-				std::cout<<"IN:"<<input<<";";
-			//replace variables with floats
-		for(int i=variable_list.size()-1;i>=0;i--){
-			if(variable_list[i]->max==variable_list[i]->min){
-			std::string str2 = variable_list[i]->var_name;
-					
-		      if(input.find(str2)!=-1){
-				  std::cout<<"===="<<str2;
-				  input.replace(input.find(str2),str2.length(),std::to_string(variable_list[i]->value));	
-				 break;
-			  }
-		  }
-		}
-		std::cout<<"IN:"<<input<<";";
-		
-			//replace variables with floats
-		for(int i=variable_list.size()-1;i>=0;i--){
-			if(variable_list[i]->max==variable_list[i]->min){
-			std::string str2 = variable_list[i]->var_name;
-					
-		      if(input.find(str2)!=-1){
-				  std::cout<<"===="<<str2;
-				  input.replace(input.find(str2),str2.length(),std::to_string(variable_list[i]->value));	
-				 break;
-			  }
-		  }
-		}
-		std::cout<<"IN:"<<input<<";";
-		
-		
-		
-		
-		std::vector<std::string> params = {};
-		auto mobj = mathS::Parse(input);
-		auto f = assembler.Assemble(mobj, params);
-				
-		std::cout<<"mathS :"<<f({})->GetString()<<std::endl;
-	std::string out=f({})->GetString();
-	if(isnumber(out))
-		return out;
-	else
-	return input;
-}
-
-
-
-void Token::performAction(Context &context){
-	
-	if(token_name=="R"){
-		
-		addVariable(var_name,arguments[0],arguments[1]);
-		
-	}
-	else if(token_name=="S" || token_name=="Sr"){
-		
-		
-		Scope *newScope = context.getCurrentScope();
-		
-		std::cout<<"***001";
-		glm::vec3 size;
-		
-		if(var_names[0]!=""){
-				
-				size.x=atof(MathS2(var_names[0]).c_str());
-				
-				
-		}
-		else size.x=arguments[0];
-		
-		if(var_names[1]!=""){
-				size.y=atof(MathS2(var_names[1]).c_str());
-		}
-		else size.y=arguments[1];
-		
-		if(var_names[2]!=""){
-				
-				size.z=atof(MathS2(var_names[2]).c_str());
-		}
-		else size.z=arguments[2];
-		
-		//std::cout << "S (" << size.x << ", " << size.y << ", " << size.z << ") ";
-		
-		//size *= newScope->getSize();
-		//size = glm::vec3(abs(size.x), abs(size.y), abs(size.z));
-		
-		//std::cout << "S* (" << size.x << ", " << size.y << ", " << size.z << ") "<<std::endl;
-		newScope->S(size);
-		glm::vec3 pos = context.getCurrentScope()->getPosition();
-    glm::vec3 contextSize = context.getCurrentScope()->getSize();
-    std::cout << " -- Current scope -> POS: (" << pos.x << ", " << pos.y << ", " << pos.z << ") SIZE: (" << contextSize.x << ", " << contextSize.y << ", " << contextSize.z << ") " << std::endl;
-		
-	}
-	else if(token_name=="T"){
-		Scope *newScope = context.getCurrentScope();
-		glm::vec3 position;
-		
-		if(var_names[0]!=""){
-			position.x=atof(MathS2(var_names[0]).c_str());
-				
-		}
-		else position.x=arguments[0];
-		
-		if(var_names[1]!=""){
-				position.y=atof(MathS2(var_names[1]).c_str());
-		}
-		else position.y=arguments[1];
-		
-		if(var_names[2]!=""){
-				position.z=atof(MathS2(var_names[2]).c_str());
-		}
-		else position.z=arguments[2];
-		
-		
-				
-		newScope->T(position);
-		
-	}
-	else if(token_name=="*"){
-		std::cout<<"***002";
-			if(var_name!=""){
-				int index=findVariable(var_name);
-				if(index!=-1 ){
-					if(variable_list[index]->max==variable_list[index]->min) removeVariable(var_name);
-				}
-				else std::cout<<"not found";
-			}
-	}
-	else if(token_name=="+"){
-		std::cout<<"***003";
-			if(var_name!=""){
-				
-				 addVariable(var_name);
-				}
-				
-			
-	}
-	else if(token_name=="I"){
-	    glm::mat4 transform = context.getCurrentScope()->getTransform();
-		Mesh instance = Mesh::getInstance(instance_type);
-		instance.apply(transform);
-		context.getScene().add(instance);
-	}
-	else if(token_name=="["){
-		 context.pushScope();
-		
-	}
-	else if(token_name=="]"){
-		 context.popScope();
-		
-	}
-	else if(token_name=="{"){
-		 context.newScope();
-		
-	}
-	else if(token_name=="}"){
-		 context.popScope();
-		
-	}
-	
-	
-	
-}
+// local includes
+#include "hex_planet.h"
 
 
 
 
-class Grammar
-{
+
+//using namespace std;
+
+
+//===========================================================================================================================
+
+//												 Globals 
+
+//===========================================================================================================================
+
+Grammar *grammar;
+
+static int SCREEN_WIDTH=800;
+static int SCREEN_HEIGHT=600;
+GLuint tex_2d,tex_moon;
+  float A1x=0.0,A1y=0.0,A1z=0.0;
+
+    float scale = 0.1;
+    int scale_level=0;
+int g_glutMainWin;
+float g_aspect;
+HexPlanet *m_planet,*m_moon;
+
+  //set of sides that are travelable or not per type
+  std::vector<unsigned int> vec_type1;
+  std::vector<unsigned int> vec_type2;
+  std::vector<unsigned int> vec_type3;
+  std::vector<unsigned int> vec_type4;
+  std::vector<unsigned int> vec_type0;
+ 
+
+GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};  /* Red diffuse light. */
+GLfloat light_position[] = {1.0, 15.0, 5.0, 0.0};  /* Infinite light location. */
+int mouse_x=0,mouse_y=0;
+
+GLfloat texcoord[][2] = {{0.5, 0.0},
+{0.0669875,0.25},
+{0.0669875, 0.75},
+{0.5, 1.0},
+{0.9330125, 0.75},
+{0.9330125, 0.25}};  
+
+int tiles[3000][3];
+GLuint textile[5];
+GLuint number_tile[10];
+
+float anglex=0.0;
+float angley=0.0;
+float sz=1.0f;
+float sx=0.0f;
+float sy=0.0f;
+float sX=0.0f,sY=0.0f,sZ=1.0f;
+int current_axes=5;
+int last_axes=5;
+bool invert_y=false;
+float theta2=atan(sz/sx);
+Imath::V3f svec4,svec(0.0f,0.0f,1.0f),SVEC(0.0f,0.0f,1.0f);
+Imath::V3f X(1.0f,0.0f,0.0f),Y(0.0f,1.0f,0.0f),Z(0.0f,0.0f,1.0f);
+
+bool button_down=false;
+bool flipped=false;
+bool moving=false;
+int select_hex=0;
+int current_select_hex=0;
+
+
+Imath::V3f Align;
+
+
+std::vector<int> hex_tile_list;
+std::vector<int> hex_path;
+std::vector<int>::iterator it;
+int count_path=0;
+int overflow_count=0;
+
+
+
+
+
+
+
+
+
+class HexGrid{
 public:
-    Grammar(std::string filePath);
-    ~Grammar(){}
-
-    
-	int findRule(std::string rule_name);
-	
-	std::vector<Token *> Recurse(Rule *rule);
-	void generateGeometry();
-	void ReadTokens(Rule *rule,std::string token_str,int i);
-
-    std::vector<Rule *> rule_list;
-	std::vector<Token *> tokens_new;
-};
-
-
-
-
-
-
-//////////////////////////////////Read Grammar Script from Grammar file/////////////////////////////////////
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-void Grammar::ReadTokens(Rule *rule,std::string rule_str,int i){
-	std::istringstream lin(rule_str);
-			
-			std::string token_str;
-			float value;
-			
-			while(lin>>token_str){
-				Token *token;
-				if(token_str=="S" || token_str=="T" || token_str=="Sr" ){
-					token=new Token(token_str);
-					
-					lin>>token_str;
-					if(token_str=="("){
-						
-						
-						
-						for(int i=0;i<3;i++){
-							lin>>token_str;
-							
-							
-							
-							if(!isnumber(token_str)){
-								
-								token->var_names[i]=token_str;
-							     value=0.0f;
-							}
-							else {
-								token->var_names[i]="";
-								value=atof(token_str.c_str());
-							}
-							token->addArgument(value);
-						}
-						lin>>token_str;
-						if(token_str!=")"){
-							std::cout<<"Error-expected ')' 001 "<<std::endl;
-							exit(1);
-							}
-					rule->addToken(token,i);
-					}
-					else {
-						std::cout<<"Error-expected '(' 001"<<std::endl;
-						exit(1);
-						
-					}
-				}
-				else if(token_str=="R"){
-					token=new Token(token_str);
-					lin>>token_str;
-				
-					token->var_name=token_str;
-					
-					
-					
-					
-					lin>>token_str;
-					
-					if(token_str=="("){
-						
-						for(int i=0;i<2;i++){
-							lin>>token_str;
-							
-							value=atof(token_str.c_str());
-							token->addArgument(value);
-						}
-						
-						lin>>token_str;
-						if(token_str!=")"){
-							std::cout<<"Error-expected ')' 002 "<<std::endl;
-							exit(1);
-						}
-					
-					
+    HexGrid(Imath::V3f center,int size){
+		this->size=size;
+		this->center=center;
 		
-					addVariable(token->var_name,token->arguments[0],token->arguments[1]);
-					
-					rule->addToken(token,i);
-					}
-					else {
-						std::cout<<"Error-expected '(' 002"<<std::endl;
-						exit(1);
-					}
-				}
-				else if(token_str=="I"){
-					token=new Token(token_str);
-					lin>>token_str;
-					if(token_str=="("){
-						lin>>token_str;
-						if(token_str=="Cube" || token_str=="Sphere" || token_str=="Cylinder"){
-							
-							token->addInstanceType(token_str);
-						}
-						else {
-							std::cout<<"Error-expected ')' 003 "<<std::endl;
-							exit(1);
-						}
-						
-						
-						lin>>token_str;
-						if(token_str!=")"){
-							std::cout<<"Error-expected ')' 003 "<<std::endl;
-							exit(1);
-							}
-						rule->addToken(token,i);
-			
-					}
-					
-				}
-				else if(token_str=="*"){
-					token=new Token(token_str);
-					lin>>token->var_name;
-					
-					
-					
-					rule->addToken(token,i);					
-				}
-				else if(token_str=="+"){
-					token=new Token(token_str);
-					lin>>token->var_name;
-					
-					
-					
-					rule->addToken(token,i);					
-				}
-				else if(token_str=="["){
-					token=new Token(token_str);
-					rule->addToken(token,i);
-					
-				}
-				else if(token_str=="]"){
-					token=new Token(token_str);
-					rule->addToken(token,i);
-				}
-				else if(token_str=="{"){
-					token=new Token(token_str);
-					rule->addToken(token,i);
-					
-				}
-				else if(token_str=="}"){
-					token=new Token(token_str);
-					rule->addToken(token,i);
-				}
-				else {
-					
-					token=new Token(token_str);
-					rule->addToken(token,i);
-					
-						
-					
-					
-				}
-			
-			std::cout<<"Token :"<<i<<":"<<token->token_name<<std::endl;	
-			
-			}
-}
+	}
+	void setcolor(float r,float g,float b){
+		this->r=r/256.0f;
+		this->g=g/256.0f;
+		this->b=b/256.0f;
+	}
+	void add(Imath::V3f p){
+		this->points[this->counter]=p;
+		this->counter++;
+		
+	}
+	Imath::V3f center,points[6];
+	int size;
+	int counter=0;
+	float r,g,b;
+	
+};
+std::vector<HexGrid *> hextiles;
+std::vector<HexGrid *> globalhextiles;
 
 
-Grammar::Grammar(std::string filePath)
+
+
+
+
+
+
+
+
+
+
+
+/***    drawing text on screen  ***/     
+void drawString(char *string)
 {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();             
+    glLoadIdentity();   
+    int w = glutGet( GLUT_WINDOW_WIDTH );
+    int h = glutGet( GLUT_WINDOW_HEIGHT );
+    glOrtho( 0, w, 0, h, -1, 1 );
 
-    std::ifstream fin(filePath);
-    if (!fin.is_open()) {
-        std::cerr << "E: Could not open file " << filePath << std::endl;
-        return;
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glDisable( GL_DEPTH_TEST ); 
+
+    glDisable( GL_LIGHTING );
+    glColor3f(1, 0, 0);
+
+    glRasterPos2i(20, 20);
+    void *font = GLUT_BITMAP_HELVETICA_18; 
+    for (char* c=string; *c != '\0'; c++) 
+    {
+        glutBitmapCharacter(font, *c); 
     }
 
-    std::string line;
-    while(std::getline(fin, line) ) {
+    glEnable( GL_LIGHTING );
 
-        if(line!=""){
-			size_t pos = 0;
-			std::string token;
+    glEnable (GL_DEPTH_TEST);     
 
-			std::string delimiter = "->";
-
-			pos = line.find(delimiter);
-			
-			std::string rule_str = line.substr(0, pos);
-			line.erase(0, pos + delimiter.length());
-			std::istringstream lin(rule_str+" -> ");
-			
-			std::cout<<"line"<<line<<".";
-			
-			
-			char token_char;
-			std::string token_str;
-			float value;
-			std::string rulename;
-			lin >> rulename;
-			Rule *rule;
-			if(rulename!=""){
-			
-				rule=new Rule(rulename,1);
-				
-				lin >> token_str;
-				
-				int repeat;
-				
-			
-			
-				if(token_str!=";" && token_str!="->"){
-				if(!isnumber(token_str)){
-					
-					rule->var_name=token_str;
-					repeat=1;
-				}
-				else {
-					rule->repeat=atoi(token_str.c_str());
-				}
-				lin >> token_str;
-				}
-					
-			
-				do
-				{
-				 if(token_str==";" || token_str=="->")break;
-					
-					if(findVariableForward(token_str)!=-1){
-						rule->var_names[rule->var_counter]=token_str;
-						rule->var_counter++;
-					}
-					lin >> token_str;
-				//	std::cout<<token_str;
-				}
-				while(true);
-				
-				if(token_str==";"){
-					lin >> token_str;
-				
-					if(isnumber(token_str)){
-						rule->probability=atof(token_str.c_str());
-					std::cout<<"PROBABILITY:"<<rule->probability<<std::endl;
-					}
-				}
-				
-				
-				std::cout<<"Rule :"<<rulename<<std::endl;
-				
-				rule_list.push_back(rule);
-			
-			
-			
-				delimiter = "|";
-
-				std::vector<std::string> sections;
-				int num_sections=0;
-				while ((pos = line.find(delimiter)) != std::string::npos) {
-					sections.push_back( line.substr(0, pos));
-						
-					line.erase(0, pos + delimiter.length());
-					std::cout<<"line"<<line<<".";
-					num_sections++;
-				}
-				
-				if( line != "") sections.push_back( line.substr(0, pos));
-
-
-				if(num_sections==0){
-					ReadTokens(rule,sections[0],1);
-				}
-				else {
-					num_sections++;
-					if(num_sections>3)num_sections=3;
-					
-					for(int i=0;i<num_sections;i++){
-					
-						ReadTokens(rule,sections[i],i);
-					
-					}
-			
-				}
-			}
-	  }
-	}
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();  
+}
+//===========================================================================================================
+//to_polar
+//================================================================================================================
+Imath::V3f topolar(Imath::V3f a){
+	Imath::V3f p;
+	p.x=1.0f;
+	p.y=atan2f(a.z,a.x);
+	p.z=atanf(a.y/sqrtf(a.x*a.x+a.z*a.z));
+	return p;
+}
+Imath::V3f frompolar(float theta,float phi,float theta_2,float phi_2){
+	Imath::V3f p(0,1,0);
+	Imath::M33f M1,M2,M3,M4;
+	float st=sin(theta);
+	float ct=cos(theta);
+	float sp=sin(phi);
+	float cp=cos(phi);
 	
 	
+	M1.makeIdentity ();
+	M1[0][0]=ct;
+	M1[0][1]=-st;
+	M1[1][0]=st;
+	M1[1][1]=ct;
 	
+	M2.makeIdentity ();
+	M2[0][0]=cp;
+	M2[0][2]=sp;
+	M2[2][0]=-sp;
+	M2[2][2]=cp;
+	
+	st=sin(theta_2);
+	ct=cos(theta_2);
+	sp=sin(phi_2);
+	cp=cos(phi_2);
+	
+	
+	M3.makeIdentity ();
+	M3[0][0]=ct;
+	M3[0][1]=-st;
+	M3[1][0]=st;
+	M3[1][1]=ct;
+	
+	M4.makeIdentity ();
+	M4[0][0]=cp;
+	M4[0][2]=sp;
+	M4[2][0]=-sp;
+	M4[2][2]=cp;
+	
+	Imath::V3f out=(p*M3*M4)*M1*M2;
+	
+	
+	return out;
+	
+}
+//===========================================================================================================
+//satelite
+//================================================================================================================
+float angleSat[10];
 
-		
-		
-		tokens_new=Recurse(rule_list[0]);
-		
+
+Imath::V3f Sat(Imath::V3f axis,int num,float D_ANGLE,float phi,float theta){
+	angleSat[num]+=D_ANGLE;
+if(angleSat[num]>=2.0f*M_PI)
+	angleSat[num]=0.0f;
+float dt=0.000007/2;
+	axis=topolar(axis);
+for(int i=0;i<30;i++){
+	if(i==0)glPointSize(14.0f);
+	else glPointSize(1.0f);
+	Imath::V3f points;
+
+	points=frompolar(theta+angleSat[num]-5000.0f*dt*float(i),phi,axis.y,axis.z);
 	
-		
-		
 	
+	points.normalize();
+	points*=m_planet->kPlanetRadius + 1.75+angleSat[num]*0.005f;
+	glPushMatrix();
+
+
+	
+	glBegin(GL_POINTS); //starts drawing of points
+		  glVertex3f(points[0],points[1],points[2]);//upper-right corner
+		  
+	glEnd();//end drawing of points
+	glPopMatrix();
+}
+Imath::V3f points;
+	
+	points=frompolar(theta+angleSat[num],phi,axis.y,axis.z);
+	
+	return points;
+}
+
+int selected_hex;
+//tileNode *selected_hex_tile=NULL;
+//===========================================================================================================
+// glut Display Func
+//================================================================================================================
+
+
+
+void glut_Display( void )//-------------------------------------------------------------------------------------
+{  
+
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glMatrixMode( GL_PROJECTION );
+  glLoadIdentity();
+  gluPerspective( 70.0f, 1.0f, 0.1f, 5000.0f );
+ // int x_vp=-400,y_vp=-400;
+glViewport(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
+  
+ float dt=0.000007/2;
+float dsx=0,dsy=0,dsz=0;
+
+//if(button_down){
+
+//	button_down=false;
+
+ dsx=(mouse_x-SCREEN_WIDTH/2.0f)*dt;
+
+ dsy=-(mouse_y-SCREEN_HEIGHT/2)*dt;
+
+//}
+
+
+if(fabsf(SVEC[1])>0.207f){
+
+Imath::V3f x,y,z,Yt,Xt,Zt;
+
+//printf("   SVEC(%2.3f  %2.3f   %2.3f ) X(%2.3f   %2.3f   %2.3f )  Y(%2.3f  %2.3f   %2.3f )   Z(%2.3f  %2.3f   %2.3f )\n",SVEC[0],SVEC[1],SVEC[2],X[0],X[1],X[2],Y[0],Y[1],Y[2],Z[0],Z[1],Z[2]);
+
+
+if(SVEC[1]>0.0f){
+y[0]=-SVEC[0];
+
+y[1]=(SVEC[0]*SVEC[0]+SVEC[2]*SVEC[2])/SVEC[1];
+
+
+y[2]=-SVEC[2];
+}
+else {
+y[0]=SVEC[0];
+
+y[1]=-(SVEC[0]*SVEC[0]+SVEC[2]*SVEC[2])/SVEC[1];
+
+
+y[2]=SVEC[2];
 	
 	
 	
 }
 
 
-
-
-std::vector<Token *> Grammar::Recurse(Rule *rule){
-	
-		
-		std::cout<<"Rule Name: "<<rule->rule_name;
-		
-		std::vector<Token *> new_tokens;
-		
-	
-		
-		
-		for(int i=0;i<rule->var_counter;i++){
-			
-			int index=findVariableForward(rule->var_names[i]);
-		
-			addVariable(variable_list[index]->var_name);
-		}
-		
-		std::cout<<"Rule Var Name: "<<rule->var_name;
-		
-		
-		int index=findVariable(rule->var_name);
-		if(index!=-1){
-		
-		
-
-				float val=variable_list[index]->getValue();
-				rule->repeat=floorf(val);	
-			
-			
-			
-		}
-	
-		
-		
-		std::cout<<"REPEAT="<<rule->repeat<<std::endl;
-			
-		for(int m=0;m<3;m++){
-		
-		
-				if(m==1){
-					for(int l=0;l<rule->repeat;l++){
-		
-						for(int j=0;j<rule->section_tokens[m].size();j++){
-						
-							if(rule->section_tokens[m][j]->isRule()!=""){
-								int index=findRule(rule->section_tokens[m][j]->token_name);
-								if(index!=-1){
-									Rule *fromtoken = rule_list[index];
-									float prob=(rand()/(float)RAND_MAX);
-									std::cout<<"PROB"<<prob<<">"<<fromtoken->probability<<std::endl;
-									if(fromtoken->probability>=prob){
-									std::vector<Token *> more_tokens=Recurse(fromtoken);
-									for(int k=0;k<more_tokens.size();k++){
-										Token *check_token=more_tokens[k];
-										if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
-											
-											for(int i=0;i<3;i++){
-												if(check_token->var_names[i]!=""){
-													
-													check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
-													
-													check_token->var_names[i]="";
-												}
-											}
-										}		
-										
-										new_tokens.push_back(more_tokens[k]);
-									}
-								}
-							  }
-						
-							}
-							else {
-								Token *check_token=new Token(rule->section_tokens[m][j]);
-								if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
-									
-									for(int i=0;i<3;i++){
-										if(check_token->var_names[i]!=""){
-											check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
-											
-											check_token->var_names[i]="";
-										}
-									}
-								}
-								new_tokens.push_back(check_token);
-							}
-							
-							
-						  }
-					}
-				}
-				else {
-						for(int j=0;j<rule->section_tokens[m].size();j++){
-						
-							if(rule->section_tokens[m][j]->isRule()!=""){
-								int index=findRule(rule->section_tokens[m][j]->token_name);
-								if(index!=-1){
-									Rule *fromtoken = rule_list[index];
-									std::vector<Token *> more_tokens=Recurse(fromtoken);
-									for(int k=0;k<more_tokens.size();k++){
-										Token *check_token=more_tokens[k];
-										if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
-											
-											for(int i=0;i<3;i++){
-												if(check_token->var_names[i]!=""){
-													
-													check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
-													
-													check_token->var_names[i]="";
-												}
-											}
-										}		
-										new_tokens.push_back(more_tokens[k]);
-									}
-								}
-						
-							}
-							else {
-								
-								
-								
-								Token *check_token=new Token(rule->section_tokens[m][j]);
-								if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
-									
-									for(int i=0;i<3;i++){
-										if(check_token->var_names[i]!=""){
-											
-											check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
-											
-											check_token->var_names[i]="";
-										}
-									}
-								}
-								
-								
-								new_tokens.push_back(check_token);
-							}
-							
-							
-						  }
-					
-				} 
-		}
-		
-		for(int i=0;i<rule->var_counter;i++){
-			
-			removeVariable(rule->var_names[i]);
-		}
-
-		return new_tokens;
-		
-}
-	
-	
-	
-	
+y.normalize();
 
 
 
-int Grammar::findRule(std::string rule_name){
-	std::cout<<"Searching for rule:  "<<rule_name<<std::endl;
-	for(int i=0;i<rule_list.size();i++){
-	
-		if(rule_list[i]->rule_name.compare(rule_name)==0) {
-			
-			std::cout<<"Found "<<rule_name<<std::endl;
-		return i;
-		}
-	
-	}
-	return -1;
+
+//printf("(%2.3f   %2.3f   %2.3f ) ",y[0],y[1],y[2]);
+z=SVEC;
+z.normalize();
+x=y%z;
+x.normalize();
+
+//y=z%x;
+//y.normalize();
+
+float square_angle=acos((y^z)/(sqrt(z^z)*sqrt(y^y)))*180.0f/M_PI;
+
+//printf("  %2.3f   ",square_angle);
+
+
+Yt[0]=y[0]*X[0]+y[1]*Y[0]+y[2]*Z[0];
+Yt[1]=y[0]*X[1]+y[1]*Y[1]+y[2]*Z[1];
+Yt[2]=y[0]*X[2]+y[1]*Y[2]+y[2]*Z[2];
+
+Zt[0]=z[0]*X[0]+z[1]*Y[0]+z[2]*Z[0];
+Zt[1]=z[0]*X[1]+z[1]*Y[1]+z[2]*Z[1];
+Zt[2]=z[0]*X[2]+z[1]*Y[2]+z[2]*Z[2];
+
+Xt[0]=x[0]*X[0]+x[1]*Y[0]+x[2]*Z[0];
+Xt[1]=x[0]*X[1]+x[1]*Y[1]+x[2]*Z[1];
+Xt[2]=x[0]*X[2]+x[1]*Y[2]+x[2]*Z[2];
+
+X=Xt;Y=Yt;Z=Zt;
+
+X.normalize();
+Y.normalize();
+Z.normalize();
+
+
+
+//printf("   SVEC(%2.3f  %2.3f   %2.3f ) X(%2.3f   %2.3f   %2.3f )  Y(%2.3f  %2.3f   %2.3f )   Z(%2.3f  %2.3f   %2.3f )\n",SVEC[0],SVEC[1],SVEC[2],X[0],X[1],X[2],Y[0],Y[1],Y[2],Z[0],Z[1],Z[2]);
+
+
+float SY,SX,SZ;
+SVEC[0]=0.0f;
+SVEC[1]=0.0f;
+SVEC[2]=1.0f;
+SX=SVEC[0]*X[0]+SVEC[1]*Y[0]+SVEC[2]*Z[0];
+SY=SVEC[0]*X[1]+SVEC[1]*Y[1]+SVEC[2]*Z[1];
+SZ=SVEC[0]*X[2]+SVEC[1]*Y[2]+SVEC[2]*Z[2];
+printf("SX SY SZ (%2.3f   %2.3f   %2.3f ) ",SX,SY,SZ);
+
+
+//getchar();
 }
 
 
 
-void Grammar::generateGeometry()
+//up std::vector
+Imath::V3f SVEC2;
+SVEC2=SVEC-Imath::V3f(0.0f,1.0f,0.0f);
+
+ SVEC2.normalize();
+
+Imath::V3f SVEC3=SVEC%SVEC2;
+SVEC3.normalize();
+
+Imath::V3f SVEC5;
+SVEC5=SVEC%SVEC3;
+SVEC5.normalize();
+
+Imath::V3f SVEC_POINTER,svec_pointer;
+
+SVEC_POINTER[0]=SVEC[0]+250.0f*dsx*SVEC3[0]+250.0f*dsy*SVEC5[0];
+SVEC_POINTER[1]=SVEC[1]+250.0f*dsx*SVEC3[1]+250.0f*dsy*SVEC5[1];
+SVEC_POINTER[2]=SVEC[2]+250.0f*dsx*SVEC3[2]+250.0f*dsy*SVEC5[2];
+
+svec_pointer[0]=SVEC_POINTER[0]*X[0]+SVEC_POINTER[1]*Y[0]+SVEC_POINTER[2]*Z[0];
+svec_pointer[1]=SVEC_POINTER[0]*X[1]+SVEC_POINTER[1]*Y[1]+SVEC_POINTER[2]*Z[1];
+svec_pointer[2]=SVEC_POINTER[0]*X[2]+SVEC_POINTER[1]*Y[2]+SVEC_POINTER[2]*Z[2];
+
+SVEC[0]+=dsx*SVEC3[0]+dsy*SVEC5[0];
+SVEC[1]+=dsx*SVEC3[1]+dsy*SVEC5[1];
+SVEC[2]+=dsx*SVEC3[2]+dsy*SVEC5[2];
+
+SVEC.normalize();
+
+
+
+sx=SVEC[0]*X[0]+SVEC[1]*Y[0]+SVEC[2]*Z[0];
+sy=SVEC[0]*X[1]+SVEC[1]*Y[1]+SVEC[2]*Z[1];
+sz=SVEC[0]*X[2]+SVEC[1]*Y[2]+SVEC[2]*Z[2];
+
+Imath::V3f svec3;
+svec3[0]=SVEC3[0]*X[0]+SVEC3[1]*Y[0]+SVEC3[2]*Z[0];
+svec3[1]=SVEC3[0]*X[1]+SVEC3[1]*Y[1]+SVEC3[2]*Z[1];
+svec3[2]=SVEC3[0]*X[2]+SVEC3[1]*Y[2]+SVEC3[2]*Z[2];
+
+Imath::V3f svec5;
+svec5[0]=SVEC5[0]*X[0]+SVEC5[1]*Y[0]+SVEC5[2]*Z[0];
+svec5[1]=SVEC5[0]*X[1]+SVEC5[1]*Y[1]+SVEC5[2]*Z[1];
+svec5[2]=SVEC5[0]*X[2]+SVEC5[1]*Y[2]+SVEC5[2]*Z[2];
+
+Imath::V3f svec4(sx,sy,sz);
+
+svec=svec4;
+
+svec.normalize();
+svec5.normalize();
+
+char string1[100];
+sprintf(string1," tile index: %d (%2.3f   %2.3f   %2.3f )  (%2.3f  %2.3f   %2.3f )   (%2.3f  %2.3f   %2.3f )",select_hex,SVEC[0],SVEC[1],SVEC[2],X[0],X[1],X[2],Y[0],Y[1],Y[2]);
+drawString(string1);
+
+
+
+gluLookAt(3.0f*svec[0], 3.0f*svec[1], 3.0f*svec[2], 0.0, 0.0, 0.0,svec5[0],svec5[1],svec5[2]);
+
+
+light_position[0]=10.0f*svec5[0];
+light_position[1]=10.0f*svec5[1];
+light_position[2]=10.0f*svec5[2];
+
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+ glMatrixMode( GL_MODELVIEW );
+  glLoadIdentity();
+
+
+
+
+
+
+glPushMatrix();
+glScalef(0.8,0.8,0.8);
+glDisable(GL_LIGHTING);
+glBegin( GL_LINES );
+	
+	glColor3f( 1.0f, 0.0f, 0.0f );
+	glVertex3f( 0.0f, 0.0f, 0.0f );
+	glVertex3f( 1.0f, 0.0f, 0.0f );
+
+
+	glColor3f( 0.0f, 1.0f, 0.0f );
+	glVertex3f( 0.0f, 0.0f, 0.0f );
+	glVertex3f( 0.0f, 1.0f, 0.0f );
+
+	glColor3f( 0.0f, 0.0f, 1.0f );
+	glVertex3f( 0.0f, 0.0f, 0.0f );
+	glVertex3f( 0.0f, 0.0f, 1.0f );
+
+	glColor3f( 1.0f, 0.0f, 0.0f );
+	glVertex3f( 0.0f, 0.0f, 0.0f );
+	glVertex3f( X[0], X[1], X[2] );
+
+
+	glColor3f( 0.0f, 1.0f, 0.0f );
+	glVertex3f( 0.0f, 0.0f, 0.0f );
+	glVertex3f( Y[0], Y[1], Y[2] );
+
+	glColor3f( 0.0f, 0.0f, 1.0f );
+	glVertex3f( 0.0f, 0.0f, 0.0f );
+	glVertex3f( Z[0], Z[1], Z[2] );
+
+	//glScalef(25.0f,25.0f,25.0f);
+glColor3f( 0.0f, 1.0f, 1.0f );
+	glVertex3f( svec[0], svec[1], svec[2] );
+	glVertex3f( svec[0]+10.0f*dsy*svec5[0], svec[1]+10.0f*dsy*svec5[1], svec[2]+10.0f*dsy*svec5[2] );
+	glVertex3f( svec[0], svec[1], svec[2] );
+	glVertex3f( svec[0]+10.0f*dsx*svec3[0], svec[1]+10.0f*dsx*svec3[1], svec[2]+10.0f*dsx*svec3[2] );
+
+	glEnd();
+glPopMatrix();
+
+
+
+glEnable(GL_LIGHTING);
+glScalef(scale,scale,scale);
+glPushMatrix();
+
+
+
+//glColor4f(1,1,1,0.6);			
+//grammar->context->getScene().draw();
+
+glColor4f(1,1,1,1);
+
+grammar->context->draw();
+
+
+glPopMatrix();
+
+
+
+
+
+
+
+
+  glutSwapBuffers(); 
+glutPostRedisplay();
+}
+//----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+//----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+void pressNormalKey(unsigned char key, int x, int y){
+	
+}
+void releaseNormalKey(unsigned char key, int x, int y){
+	
+	
+}
+void pressSpecialKey(int key, int x, int y){
+	switch (key) {
+      case GLUT_KEY_F1:    // F1: Toggle between full-screen and windowed mode
+		 delete grammar;
+		 grammar=new Grammar("./test.grammar");
+		 grammar->generateGeometry();
+		 grammar->context->getScene().calc_normals();
+         break;
+      case GLUT_KEY_RIGHT:    // Right: increase x speed
+          break;
+      case GLUT_KEY_LEFT:     // Left: decrease x speed
+          break;
+      case GLUT_KEY_UP:       // Up: increase y speed
+          break;
+      case GLUT_KEY_DOWN:     // Down: decrease y speed
+          break;
+      case GLUT_KEY_PAGE_UP:  // Page-Up: increase ball's radius
+         break;
+      case GLUT_KEY_PAGE_DOWN: // Page-Down: decrease ball's radius
+         break;
+   }
+}
+void releaseSpecialKey(int key, int x, int y){
+	
+}
+
+
+
+
+
+
+//----------------------------------------------------------------------------------------------------------------------------------------
+void OnMouseClick(int button, int state, int x, int y)
 {
-    Context context;
-    for(int k=0;k<tokens_new.size();k++){
-		//tokens_new[k]->print();
-			tokens_new[k]->performAction(context);
-			
-	}		
-    PLYWriter::writeMesh( "test.ply", context.getScene());
+  if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) 
+  { 
+		button_down=true;
+  }
+  else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) 
+  { 
+		button_down=false;
+  }	
+  else   if ((button == 3) || (button == 4)) // It's a wheel event
+   {
+       // Each wheel event reports like a button click, GLUT_DOWN then GLUT_UP
+       if (state == GLUT_UP){
+		   
+		    return;
+		} 
+       if(button==3){
+       scale_level++;
+		scale*=1.0f/1.05f;
+		}
+       else { 
+		scale*=1.05f;
+		scale_level--;
+		}
+       if(scale>1.0f){
+		scale=1.0f;
+		scale_level=0;
+		}
+   }
 }
 
+void glut_Motion(int x, int y)
+{
+
+mouse_x = x;
+mouse_y = y;
+glutPostRedisplay();
+}
+
+int load_texture(const char *name){
+ int tex_2D=SOIL_load_OGL_texture
+	(
+		name,
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
+	);
+	/* check for an error during the load process */
+	if( 0 == tex_2D )
+	{
+		std::cout<<"SOIL loading error:"<< SOIL_last_result()<<std::endl;
+	}
+	else {
+		std::cout<<"LOADED TEXTURE"<<std::endl;
+
+	
+    glBindTexture(GL_TEXTURE_2D, tex_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  
+	}
+return tex_2D;
+}
+
+//==================================================================================================================================================
+
+//											 		Main program
 
 
-int main(){
-    srand(time(NULL));
+
+//==================================================================================================================================================
+
+
+#define iWidth 16
+#define iHeight 16
+#define iDepth 16
+
+
+static GLubyte image[iDepth][iHeight][iWidth][3];
+
+
+
+
+
+
+int main( int argc, char *argv[])
+{
+
+
+
+
+
+
+
+
+
+
+
+
+		
+		
+	
+	
+	// Initialize glut
+	glutInit(&argc, argv);
+	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
+	glutInitWindowPosition( 0, 0 );
+	glutInitWindowSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+ 
+	g_glutMainWin = glutCreateWindow( "RaceToMars" );
+
+	//glutFullScreen();  
+	glutDisplayFunc( glut_Display );
+	glutPassiveMotionFunc( glut_Motion );
+	glutMouseFunc(OnMouseClick); 
+	
+	glutKeyboardFunc(pressNormalKey);
+    glutKeyboardUpFunc(releaseNormalKey);
+    glutSpecialFunc(pressSpecialKey);
+    glutSpecialUpFunc(releaseSpecialKey);
+    
+    
+	glEnable( GL_BLEND );
+    //glDisable( GL_BLEND );
+    //	straight alpha
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+    //	premultiplied alpha (remember to do the same in glColor!!)
+    //glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+
+    //	do I want alpha thresholding?
+    glEnable( GL_ALPHA_TEST );
+    glAlphaFunc( GL_GREATER, 0.5f );
+    glPointSize(4);
+    
+    // LoadGLTextures(); 
+	
+
+srand(time(NULL));
     std::cout << std::fixed << std::showpoint;
 	std::cout.precision(2);
-    Grammar grammar("./test.grammar");
-		grammar.generateGeometry();
+    grammar=new Grammar("./test.grammar");
+		grammar->addContext();
+		GLuint texid=load_texture("paper.png");
+		grammar->context->loadTexture(texid);
+		
+		texid=load_texture("ice.png");
+		grammar->context->loadTexture(texid);
+		
+		texid=load_texture("cherrywood.png");
+		grammar->context->loadTexture(texid);
+		
+		
+		grammar->context->genPrimitives();
+		
+		grammar->generateGeometry();
+		std::cout<<"Finished generating geometry..."<<std::endl;
+
+grammar->context->getScene().calc_normals();
+
+    
+	/* load an image file directly as a new OpenGL texture */
+/*
+	tex_2d=load_texture("earth.png");
+	tex_moon=load_texture("moon.png");
+
+	textile[0]=load_texture("sky-patch-1.png");
+	textile[1]=load_texture("sky-patch-2.png");
+	textile[2]=load_texture("sky-patch-3.png");
+	textile[3]=	load_texture("sky-patch-4.png");
+	textile[4]=load_texture("sky-patch-5.png");
+
+
+	number_tile[0]=load_texture("n0.png");
+	number_tile[1]=load_texture("n1.png");
+	number_tile[2]=load_texture("n2.png");
+	number_tile[3]=load_texture("n3.png");
+	number_tile[4]=load_texture("n4.png");
+	number_tile[5]=load_texture("n5.png");
+	number_tile[6]=load_texture("n6.png");
+	number_tile[7]=load_texture("n7.png");
+	number_tile[8]=load_texture("n8.png");
+	number_tile[9]=load_texture("n9.png");
+*/
+	 /* Enable a single OpenGL light. */
+	GLfloat light_ambient[] =
+	  {0.2, 0.2, 0.2, 0.2};
+	  GLfloat light_diffuse[] =
+	  {1.0, 1.0, 1.0, 0.8};
+	  GLfloat light_specular[] =
+	  {1.0, 1.0, 1.0, 0.9};
+
+
+	  glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+	  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+	  glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+	  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+	  glEnable(GL_LIGHT0);
+	  glDepthFunc(GL_LESS);
+	  glEnable(GL_DEPTH_TEST);
+	 glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
+	glEnable(GL_COLOR_MATERIAL);
+	  glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
+	  glLightfv(GL_LIGHT1, GL_POSITION, light_position);
+	  glEnable(GL_LIGHT1);
+	  glEnable(GL_LIGHTING);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		// Call glut main loop  
+		glutMainLoop();
+
+
+
+	return 1;
 }
-
-
-
-
-
-
-
 
 
 

@@ -13,6 +13,64 @@ Mesh::~Mesh()
 {
 
 }
+void Mesh::draw(){
+	glColor3f(1,1,1);
+	glBegin(GL_TRIANGLES);
+	for(int i=0;i<faces.size();i++){
+		
+		glm::ivec3 face=faces[i];
+		glm::vec3 normal=normals[i];
+		
+		
+		glNormal3f(normal[0],normal[1],normal[2]);
+	
+		glVertex3f(vertices[face[0]][0],vertices[face[0]][1],vertices[face[0]][2]);
+		glVertex3f(vertices[face[1]][0],vertices[face[1]][1],vertices[face[1]][2]);
+		glVertex3f(vertices[face[2]][0],vertices[face[2]][1],vertices[face[2]][2]);
+		
+	}
+
+	glEnd();
+	glColor3f(1,0,0);
+	glBegin(GL_LINE_LOOP);
+	for(int i=0;i<faces.size();i++){
+		
+		glm::ivec3 face=faces[i];
+		//glm::vec3 normal=normals[i];
+		
+		
+		//glNormal3f(normal[0],normal[1],normal[2]);
+		glVertex3f(vertices[face[0]][0],vertices[face[0]][1],vertices[face[0]][2]);
+		glVertex3f(vertices[face[1]][0],vertices[face[1]][1],vertices[face[1]][2]);
+		glVertex3f(vertices[face[2]][0],vertices[face[2]][1],vertices[face[2]][2]);
+		
+	}
+
+	glEnd();
+	
+}
+
+void Mesh::calc_normals(){
+	
+	
+	
+	normals.clear();
+	
+	for(int i=0;i<faces.size();i++){
+		
+		glm::ivec3 face=faces[i];
+		
+		
+		glm::vec3 A=vertices[face[1]]-vertices[face[0]];
+		glm::vec3 B=vertices[face[2]]-vertices[face[0]];
+		
+		glm::vec3 normal=glm::cross(A,B);
+		normals.push_back(normal);
+		
+	}
+	
+	
+}
 
 void Mesh::apply(const glm::mat4 &transform)
 {
@@ -72,6 +130,8 @@ Mesh Mesh::getCube()
                     {4, 1, 0}, {5, 1, 4}, // FRONT
                     {2, 3, 6}, {6, 3, 7}  // BACK
     };
+    cube.texcoords = {{0.5, 0, 0.5}, {0.5, 1, 0.5}, {-0.5, 0, 0.5}, {-0.5, 1, 0.5},
+                    {0.5, 0, -0.5}, {0.5, 1, -0.5}, {-0.5, 0, -0.5}, {-0.5, 1, -0.5}};
 
     return cube;
 }
@@ -86,28 +146,35 @@ Mesh Mesh::getCylinder()
 
     // Bottom vertices
     cylinder.vertices.push_back(glm::vec3(0.0f, 0.0f, 0.0f) + translation);
+    cylinder.texcoords.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
+    
     for (int i = 1; i < n; ++i) {
         float t = float(i)/float(n);
         glm::vec3 baseVertex = glm::vec3(R*glm::cos(2*pi*t), 0.0f, R*glm::sin(2*pi*t)) + translation;
         cylinder.vertices.push_back(baseVertex);
+        cylinder.texcoords.push_back(glm::vec3(glm::cos(2*pi*t), 0.0f, glm::sin(2*pi*t)));
         cylinder.faces.push_back(glm::ivec3(i + 1, 0, i));
     }
     cylinder.vertices.push_back(glm::vec3(R, 0.0f, 0.0f) + translation);
+    cylinder.texcoords.push_back(glm::vec3(1.0f, 0.0f, 0.0f) + translation);
     cylinder.faces.push_back(glm::ivec3(1, 0, n));
 
     int topOffset = n + 1;
 
     // Top Vertices
     cylinder.vertices.push_back(glm::vec3(0.0f, 1.0f, 0.0f) + translation);
+    cylinder.texcoords.push_back(glm::vec3(0.0f, 1.0f, 0.0f) + translation);
     for (int i = 1; i < n; ++i) {
         float t = float(i)/float(n);
         glm::vec3 topVertex = glm::vec3(R*glm::cos(2*pi*t), 1.0f, R*glm::sin(2*pi*t)) + translation;
         cylinder.vertices.push_back(topVertex);
+        cylinder.texcoords.push_back(glm::vec3(glm::cos(2*pi*t), 1.0f, glm::sin(2*pi*t)));
         cylinder.faces.push_back(glm::ivec3(i + topOffset, topOffset, i + 1 + topOffset));
         cylinder.faces.push_back(glm::ivec3(i + 1 + topOffset, i, i + topOffset));
         cylinder.faces.push_back(glm::ivec3(i, i + 1 + topOffset, i + 1));
     }
     cylinder.vertices.push_back(glm::vec3(R, 1.0f, 0.0f) + translation);
+    cylinder.texcoords.push_back(glm::vec3(1.0f, 1.0f, 0.0f) + translation);
     cylinder.faces.push_back(glm::ivec3(n + topOffset, topOffset, 1 + topOffset));
     cylinder.faces.push_back(glm::ivec3(1 + topOffset, n, n + topOffset));
     cylinder.faces.push_back(glm::ivec3(n, 1 + topOffset, 1));
@@ -127,7 +194,7 @@ Mesh Mesh::getSphere()
     // Add north pole
     glm::vec3 northPole = glm::vec3(0.0f, R, 0.0f);
     sphere.vertices.push_back(northPole);
-
+	sphere.texcoords.push_back(glm::vec3(0.0f, 1.0f, 0.0f));
     // Add layer connected to north pole
     float t_phi = float(1)/float(n_phi);
     float c_phi = glm::cos(pi * t_phi);
@@ -137,12 +204,14 @@ Mesh Mesh::getSphere()
         float t_theta = float(i)/float(n_theta);
         float c_theta = glm::cos(2*pi * t_theta);
         float s_theta = glm::sin(2*pi * t_theta);
-
+		
         glm::vec3 vertex = R * glm::vec3(s_phi * c_theta, c_phi, s_phi * s_theta);
+        sphere.texcoords.push_back(glm::vec3(s_phi * c_theta, c_phi, s_phi * s_theta));
         sphere.vertices.push_back(vertex);
         sphere.addTriangle(i+1, i, 0);
     }
     sphere.vertices.push_back(R * glm::vec3(s_phi, c_phi, 0.0f));
+    sphere.texcoords.push_back( glm::vec3(s_phi, c_phi, 0.0f));
     sphere.addTriangle(1, n_theta, 0);
 
     int offset = n_theta;
@@ -159,9 +228,11 @@ Mesh Mesh::getSphere()
 
             glm::vec3 vertex = R * glm::vec3(s_phi * c_theta, c_phi, s_phi * s_theta);
             sphere.vertices.push_back(vertex);
+            sphere.texcoords.push_back(glm::vec3(s_phi * c_theta, c_phi, s_phi * s_theta));
             sphere.addQuad(i+1 + offset, i + offset, i + offset - n_theta, i+1 + offset - n_theta);
         }
         sphere.vertices.push_back(R * glm::vec3(s_phi, c_phi, 0.0f));
+        sphere.texcoords.push_back(glm::vec3(s_phi, c_phi, 0.0f));
         sphere.addQuad(1 + offset, n_theta + offset, offset, 1 + offset - n_theta);
         offset += n_theta;
     }
@@ -173,13 +244,16 @@ Mesh Mesh::getSphere()
         float s_theta = glm::sin(2*pi * t_theta);
         glm::vec3 vertex = R * glm::vec3(s_phi * c_theta, c_phi, s_phi * s_theta);
         sphere.vertices.push_back(vertex);
+        sphere.texcoords.push_back(glm::vec3(s_phi * c_theta, c_phi, s_phi * s_theta));
         sphere.addTriangle(i+1 + offset, n_theta + 1 + offset, i + offset);
     }
     sphere.vertices.push_back(R * glm::vec3(s_phi, c_phi, 0.0f));
+    sphere.texcoords.push_back(glm::vec3(s_phi, c_phi, 0.0f));
     sphere.addTriangle(1 + offset, n_theta + 1 + offset, n_theta + offset);
 
     // Add north pole
     glm::vec3 southPole = glm::vec3(0.0f, -R, 0.0f);
+    sphere.texcoords.push_back(glm::vec3(0.0f, -1.0f, 0.0f));
     sphere.vertices.push_back(southPole);
     
     return sphere;
