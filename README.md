@@ -172,3 +172,36 @@ WindowsYW Ylength ->  T ( 1 0 Ylength/2.0-0.8 )   | T ( 0 0 -0.9 ) [  S ( 0.01 0
 </div>
 
 
+
+```
+X -> R xlen ( 4 6 ) R ylen ( 2 3 )  R WindowGapSides ( 0.2 0.3 ) R WindowGapTop ( 0.1 0.2 ) R WindowGapBottom ( 0.35 0.5 ) S ( 2.4 2.4 2.4 ) Y
+
+
+
+Y  6 xlen ylen -> [ S ( 2*xlen 0.1 2*ylen ) I ( Cube 16 ) ] [ T ( -xlen 0 ylen ) GenX ]  [ T ( -xlen 0 -ylen ) GenX ] T ( 0 1 0 )
+
+
+
+
+GenX xlen  WindowGapSides WindowGapTop WindowGapBottom -> | ChooseBlankWallX T ( 1 0 0 ) ChooseDoorWindowX T ( 1 0 0 )
+
+
+ChooseBlankWallX ; 0.2 -> [ S ( 1 1 0.1 ) I ( CubeX 17 ) ] -> WindowDoorWindowX
+
+ChooseDoorWindowX ; 0.8 -> WindowDoorSectionX -> WindowSectionX
+
+
+
+
+
+WindowSectionX -> [ S ( 1 WindowGapBottom 0.1 ) I ( CubeX 17 ) ] [ T ( 0 1-WindowGapTop 0 ) S ( 1 WindowGapTop 0.1 ) I ( CubeX 17 ) ] [ T ( 0 WindowGapBottom 0 ) S ( WindowGapSides 1-WindowGapTop-WindowGapBottom 0.1 ) I ( CubeX 17 ) ] [ T ( 1-WindowGapSides WindowGapBottom 0 ) S ( WindowGapSides 1-WindowGapTop-WindowGapBottom 0.1 ) I ( CubeX 17 ) ]
+WindowDoorSectionX -> [ S ( 1 WindowGapTop/2 0.1 ) I ( CubeX 17 ) ] [ T ( 0 1-WindowGapTop 0 ) S ( 1 WindowGapTop 0.1 ) I ( CubeX 17 ) ] [ T ( 0 WindowGapTop/2 0 ) S ( WindowGapSides 1-WindowGapTop-WindowGapTop/2 0.1 ) I ( CubeX 17 ) ] [ T ( 1-WindowGapSides WindowGapTop/2 0 ) S ( WindowGapSides 1-WindowGapTop-WindowGapTop/2 0.1 ) I ( CubeX 17 ) ]
+
+
+```
+
+
+
+<div align="center">
+    <img src="Screenshot32.png" width="1200px"</img> 
+</div>
