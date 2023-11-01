@@ -81,6 +81,17 @@ The probability is 60% of drawing a building or empty.
 AddBuilding ; 0.6 -> T ( 0 0 3 ) [ Center ]  T ( 0 0 -2 )  [ SectionX  ] [ SectionY ]
 ```
 
+An example of a more complex probabilty construct.
+
+```
+Ruke repeat  {initialise variables} -> | ChooseX  ChooseY
+
+
+ChooseX ; 0.2 -> [ Rules I ( type texindex ) ] -> ChooseY
+
+ChooseY ; 0.8 -> [ Rules I ( type texindex ) ]-> [ Rules I ( type texindex ) ]
+
+```
 
 ### Example
 ```
