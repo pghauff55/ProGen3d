@@ -53,7 +53,8 @@ T ( -1.5 Height/2 1.0/Width )
 
 
 ### Instantiate
-I ( Cube )
+I ( Cube | CubeX | CubeY )
+Cube positions in the middle CubeX positions at the X edge and similarly with CubeY on the Y edge.
 I ( Sphere )
 I ( Cylinder )
 
