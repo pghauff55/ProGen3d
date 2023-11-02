@@ -10,6 +10,7 @@ Uses glm vector math, SoiL.h texture loading, Imath vector math, and Glut glu op
 <div align="center">
     <img src="Screenshot1515.png" width="1200px"</img> 
 </div>
+
 ### Variables
 
 {R | R*} variable_name ( min max )
@@ -61,7 +62,11 @@ T ( -1.5 Height/2 1.0/Width )
 
 
 ### Instantiate
-I ( Cube | CubeX | CubeY )
+I ( Cube | CubeX | CubeY texindex rotate_multiple scaletex)
+
+# Texture index
+# Rotate Texture
+# Scale Texture
 Cube positions in the middle CubeX positions at the X edge and similarly with CubeY on the Y edge.
 I ( Sphere )
 I ( Cylinder )
