@@ -118,27 +118,22 @@ void addVariable(std::string var_name){
 std::string MathS2(std::string input){
 		mathS::Assembler assembler;
 				//std::cout<<"IN:"<<input<<";";
+			bool remove_var=false;
 			//replace variables with floats
 		for(int i=variable_list.size()-1;i>=0;i--){
 			std::string str2 = variable_list[i]->var_name;
-					
-		      if(input.find(str2)!=-1){
+					int pos=0;
+		      while((pos=input.find(str2))!=-1){
 				  //std::cout<<"===="<<str2;
-				  input.replace(input.find(str2),str2.length(),std::to_string(variable_list[i]->value));	
-				 break;
+				  remove_var=true;
+				  input.replace(pos,str2.length(),std::to_string(variable_list[i]->value));	
+				
+				 
 			  }
-		}
-		//std::cout<<"IN:"<<input<<";";
-		
-			//replace variables with floats
-		for(int i=variable_list.size()-1;i>=0;i--){
-			std::string str2 = variable_list[i]->var_name;
-					
-		      if(input.find(str2)!=-1){
-				  //std::cout<<"===="<<str2;
-				  input.replace(input.find(str2),str2.length(),std::to_string(variable_list[i]->value));	
-				 break;
-			  }
+			   if(remove_var){
+				   removeVariable(str2);
+				   remove_var=false;
+			   }
 		}
 		//std::cout<<"IN:"<<input<<";";
 		
@@ -297,7 +292,16 @@ void Token::performAction(Context *context){
 	    glm::mat4 transform = context->getCurrentScope()->getTransform();
 		Mesh instance = Mesh::getInstance(instance_type);
 		instance.apply(transform);
-		context->addPrimitive(instance_type,context->getCurrentScope());
+		int texindex=0;
+		
+		if(var_name!=""){
+			texindex=(int)atof(MathS2(var_name).c_str());
+			//std::cout<<"MathS2: "<<texindex<<" "<<std::endl;
+			}
+		int arg=0;
+		if(arguments.size()>0)arg=(int)arguments[0];
+		
+		context->addPrimitive(instance_type,context->getCurrentScope(),texindex,arg);
 		context->getScene().add(instance);
 	}
 	else if(token_name=="["){
@@ -427,7 +431,7 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 					lin>>token_str;
 					if(token_str=="("){
 						lin>>token_str;
-						if(token_str=="Cube" || token_str=="Sphere" || token_str=="Cylinder"){
+						if(token_str=="Cube" || token_str=="Sphere" || token_str=="Cylinder" || token_str=="CubeX" ||token_str=="CubeY" ){
 							
 							token->addInstanceType(token_str);
 						}
@@ -437,12 +441,37 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 						}
 						
 						
+						
 						lin>>token_str;
 						if(token_str!=")"){
+						//	std::cout<<"token_str: "<<token_str<<" ";
+							token->var_name=token_str;
+							     //value=0.0f;
+							     //token->addArgument(value);
+							     lin>>token_str;
+						}
+						
+				
+						if(token_str!=")"){
+							std::cout<<"token_str: "<<token_str<<" ";
+							//token->var_name=token_str;
+							     value=atof(token_str.c_str());
+							     token->addArgument(value);
+							     lin>>token_str;
+						}
+						
+						
+								
+						
+						if(token_str==")"){
+							rule->addToken(token,index_k);
+						
+						}
+						else {
 							//std::cout<<"Error-expected ')' 003 "<<std::endl;
 							exit(1);
-							}
-						rule->addToken(token,index_k);
+						}
+						
 			
 					}
 					//else //{//std::cout<<"Missing ("<<std::endl;exit(1);}
@@ -496,6 +525,27 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 				
 			
 			}
+}
+
+
+std::vector<std::string> breakup(std::string input,std::string delimiter){
+		std::vector<std::string> output;
+	
+		int pos=-1;
+		
+		while( (pos = input.find(delimiter))!=-1){
+	
+			std::string str=input.substr(0, pos);
+			
+			input.erase(0, pos + delimiter.length());
+		
+		    output.push_back(str);
+		}
+		output.push_back(input);
+		
+		
+		
+		return output;
 }
 std::string Grammar::ruleBody(Rule *rule,std::istringstream &lin,std::string line){
 		int pos = 0;
@@ -557,56 +607,42 @@ std::string Grammar::ruleBody(Rule *rule,std::istringstream &lin,std::string lin
 		}
 		
 		
+		//Sections
+		
+		
+		
+		
+
+		
 		
 		
 		
 		rule_list.push_back(rule);
 		std::string delimiter = "|";
 		std::vector<std::string> sections;
-		int num_sections=0;
-		pos = line.find(delimiter);
-		////std::cout<<"POS("<<pos<<")";
-		if( pos != -1) {
-					
-					std::string sect_str=line.substr(0, pos);
-					//std::cout<<"section 0: "<<sect_str;//<<"LINE "<<line<<" LINE";
-					sections.push_back( sect_str);
-						
-					line.erase(0, pos + delimiter.length());
-					////std::cout<<"line"<<line<<".";
-					num_sections++;
-		
-				pos = line.find(delimiter);
-				////std::cout<<"POS("<<pos<<")";
-				if( pos != -1) {
-
-					std::string sect_str=line.substr(0, pos);
-					////std::cout<<"section 0: "<<sect_str<<"LINE "<<line<<" LINE";
-
-
-							sections.push_back( line.substr(0, pos));
-								
-							line.erase(0, pos + delimiter.length());
-							////std::cout<<"line"<<line<<".";
-							num_sections++;
 		
 		
-								if( line != "") {
-									sections.push_back( line);
-									num_sections++;
-								}
-
-				}
-	
-
-		for(int i=0;i<num_sections;i++){
-						ReadTokens(rule,sections[i],i);
-				}
-		}
+		sections=breakup(line,delimiter);
 		
-		if(num_sections==0){
+		int num_sections=sections.size();
+		 
+		 
+		 if(num_sections>3){
+			 std::cout<<"Too many sections "<<num_sections<<std::endl;
+			 exit(0);
+		 }
+
+		
+		if(num_sections==1){
 			ReadTokens(rule,line,1);
 		}
+		else {
+			for(int i=0;i<num_sections;i++){
+							ReadTokens(rule,sections[i],i);
+			}
+		
+		}
+		
 
 				
 	
@@ -618,11 +654,7 @@ std::string Grammar::ruleBody(Rule *rule,std::istringstream &lin,std::string lin
 	
 }
 
-std::string Grammar::ruleAlternate(Rule *rule,std::istringstream &lin,std::string line){
-			int pos = 0;
-			//std::istringstream lin(rule_str+" -> ");
-			
-			////std::cout<<"line"<<line<<".";
+std::string Grammar::ruleAlternate(Rule *rule,std::string line){
 			
 			
 			char token_char;
@@ -632,33 +664,10 @@ std::string Grammar::ruleAlternate(Rule *rule,std::istringstream &lin,std::strin
 			rule->alternate=new Rule(rule->rule_name+"_Alt",1);
 			rule->alternate->probability=1.0f-rule->probability;
 			
-			std::string delimiter = "|";
-			std::vector<std::string> sections;
-			int num_sections=0;
-			while ((pos = line.find(delimiter)) != -1) {
-					sections.push_back( line.substr(0, pos));
-						
-					line.erase(0, pos + delimiter.length());
-					//std::cout<<"line"<<line<<".";
-					num_sections++;
-			}
-				
-			if( line != "") sections.push_back( line.substr(0, pos));
+			
 
-
-			if(num_sections==0){
-					ReadTokens(rule->alternate,sections[0],1);
-				}
-			else {
-					num_sections++;
-					if(num_sections>3)num_sections=3;
-					
-					for(int i=0;i<num_sections;i++){
-					
-						ReadTokens(rule->alternate,sections[i],i);
-					
-					}
-				}
+			
+			ReadTokens(rule->alternate,line,1);
 			
 			
 		
@@ -677,32 +686,29 @@ Grammar::Grammar(std::string filePath)
     std::string line;
     while(std::getline(fin, line) ) {
 
-        if(line!=""){
-			size_t pos = 0;
-			std::string token;
+        if(line!="" && line[0]!='#'){
+			
+			std::vector<std::string> rule_sections;
 
 			std::string delimiter = "->";
+			
+			rule_sections=breakup(line,delimiter);
 
-			pos = line.find(delimiter);
 			
-			std::string rule_str = line.substr(0, pos);
-			line.erase(0, pos + delimiter.length());
+
+
 			
 			
-			std::istringstream lin(rule_str+" ->");
+			std::istringstream lin(rule_sections[0]+" ->");
 			std::string rulename;
 			lin >> rulename;
 			//std::cout<<"Rule name:"<<rulename<<" "<<line<<std::endl;
 			Rule *rule=new Rule(rulename,1);
 			
-			line=ruleBody(rule,lin,line);
-			/*while(line!=""){
-				pos = line.find(delimiter);
-				rule_str = line.substr(0, pos);
-				line.erase(0, pos + delimiter.length());
-				std::istringstream linalt(rule_str+"->");
-				ruleAlternate(rule,linalt,rule_str);
-			}*/
+			line=ruleBody(rule,lin,rule_sections[1]);
+			
+			if(rule_sections.size()>2)ruleAlternate(rule,rule_sections[2]);
+			
 			
 		}
 		
@@ -733,10 +739,6 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 		////std::cout<<"Rule Name: "<<rule->rule_name;
 		
 		std::vector<Token *> new_tokens;
-		
-	
-		
-		
 		for(int i=0;i<rule->var_counter;i++){
 			
 			int index=findVariableForward(rule->var_names[i]);
@@ -747,38 +749,60 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 		////std::cout<<"Rule Var Name: "<<rule->var_name;
 		
 		
-		int index=findVariable(rule->var_name);
-		if(index!=-1){
+		//int index=findVariable
+		if(rule->var_name!=""){
 		
 		
 
-				float val=variable_list[index]->getValue();
-				rule->repeat=floorf(val);	
+				//float val=variable_list[index]->getValue();
+				rule->repeat=atof(MathS(rule->var_name).c_str());//floorf(val);	
 			
 			
 			
 		}
-	
 		
-		
-		////std::cout<<"REPEAT="<<rule->repeat<<std::endl;
+		float roll=1.1f;
+		if(rule->alternate!=NULL){
 			
-		for(int m=0;m<3;m++){
+			roll=rand()/(float)RAND_MAX;
 		
-				//std::cout<<"m_"<<m<<std::endl<<std::endl;
-				if(m==1){
-					for(int l=0;l<rule->repeat;l++){
+		//std::cout<<"Roll<<roll<<std::endl;
+		if(rule->probability>roll){
+			
+			std::vector<Token *> more_tokens=Recurse(rule->alternate);
+		
+				for(int k=0;k<more_tokens.size();k++){
+						Token *check_token=more_tokens[k];
+						if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
+										
+						for(int i=0;i<3;i++){
+								if(check_token->var_names[i]!=""){
+													
+										check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
+													
+										check_token->var_names[i]="";
+									}
+						}
+					}		
+				new_tokens.push_back(more_tokens[k]);
+		
+				}
+				
+		}
+		else {
+	
+		for(int l=0;l<rule->repeat;l++){
 		                //std::cout<<"l_"<<l<<";"<<std::endl;
-						for(int j=0;j<rule->section_tokens[m].size();j++){
+						for(int j=0;j<rule->section_tokens[1].size();j++){
 							//std::cout<<"j_"<<j<<";";	
-							if(rule->section_tokens[m][j]->isRule()!=""){
+							if(rule->section_tokens[1][j]->isRule()!=""){
 								   // //std::cout<<"RULE;";
-								int index=findRule(rule->section_tokens[m][j]->token_name);
+								int index=findRule(rule->section_tokens[1][j]->token_name);
 								if(index!=-1){
 									Rule *fromtoken = rule_list[index];
-									float prob=(rand()/(float)RAND_MAX);
+									
 									////std::cout<<"PROB"<<prob<<">"<<fromtoken->probability<<std::endl;
-									if( (fromtoken->probability)>prob ){
+									
 										////std::cout<<"HERE009";
 										std::vector<Token *> more_tokens=Recurse(fromtoken);
 										////std::cout<<"HERE007";
@@ -799,6 +823,82 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 											new_tokens.push_back(more_tokens[k]);
 										}
 									}
+									//std::cout<<"HERE008";
+							  
+						//std::cout<<"HERE0010";
+							}
+							else {
+								    //std::cout<<"notRULE";
+								Token *check_token=new Token(rule->section_tokens[1][j]);
+								if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
+									
+									for(int i=0;i<3;i++){
+										if(check_token->var_names[i]!=""){
+											check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
+											
+											check_token->var_names[i]="";
+										}
+									}
+								}
+								new_tokens.push_back(check_token);
+							}
+							
+						//std::cout<<"HERE0011";	
+						}
+					
+				}
+		
+		}
+		
+		return new_tokens;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+		////std::cout<<"REPEAT="<<rule->repeat<<std::endl;
+			
+		for(int m=0;m<3;m++){
+		
+				//std::cout<<"m_"<<m<<std::endl<<std::endl;
+				if(m==1){
+					for(int l=0;l<rule->repeat;l++){
+		                //std::cout<<"l_"<<l<<";"<<std::endl;
+						for(int j=0;j<rule->section_tokens[m].size();j++){
+							//std::cout<<"j_"<<j<<";";	
+							if(rule->section_tokens[m][j]->isRule()!=""){
+								   // //std::cout<<"RULE;";
+								int index=findRule(rule->section_tokens[m][j]->token_name);
+								if(index!=-1){
+									Rule *fromtoken = rule_list[index];
+									
+									////std::cout<<"PROB"<<prob<<">"<<fromtoken->probability<<std::endl;
+									
+										std::vector<Token *> more_tokens=Recurse(fromtoken);
+										////std::cout<<"HERE007";
+										for(int k=0;k<more_tokens.size();k++){
+											Token *check_token=more_tokens[k];
+											if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
+												
+												for(int i=0;i<3;i++){
+													if(check_token->var_names[i]!=""){
+														
+														check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
+														
+														check_token->var_names[i]="";
+													}
+												}
+											}		
+											
+											new_tokens.push_back(more_tokens[k]);
+										}
+									
 									//std::cout<<"HERE008";
 							  }
 						//std::cout<<"HERE0010";
@@ -880,9 +980,17 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 						  }
 					
 				} 
-		}
+		
+		
+		
+		
+		
 		//std::cout<<"HERE004";
-		for(int i=0;i<rule->var_counter;i++){
+		
+	}
+	
+	
+	for(int i=0;i<rule->var_counter;i++){
 			
 			removeVariable(rule->var_names[i]);
 		}
@@ -932,4 +1040,60 @@ void Grammar::generateGeometry()
 	}		
      
 }
+
+
+
+
+
+
+
+
+
+
+Grammar::~Grammar(){
+	
+	
+	
+    for(int k=0;k<tokens_new.size();k++){
+		//tokens_new[k]->print();
+			
+			//std::cout<<k<<",";
+			delete tokens_new[k];
+			
+	}		
+	
+	
+	//for(int i=0;i<rule_list.size();i++){
+	//	std::cout<<i<<",";
+	 //delete rule_list[i];	
+	//}
+	
+	//delete context;
+	
+	
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

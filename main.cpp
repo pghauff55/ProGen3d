@@ -7,7 +7,8 @@
 #include <unordered_map>
 #include <stack>
 #include <vector>
-
+#include <filesystem>
+#include <glob.h>
 
 
 #include <stdio.h>
@@ -44,7 +45,7 @@
 
 
 
-//using namespace std;
+
 
 
 //===========================================================================================================================
@@ -55,8 +56,8 @@
 
 Grammar *grammar;
 
-static int SCREEN_WIDTH=800;
-static int SCREEN_HEIGHT=600;
+static int SCREEN_WIDTH=1600;
+static int SCREEN_HEIGHT=1200;
 GLuint tex_2d,tex_moon;
   float A1x=0.0,A1y=0.0,A1z=0.0;
 
@@ -121,40 +122,46 @@ int overflow_count=0;
 
 
 
+std::vector<std::string> globVector(const std::string& pattern){
+    glob_t glob_result;
+    glob(pattern.c_str(),GLOB_TILDE,NULL,&glob_result);
+    std::vector<std::string> files;
+    for(unsigned int i=0;i<glob_result.gl_pathc;++i){
+        files.push_back(std::string(glob_result.gl_pathv[i]));
+    }
+    globfree(&glob_result);
+    return files;
+}
 
 
 
 
 
-class HexGrid{
-public:
-    HexGrid(Imath::V3f center,int size){
-		this->size=size;
-		this->center=center;
-		
+
+int load_texture(const char *name){
+ int tex_2D=SOIL_load_OGL_texture
+	(
+		name,
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
+	);
+	/* check for an error during the load process */
+	if( 0 == tex_2D )
+	{
+		std::cout<<"SOIL loading error:"<< SOIL_last_result()<<std::endl;
 	}
-	void setcolor(float r,float g,float b){
-		this->r=r/256.0f;
-		this->g=g/256.0f;
-		this->b=b/256.0f;
-	}
-	void add(Imath::V3f p){
-		this->points[this->counter]=p;
-		this->counter++;
-		
-	}
-	Imath::V3f center,points[6];
-	int size;
-	int counter=0;
-	float r,g,b;
+	else {
+		std::cout<<"LOADED TEXTURE "<<name<<std::endl;
+
 	
-};
-std::vector<HexGrid *> hextiles;
-std::vector<HexGrid *> globalhextiles;
-
-
-
-
+    glBindTexture(GL_TEXTURE_2D, tex_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  
+	}
+return tex_2D;
+}
 
 
 
@@ -571,10 +578,40 @@ void releaseNormalKey(unsigned char key, int x, int y){
 	
 }
 void pressSpecialKey(int key, int x, int y){
+	
+	GLuint tex_id=0;
+	
+	std::vector<std::string> files = globVector("./*.png");
+	int counter=0;
+	
 	switch (key) {
       case GLUT_KEY_F1:    // F1: Toggle between full-screen and windowed mode
 		 delete grammar;
 		 grammar=new Grammar("./test.grammar");
+		 grammar->addContext();
+		
+		
+			
+		for (int i=0;i<files.size();i++){
+			std::cout<<counter;
+			counter++;
+			GLuint texid=load_texture(files[i].c_str());
+			grammar->context->loadTexture(texid);
+		
+		}
+		files = globVector("./*.jpg");
+		
+		for (int i=0;i<files.size();i++){
+			std::cout<<counter;
+			counter++;
+			GLuint texid=load_texture(files[i].c_str());
+			grammar->context->loadTexture(texid);
+		
+		}
+		
+		
+		grammar->context->genPrimitives();
+		
 		 grammar->generateGeometry();
 		 grammar->context->getScene().calc_normals();
          break;
@@ -640,31 +677,6 @@ void glut_Motion(int x, int y)
 mouse_x = x;
 mouse_y = y;
 glutPostRedisplay();
-}
-
-int load_texture(const char *name){
- int tex_2D=SOIL_load_OGL_texture
-	(
-		name,
-		SOIL_LOAD_AUTO,
-		SOIL_CREATE_NEW_ID,
-		SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
-	);
-	/* check for an error during the load process */
-	if( 0 == tex_2D )
-	{
-		std::cout<<"SOIL loading error:"<< SOIL_last_result()<<std::endl;
-	}
-	else {
-		std::cout<<"LOADED TEXTURE"<<std::endl;
-
-	
-    glBindTexture(GL_TEXTURE_2D, tex_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  
-	}
-return tex_2D;
 }
 
 //==================================================================================================================================================
@@ -744,15 +756,32 @@ srand(time(NULL));
     std::cout << std::fixed << std::showpoint;
 	std::cout.precision(2);
     grammar=new Grammar("./test.grammar");
+    
+    
+    
 		grammar->addContext();
-		GLuint texid=load_texture("paper.png");
+	
+	
+	std::vector<std::string> files = globVector("./*.png");
+	int counter=0;
+    for (int i=0;i<files.size();i++){
+		std::cout<<counter;
+		counter++;
+		GLuint texid=load_texture(files[i].c_str());
 		grammar->context->loadTexture(texid);
+	
+	}
+	files = globVector("./*.jpg");
+	
+    for (int i=0;i<files.size();i++){
+		std::cout<<counter;
+		counter++;
+		GLuint texid=load_texture(files[i].c_str());
+		grammar->context->loadTexture(texid);
+	
+	}
+
 		
-		texid=load_texture("ice.png");
-		grammar->context->loadTexture(texid);
-		
-		texid=load_texture("cherrywood.png");
-		grammar->context->loadTexture(texid);
 		
 		
 		grammar->context->genPrimitives();
@@ -788,9 +817,9 @@ grammar->context->getScene().calc_normals();
 */
 	 /* Enable a single OpenGL light. */
 	GLfloat light_ambient[] =
-	  {0.2, 0.2, 0.2, 0.2};
+	  {0.1, 0.1, 0.1 ,0.1};
 	  GLfloat light_diffuse[] =
-	  {1.0, 1.0, 1.0, 0.8};
+	  {0.8, 0.8, 0.8, 0.8};
 	  GLfloat light_specular[] =
 	  {1.0, 1.0, 1.0, 0.9};
 

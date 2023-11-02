@@ -10,22 +10,34 @@
 	
 	
 
-Primitive::Primitive(std::string type,GLuint texId){
+Primitive::Primitive(std::string type,GLuint texId, bool x,bool y,bool z){
 this->texId=texId;
 
 this->type=type;
+this->x=x;
+this->y=y;
+this->z=z;
 
 
 }
 
-void Primitive::draw(Scope *scope){
+void Primitive::draw(Scope *scope,int tex,int rotate){
 	
-	
+	float scaletex=0.125f;
 	glPushMatrix();
  glEnable(GL_TEXTURE_2D);
-glBindTexture(GL_TEXTURE_2D,this->texId);
+glBindTexture(GL_TEXTURE_2D,tex);
+	glMatrixMode( GL_TEXTURE );
+
+	glLoadIdentity();
+	glScalef(scaletex*scope->size.x,scaletex*scope->size.y,scaletex*scope->size.z);
+
+	glPushMatrix();
+
+	glMatrixMode( GL_MODELVIEW );
 	
 	glTranslatef(scope->position[0],scope->position[1],scope->position[2]);
+	glRotatef(90.0f*float(rotate),0,1,0);
 	glScalef(scope->size.x,scope->size.y,scope->size.z);
 	
 	
@@ -48,9 +60,12 @@ glBindTexture(GL_TEXTURE_2D,this->texId);
 	
 		
 	}
-	else if(type=="Cube"){
-	
-	glTranslatef(0.0f,0.5f,0.0f);
+	else if(type=="Cube" || type=="CubeX" || type=="CubeY"){
+	float y_val=0.0f,x_val=0.0f,z_val=0.0f;
+	if(y)y_val=0.5f;
+	if(x)x_val=0.5f;
+	if(x)z_val=0.5f;
+	glTranslatef(x_val,y_val,z_val);
 	
 	glScalef(0.5f,0.5f,0.5f);
 	
@@ -146,37 +161,49 @@ glBindTexture(GL_TEXTURE_2D,this->texId);
 		glEnd();  // End of drawing color-cube
 	}
 	glPopMatrix();
+	glPopMatrix();
 	 glDisable(GL_TEXTURE_2D);
 }
 
 
 
-void Context::addPrimitive(std::string type,Scope *scope){
+void Context::addPrimitive(std::string type,Scope *scope,int texindex, int rotate){
 	
 	
 	
 	
 	if(type=="Cube"){
-		std::cout<<"Adding Primitive "<<Cube->type<<std::endl;
+		//std::cout<<"Adding Primitive "<<Cube->type<<std::endl;
 		primitives.push_back(Cube);
+		}
+	
+	else if(type=="CubeX"){
+		//std::cout<<"Adding Primitive "<<Cube->type<<std::endl;
+		primitives.push_back(CubeX);
+		}
+	else if(type=="CubeY"){
+		//std::cout<<"Adding Primitive "<<Cube->type<<std::endl;
+		primitives.push_back(CubeY);
 		}
 	else if(type=="Cylinder"){
 		primitives.push_back(Cylinder);
-		std::cout<<"Adding Primitive "<<Cylinder->type<<std::endl;
+		//std::cout<<"Adding Primitive "<<Cylinder->type<<std::endl;
 		}
 	else if(type=="Sphere") {
 		primitives.push_back(Sphere);
-		std::cout<<"Adding Primitive "<<Sphere->type<<std::endl;
+		//std::cout<<"Adding Primitive "<<Sphere->type<<std::endl;
 		}
 	else return;
 	
 	glm::vec3 pos=scope->getPosition();
 	glm::vec3 size=scope->getSize();
 	
-	std::cout<<pos.x<<","<<pos.y<<","<<pos.z<<std::endl;
-	std::cout<<size.x<<","<<size.y<<","<<size.z<<std::endl;
+	//std::cout<<pos.x<<","<<pos.y<<","<<pos.z<<std::endl;
+	//std::cout<<size.x<<","<<size.y<<","<<size.z<<std::endl;
 	
 	primitive_scopes.push_back(new Scope(scope));
+	texindexes.push_back(texids[texindex]);
+	rotates.push_back(rotate);
 	
 	
 }
@@ -187,27 +214,29 @@ void Context::draw(){
 	for(int i=0;i<primitives.size();i++){
 		
 		
-		primitives[i]->draw(primitive_scopes[i]);
+		primitives[i]->draw(primitive_scopes[i],texindexes[i],rotates[i]);
 	}
 	
 }
 
 
 
-GLuint Context::loadTexture(GLuint texid){
+GLuint Context::loadTexture(GLuint tex){
 	
 		
 
-	texids.push_back(texid);
-	return texid;
+	texids.push_back(tex);
+	return tex;
 }
 
 
 
 void Context::genPrimitives(){
-Cube=new Primitive("Cube",texids[0]);
-	Cylinder=new Primitive("Cylinder",texids[1]);
-	Sphere=new Primitive("Sphere",texids[2]);
+Cube=new Primitive("Cube",0,false,true,false);
+CubeX=new Primitive("CubeX",0,true,true,false);
+CubeY=new Primitive("CubeY",0,false,true,true);
+	Cylinder=new Primitive("Cylinder",0,false,false,false);
+	Sphere=new Primitive("Sphere",0,false,false,false);
 }
 
 Context::Context()
@@ -224,6 +253,11 @@ Context::Context()
 
 Context::~Context()
 {
+	for(int i=0;i<primitives.size();i++){
+		
+		
+		delete primitives[i];
+	}
  	for(int i=0;i<primitives.size();i++){
 		
 		delete primitive_scopes[i];

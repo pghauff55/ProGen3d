@@ -1,0 +1,55 @@
+X -> R WindowGap ( 0.1 0.2 ) R DoorHeight ( 0.7 0.8 ) R WindowHeight ( 0.4 0.5 ) R NumWallsX ( 2 4 ) R WindowLengthX ( 0.4 0.65 ) R WindowLengthY ( 0.2 0.35 ) R NumWindowsX ( 2 3 ) R Top ( 0.1 0.2 ) [ S ( 2.4 2.4 2.4 ) Y ]
+
+
+Y 1 WindowLengthX NumWindowsX Top WindowHeight DoorHeight WindowGap WindowLengthY ->  [ T ( -4*WindowLengthX 0 0 ) SidesX ] [ T ( 3*WindowLengthX -1 4*WindowLengthY ) S ( 0.1 2 8*WindowLengthY   ) I ( Cube 17 ) ] [ T ( -3*WindowLengthX  -1 4*WindowLengthY ) S ( 0.1 2 8*WindowLengthY   ) I ( Cube 17 ) ]
+
+SidesX ->  [ [ WallsX ]  T ( -5.0*WindowLengthX 1 0 ) [ WallsX ] T ( 0 -1 -2*WindowLengthY )  [ Floor ] ] T ( -3.5*WindowLengthX -1 -8*WindowLengthY ) [ [ WallsX ]  T ( -5.0*WindowLengthX 1 0 ) [ WallsX ] ]
+
+WallsX 3  ->  |   [ WallX ] T  ( WindowLengthX 0 0 ) [ WallX2 ] T ( WindowLengthX 0 0 ) 
+
+WallX2 ; 0.3 ->  WallX -> [ Door ]
+
+WallX ; 0.9 ->   [ Window ]  ->     [ S ( WindowLengthX 1.0 0.1 )  I ( Cube 17 ) ] 
+
+Window ->   [ WindowBottom  WindowTop ] [ WindowSideLeft ] T ( WindowLengthX-WindowGap/2 0 0 ) [ WindowSideRight ]
+
+
+
+WindowSideRight -> [ T ( -WindowLengthX/2+WindowGap/4 1.0-WindowHeight-Top 0 ) S ( WindowGap/2 WindowHeight 0.1 )  I ( Cube 17 ) ] [ T ( -WindowLengthX/2 1.0-WindowHeight-Top 0.05 ) S ( 0.025 WindowHeight+0.025 0.0025 ) I ( Cube 3 ) ]
+WindowSideLeft -> [ T ( -WindowLengthX/2+WindowGap/4 1.0-WindowHeight-Top 0 ) S ( WindowGap/2 WindowHeight 0.1 )  I ( Cube 17 ) ] [ T ( -WindowLengthX/2+WindowGap/2 1.0-WindowHeight-Top 0.05 ) S ( 0.025 WindowHeight+0.025 0.0025 ) I ( Cube 3 ) ]
+
+WindowBottom ->   [ S ( WindowLengthX 1.0-WindowHeight-Top 0.1 ) I ( Cube 17 ) ] [ T ( 0 1.0-WindowHeight-Top 0.05 ) S ( WindowLengthX-WindowGap 0.025 0.0025 ) I ( Cube 3 ) ]
+WindowTop -> [ T ( 0 1.0-Top 0 ) [ S ( WindowLengthX Top 0.1 )  I ( Cube 17 ) ] [ T ( 0 0 0.05 ) S ( WindowLengthX-WindowGap 0.025 0.0025 ) I ( Cube 3 ) ]
+
+
+
+WindowDoor ->   [ WindowDoorBottom  WindowDoorTop ] [ WindowDoorSideLeft ] T ( WindowLengthX-0.05 0 0 ) [ WindowDoorSideRight ]
+
+
+
+WindowDoorSideRight -> [ T ( -WindowLengthX/2+0.025 1.0-DoorHeight-Top 0 ) S ( 0.05 DoorHeight 0.1 )  I ( Cube 17 ) ] [ T ( -WindowLengthX/2 1.0-DoorHeight-Top 0.05 ) S ( 0.025 DoorHeight+0.025 0.0025 ) I ( Cube 3 ) ]
+WindowDoorSideLeft -> [ T ( -WindowLengthX/2+0.025 1.0-DoorHeight-Top 0 ) S ( 0.05 DoorHeight 0.1 )  I ( Cube 17 ) ] [ T ( -WindowLengthX/2+0.05 1.0-DoorHeight-Top 0.05 ) S ( 0.025 DoorHeight+0.025 0.0025 ) I ( Cube 3 ) ]
+
+WindowDoorBottom ->   [ S ( WindowLengthX 1.0-DoorHeight-Top 0.1 ) I ( Cube 17 ) ] [ T ( 0 1.0-DoorHeight-Top 0.05 ) S ( WindowLengthX-0.1 0.025 0.0025 ) I ( Cube 3 ) ]
+WindowDoorTop -> [ T ( 0 1.0-Top 0 ) [ S ( WindowLengthX Top 0.1 )  I ( Cube 17 ) ] [ T ( 0 0 0.05 ) S ( WindowLengthX-0.1 0.025 0.0025 ) I ( Cube 3 ) ]
+
+
+
+
+
+Door ->   [ DoorBottom  DoorTop ] T ( -0.75*WindowLengthX/2 0 0 )  [ DoorSideLeft ] T ( 0.75*WindowLengthX 0 0 ) [ DoorSideRight ]
+
+DoorSideRight -> [  S ( WindowLengthX/4 1 0.1 )  I ( Cube 17 ) ] [ T ( -0.1025 1.0-DoorHeight-Top 0.05 ) S ( 0.025 DoorHeight+0.025 0.0025 ) I ( Cube 3 ) ]
+
+
+DoorSideLeft ->   [   S ( WindowLengthX/4 1 0.1 )  I ( Cube 17 ) ]  [ T ( 0.1025 1.0-DoorHeight-Top 0.05 ) S ( 0.025 DoorHeight+0.025 0.0025 ) I ( Cube 3 ) ]
+
+DoorBottom ->   [ S ( WindowLengthX/2 1.0-DoorHeight-Top 0.1 ) I ( Cube 17 ) ] [ T ( 0 1.0-DoorHeight-Top 0.05 ) S ( WindowLengthX/2 0.025 0.0025 ) I ( Cube 3 ) ]
+DoorTop -> [ T ( 0 1.0-Top 0 ) [ S ( WindowLengthX/2 Top 0.1 )  I ( Cube 17 ) ] [ T ( 0 0 0.05 ) S ( WindowLengthX/2 0.025 0.0025 ) I ( Cube 3 ) ]
+
+
+
+
+
+Floor -> T ( -1.5*WindowLengthX -0.05 -2*WindowLengthY ) [ S ( 6*WindowLengthX 0.05 10*WindowLengthY ) I ( Cube 15 ) ]
+
