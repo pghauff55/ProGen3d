@@ -12,12 +12,16 @@ Uses glm vector math, SoiL.h texture loading, Imath vector math, and Glut glu op
 </div>
 ### Variables
 
-R variable_name ( min max )
+{R | R*} variable_name ( min max )
 ---  Sets a variable
 
 Example
 ```
+#float
 X -> R Height ( 4.6 10.7 )
+
+#integer
+Y -> R* xlen ( 4 6 )
 ```
 
 ### Rules
