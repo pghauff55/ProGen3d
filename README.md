@@ -6,7 +6,9 @@ Based on https://github.com/santipaprika/procedural-buildings and https://github
 
 Uses glm vector math, SoiL.h texture loading, Imath vector math, and Glut glu opengl.
 
-
+<div align="center">
+    <img src="Screenshot36.png" width="1200px"</img> 
+</div>
 <div align="center">
     <img src="Screenshot1515.png" width="1200px"</img> 
 </div>
