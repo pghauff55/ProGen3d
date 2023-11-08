@@ -9,7 +9,7 @@ Uses glm vector math, SoiL.h texture loading, Imath vector math, and Glut glu op
 ### Screenshot1
 
 <div align="center">
-    <img src="Screenshot36.png" width="1200px"</img> 
+    <img src="Screenshot41.png" width="1200px"</img> 
 </div>
 
 ### Screenshot2
