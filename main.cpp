@@ -1,7 +1,8 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
+#include <chrono>
+#include <thread>
 #include <list>
 #include <string>
 #include <unordered_map>
@@ -9,6 +10,7 @@
 #include <vector>
 #include <filesystem>
 #include <glob.h>
+#include <random>
 
 
 #include <stdio.h>
@@ -18,11 +20,25 @@
 #include <ctime>
 #include <algorithm>
 
-// openGL and related includes
+
+
+#include <epoxy/gl.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
-#include <SOIL/SOIL.h>
+
+
+
+
+
+
+#include <gtk/gtk.h>
+
+
+#include <GLFW/glfw3.h>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
 
 #include "PLYWriter.h"
 #include "Context.h"
@@ -37,12 +53,19 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stbimage/stb_image.h"
 
-
-// local includes
 #include "hex_planet.h"
+#include "textures.h"
 
 
 
+
+
+
+
+
+
+
+std::mt19937_64 rng;
 
 
 
@@ -58,73 +81,121 @@ Grammar *grammar;
 
 static int SCREEN_WIDTH=1600;
 static int SCREEN_HEIGHT=1200;
-GLuint tex_2d,tex_moon;
-  float A1x=0.0,A1y=0.0,A1z=0.0;
-
-    float scale = 0.1;
-    int scale_level=0;
-int g_glutMainWin;
-float g_aspect;
-HexPlanet *m_planet,*m_moon;
-
-  //set of sides that are travelable or not per type
-  std::vector<unsigned int> vec_type1;
-  std::vector<unsigned int> vec_type2;
-  std::vector<unsigned int> vec_type3;
-  std::vector<unsigned int> vec_type4;
-  std::vector<unsigned int> vec_type0;
- 
-
-GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};  /* Red diffuse light. */
-GLfloat light_position[] = {1.0, 15.0, 5.0, 0.0};  /* Infinite light location. */
-int mouse_x=0,mouse_y=0;
-
-GLfloat texcoord[][2] = {{0.5, 0.0},
-{0.0669875,0.25},
-{0.0669875, 0.75},
-{0.5, 1.0},
-{0.9330125, 0.75},
-{0.9330125, 0.25}};  
-
-int tiles[3000][3];
-GLuint textile[5];
-GLuint number_tile[10];
-
-float anglex=0.0;
-float angley=0.0;
-float sz=1.0f;
-float sx=0.0f;
-float sy=0.0f;
-float sX=0.0f,sY=0.0f,sZ=1.0f;
-int current_axes=5;
-int last_axes=5;
-bool invert_y=false;
-float theta2=atan(sz/sx);
-Imath::V3f svec4,svec(0.0f,0.0f,1.0f),SVEC(0.0f,0.0f,1.0f);
-Imath::V3f X(1.0f,0.0f,0.0f),Y(0.0f,1.0f,0.0f),Z(0.0f,0.0f,1.0f);
-
-bool button_down=false;
-bool flipped=false;
-bool moving=false;
-int select_hex=0;
-int current_select_hex=0;
 
 
-Imath::V3f Align;
 
 
-std::vector<int> hex_tile_list;
-std::vector<int> hex_path;
-std::vector<int>::iterator it;
-int count_path=0;
-int overflow_count=0;
 
+
+
+
+static GtkWidget *gl_area;
+static GtkTextBuffer *mybuffer;
+static GtkWidget *view;
+
+char const * filterPatterns[1] = { "*.grammar"  };
+
+
+
+std::vector<int> texture_list;
+
+
+
+
+
+void display( void );
+
+
+
+
+int generateTexture(int index)
+{
+	GLuint mTexture;
+    glGenTextures(1 , &mTexture);
+    glBindTexture(GL_TEXTURE_2D, mTexture);// Bind our 2D texture so that following set up will be applied
+
+    //Set texture wrapping parameter
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+
+    //Set texture Filtering parameter
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+
+    //Load the image
+    
+    unsigned char *image=NULL;
+    if(index==0)image=texture_image_array0;
+    else if(index==1)image=texture_image_array1;
+    else if(index==2)image=texture_image_array2;
+    //Generate the image
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB , 128 , 128, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    //glGenerateMipmap(GL_TEXTURE_2D);
+    
+    
+    
+    
+    glBindTexture(GL_TEXTURE_2D,0); //Unbind 2D textures
+    
+    return mTexture;
+
+}
+
+
+int generateTexture(const char * filename)
+{
+	GLuint mTexture;
+    glGenTextures(1 , &mTexture);
+    glBindTexture(GL_TEXTURE_2D, mTexture);// Bind our 2D texture so that following set up will be applied
+
+    //Set texture wrapping parameter
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+
+    //Set texture Filtering parameter
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+
+    //Load the image
+    int picWidth,picHeight,n;
+    unsigned char* image = stbi_load(filename, &picWidth, &picHeight, &n,STBI_rgb);
+    if (image == NULL ) {
+        std::cout<<"Failed to load image: "<<stbi_failure_reason()<<std::endl;
+    }
+    //Generate the image
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB , picWidth , picHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    //glGenerateMipmap(GL_TEXTURE_2D);
+    
+    
+    
+   // std::cout<<"Image START#####"<<picWidth<<":"<<picHeight<<":"<<picWidth*picHeight*3<<"#####################"<<std::endl;
+   // for(int i=0;i<picWidth*picHeight*3;i++)std::cout<<(unsigned int)image[i]<<",";
+   // std::cout<<"Image END##########################"<<std::endl;
+
+    stbi_image_free(image);// Free the reference to the image
+    glBindTexture(GL_TEXTURE_2D,0); //Unbind 2D textures
+    
+    return mTexture;
+
+}
 
 
 
 std::vector<std::string> globVector(const std::string& pattern){
     glob_t glob_result;
-    glob(pattern.c_str(),GLOB_TILDE,NULL,&glob_result);
+    memset(&glob_result, 0, sizeof(glob_result));
+    
+     int return_value,count=0;
+    while((return_value=glob(pattern.c_str(),GLOB_TILDE,NULL,&glob_result))!=0){
+		 
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		if(count++>20){
+			std::cout<<"glob_error"<<std::endl;
+			exit(0);
+		}
+	}
+    
+    
     std::vector<std::string> files;
     for(unsigned int i=0;i<glob_result.gl_pathc;++i){
         files.push_back(std::string(glob_result.gl_pathv[i]));
@@ -134,625 +205,15 @@ std::vector<std::string> globVector(const std::string& pattern){
 }
 
 
-
-
-
-
-int load_texture(const char *name){
- int tex_2D=SOIL_load_OGL_texture
-	(
-		name,
-		SOIL_LOAD_AUTO,
-		SOIL_CREATE_NEW_ID,
-		SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
-	);
-	/* check for an error during the load process */
-	if( 0 == tex_2D )
-	{
-		std::cout<<"SOIL loading error:"<< SOIL_last_result()<<std::endl;
-	}
-	else {
-		std::cout<<"LOADED TEXTURE "<<name<<std::endl;
-
-	
-    glBindTexture(GL_TEXTURE_2D, tex_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+void   setup(){
   
-	}
-return tex_2D;
-}
-
-
-
-
-
-
-
-
-
-/***    drawing text on screen  ***/     
-void drawString(char *string)
-{
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();             
-    glLoadIdentity();   
-    int w = glutGet( GLUT_WINDOW_WIDTH );
-    int h = glutGet( GLUT_WINDOW_HEIGHT );
-    glOrtho( 0, w, 0, h, -1, 1 );
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glDisable( GL_DEPTH_TEST ); 
-
-    glDisable( GL_LIGHTING );
-    glColor3f(1, 0, 0);
-
-    glRasterPos2i(20, 20);
-    void *font = GLUT_BITMAP_HELVETICA_18; 
-    for (char* c=string; *c != '\0'; c++) 
-    {
-        glutBitmapCharacter(font, *c); 
-    }
-
-    glEnable( GL_LIGHTING );
-
-    glEnable (GL_DEPTH_TEST);     
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();  
-}
-//===========================================================================================================
-//to_polar
-//================================================================================================================
-Imath::V3f topolar(Imath::V3f a){
-	Imath::V3f p;
-	p.x=1.0f;
-	p.y=atan2f(a.z,a.x);
-	p.z=atanf(a.y/sqrtf(a.x*a.x+a.z*a.z));
-	return p;
-}
-Imath::V3f frompolar(float theta,float phi,float theta_2,float phi_2){
-	Imath::V3f p(0,1,0);
-	Imath::M33f M1,M2,M3,M4;
-	float st=sin(theta);
-	float ct=cos(theta);
-	float sp=sin(phi);
-	float cp=cos(phi);
-	
-	
-	M1.makeIdentity ();
-	M1[0][0]=ct;
-	M1[0][1]=-st;
-	M1[1][0]=st;
-	M1[1][1]=ct;
-	
-	M2.makeIdentity ();
-	M2[0][0]=cp;
-	M2[0][2]=sp;
-	M2[2][0]=-sp;
-	M2[2][2]=cp;
-	
-	st=sin(theta_2);
-	ct=cos(theta_2);
-	sp=sin(phi_2);
-	cp=cos(phi_2);
-	
-	
-	M3.makeIdentity ();
-	M3[0][0]=ct;
-	M3[0][1]=-st;
-	M3[1][0]=st;
-	M3[1][1]=ct;
-	
-	M4.makeIdentity ();
-	M4[0][0]=cp;
-	M4[0][2]=sp;
-	M4[2][0]=-sp;
-	M4[2][2]=cp;
-	
-	Imath::V3f out=(p*M3*M4)*M1*M2;
-	
-	
-	return out;
-	
-}
-//===========================================================================================================
-//satelite
-//================================================================================================================
-float angleSat[10];
-
-
-Imath::V3f Sat(Imath::V3f axis,int num,float D_ANGLE,float phi,float theta){
-	angleSat[num]+=D_ANGLE;
-if(angleSat[num]>=2.0f*M_PI)
-	angleSat[num]=0.0f;
-float dt=0.000007/2;
-	axis=topolar(axis);
-for(int i=0;i<30;i++){
-	if(i==0)glPointSize(14.0f);
-	else glPointSize(1.0f);
-	Imath::V3f points;
-
-	points=frompolar(theta+angleSat[num]-5000.0f*dt*float(i),phi,axis.y,axis.z);
-	
-	
-	points.normalize();
-	points*=m_planet->kPlanetRadius + 1.75+angleSat[num]*0.005f;
-	glPushMatrix();
-
-
-	
-	glBegin(GL_POINTS); //starts drawing of points
-		  glVertex3f(points[0],points[1],points[2]);//upper-right corner
-		  
-	glEnd();//end drawing of points
-	glPopMatrix();
-}
-Imath::V3f points;
-	
-	points=frompolar(theta+angleSat[num],phi,axis.y,axis.z);
-	
-	return points;
-}
-
-int selected_hex;
-//tileNode *selected_hex_tile=NULL;
-//===========================================================================================================
-// glut Display Func
-//================================================================================================================
-
-
-
-void glut_Display( void )//-------------------------------------------------------------------------------------
-{  
-
-glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glMatrixMode( GL_PROJECTION );
-  glLoadIdentity();
-  gluPerspective( 70.0f, 1.0f, 0.1f, 5000.0f );
- // int x_vp=-400,y_vp=-400;
-glViewport(0,0,SCREEN_WIDTH,SCREEN_HEIGHT);
-  
- float dt=0.000007/2;
-float dsx=0,dsy=0,dsz=0;
-
-//if(button_down){
-
-//	button_down=false;
-
- dsx=(mouse_x-SCREEN_WIDTH/2.0f)*dt;
-
- dsy=-(mouse_y-SCREEN_HEIGHT/2)*dt;
-
-//}
-
-
-if(fabsf(SVEC[1])>0.207f){
-
-Imath::V3f x,y,z,Yt,Xt,Zt;
-
-//printf("   SVEC(%2.3f  %2.3f   %2.3f ) X(%2.3f   %2.3f   %2.3f )  Y(%2.3f  %2.3f   %2.3f )   Z(%2.3f  %2.3f   %2.3f )\n",SVEC[0],SVEC[1],SVEC[2],X[0],X[1],X[2],Y[0],Y[1],Y[2],Z[0],Z[1],Z[2]);
-
-
-if(SVEC[1]>0.0f){
-y[0]=-SVEC[0];
-
-y[1]=(SVEC[0]*SVEC[0]+SVEC[2]*SVEC[2])/SVEC[1];
-
-
-y[2]=-SVEC[2];
-}
-else {
-y[0]=SVEC[0];
-
-y[1]=-(SVEC[0]*SVEC[0]+SVEC[2]*SVEC[2])/SVEC[1];
-
-
-y[2]=SVEC[2];
-	
-	
-	
-}
-
-
-y.normalize();
-
-
-
-
-//printf("(%2.3f   %2.3f   %2.3f ) ",y[0],y[1],y[2]);
-z=SVEC;
-z.normalize();
-x=y%z;
-x.normalize();
-
-//y=z%x;
-//y.normalize();
-
-float square_angle=acos((y^z)/(sqrt(z^z)*sqrt(y^y)))*180.0f/M_PI;
-
-//printf("  %2.3f   ",square_angle);
-
-
-Yt[0]=y[0]*X[0]+y[1]*Y[0]+y[2]*Z[0];
-Yt[1]=y[0]*X[1]+y[1]*Y[1]+y[2]*Z[1];
-Yt[2]=y[0]*X[2]+y[1]*Y[2]+y[2]*Z[2];
-
-Zt[0]=z[0]*X[0]+z[1]*Y[0]+z[2]*Z[0];
-Zt[1]=z[0]*X[1]+z[1]*Y[1]+z[2]*Z[1];
-Zt[2]=z[0]*X[2]+z[1]*Y[2]+z[2]*Z[2];
-
-Xt[0]=x[0]*X[0]+x[1]*Y[0]+x[2]*Z[0];
-Xt[1]=x[0]*X[1]+x[1]*Y[1]+x[2]*Z[1];
-Xt[2]=x[0]*X[2]+x[1]*Y[2]+x[2]*Z[2];
-
-X=Xt;Y=Yt;Z=Zt;
-
-X.normalize();
-Y.normalize();
-Z.normalize();
-
-
-
-//printf("   SVEC(%2.3f  %2.3f   %2.3f ) X(%2.3f   %2.3f   %2.3f )  Y(%2.3f  %2.3f   %2.3f )   Z(%2.3f  %2.3f   %2.3f )\n",SVEC[0],SVEC[1],SVEC[2],X[0],X[1],X[2],Y[0],Y[1],Y[2],Z[0],Z[1],Z[2]);
-
-
-float SY,SX,SZ;
-SVEC[0]=0.0f;
-SVEC[1]=0.0f;
-SVEC[2]=1.0f;
-SX=SVEC[0]*X[0]+SVEC[1]*Y[0]+SVEC[2]*Z[0];
-SY=SVEC[0]*X[1]+SVEC[1]*Y[1]+SVEC[2]*Z[1];
-SZ=SVEC[0]*X[2]+SVEC[1]*Y[2]+SVEC[2]*Z[2];
-printf("SX SY SZ (%2.3f   %2.3f   %2.3f ) ",SX,SY,SZ);
-
-
-//getchar();
-}
-
-
-
-//up std::vector
-Imath::V3f SVEC2;
-SVEC2=SVEC-Imath::V3f(0.0f,1.0f,0.0f);
-
- SVEC2.normalize();
-
-Imath::V3f SVEC3=SVEC%SVEC2;
-SVEC3.normalize();
-
-Imath::V3f SVEC5;
-SVEC5=SVEC%SVEC3;
-SVEC5.normalize();
-
-Imath::V3f SVEC_POINTER,svec_pointer;
-
-SVEC_POINTER[0]=SVEC[0]+250.0f*dsx*SVEC3[0]+250.0f*dsy*SVEC5[0];
-SVEC_POINTER[1]=SVEC[1]+250.0f*dsx*SVEC3[1]+250.0f*dsy*SVEC5[1];
-SVEC_POINTER[2]=SVEC[2]+250.0f*dsx*SVEC3[2]+250.0f*dsy*SVEC5[2];
-
-svec_pointer[0]=SVEC_POINTER[0]*X[0]+SVEC_POINTER[1]*Y[0]+SVEC_POINTER[2]*Z[0];
-svec_pointer[1]=SVEC_POINTER[0]*X[1]+SVEC_POINTER[1]*Y[1]+SVEC_POINTER[2]*Z[1];
-svec_pointer[2]=SVEC_POINTER[0]*X[2]+SVEC_POINTER[1]*Y[2]+SVEC_POINTER[2]*Z[2];
-
-SVEC[0]+=dsx*SVEC3[0]+dsy*SVEC5[0];
-SVEC[1]+=dsx*SVEC3[1]+dsy*SVEC5[1];
-SVEC[2]+=dsx*SVEC3[2]+dsy*SVEC5[2];
-
-SVEC.normalize();
-
-
-
-sx=SVEC[0]*X[0]+SVEC[1]*Y[0]+SVEC[2]*Z[0];
-sy=SVEC[0]*X[1]+SVEC[1]*Y[1]+SVEC[2]*Z[1];
-sz=SVEC[0]*X[2]+SVEC[1]*Y[2]+SVEC[2]*Z[2];
-
-Imath::V3f svec3;
-svec3[0]=SVEC3[0]*X[0]+SVEC3[1]*Y[0]+SVEC3[2]*Z[0];
-svec3[1]=SVEC3[0]*X[1]+SVEC3[1]*Y[1]+SVEC3[2]*Z[1];
-svec3[2]=SVEC3[0]*X[2]+SVEC3[1]*Y[2]+SVEC3[2]*Z[2];
-
-Imath::V3f svec5;
-svec5[0]=SVEC5[0]*X[0]+SVEC5[1]*Y[0]+SVEC5[2]*Z[0];
-svec5[1]=SVEC5[0]*X[1]+SVEC5[1]*Y[1]+SVEC5[2]*Z[1];
-svec5[2]=SVEC5[0]*X[2]+SVEC5[1]*Y[2]+SVEC5[2]*Z[2];
-
-Imath::V3f svec4(sx,sy,sz);
-
-svec=svec4;
-
-svec.normalize();
-svec5.normalize();
-
-char string1[100];
-sprintf(string1," tile index: %d (%2.3f   %2.3f   %2.3f )  (%2.3f  %2.3f   %2.3f )   (%2.3f  %2.3f   %2.3f )",select_hex,SVEC[0],SVEC[1],SVEC[2],X[0],X[1],X[2],Y[0],Y[1],Y[2]);
-drawString(string1);
-
-
-
-gluLookAt(3.0f*svec[0], 3.0f*svec[1], 3.0f*svec[2], 0.0, 0.0, 0.0,svec5[0],svec5[1],svec5[2]);
-
-
-light_position[0]=10.0f*svec5[0];
-light_position[1]=10.0f*svec5[1];
-light_position[2]=10.0f*svec5[2];
-
-  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
- glMatrixMode( GL_MODELVIEW );
-  glLoadIdentity();
-
-
-
-
-
-
-glPushMatrix();
-glScalef(0.8,0.8,0.8);
-glDisable(GL_LIGHTING);
-glBegin( GL_LINES );
-	
-	glColor3f( 1.0f, 0.0f, 0.0f );
-	glVertex3f( 0.0f, 0.0f, 0.0f );
-	glVertex3f( 1.0f, 0.0f, 0.0f );
-
-
-	glColor3f( 0.0f, 1.0f, 0.0f );
-	glVertex3f( 0.0f, 0.0f, 0.0f );
-	glVertex3f( 0.0f, 1.0f, 0.0f );
-
-	glColor3f( 0.0f, 0.0f, 1.0f );
-	glVertex3f( 0.0f, 0.0f, 0.0f );
-	glVertex3f( 0.0f, 0.0f, 1.0f );
-
-	glColor3f( 1.0f, 0.0f, 0.0f );
-	glVertex3f( 0.0f, 0.0f, 0.0f );
-	glVertex3f( X[0], X[1], X[2] );
-
-
-	glColor3f( 0.0f, 1.0f, 0.0f );
-	glVertex3f( 0.0f, 0.0f, 0.0f );
-	glVertex3f( Y[0], Y[1], Y[2] );
-
-	glColor3f( 0.0f, 0.0f, 1.0f );
-	glVertex3f( 0.0f, 0.0f, 0.0f );
-	glVertex3f( Z[0], Z[1], Z[2] );
-
-	//glScalef(25.0f,25.0f,25.0f);
-glColor3f( 0.0f, 1.0f, 1.0f );
-	glVertex3f( svec[0], svec[1], svec[2] );
-	glVertex3f( svec[0]+10.0f*dsy*svec5[0], svec[1]+10.0f*dsy*svec5[1], svec[2]+10.0f*dsy*svec5[2] );
-	glVertex3f( svec[0], svec[1], svec[2] );
-	glVertex3f( svec[0]+10.0f*dsx*svec3[0], svec[1]+10.0f*dsx*svec3[1], svec[2]+10.0f*dsx*svec3[2] );
-
-	glEnd();
-glPopMatrix();
-
-
-
-glEnable(GL_LIGHTING);
-glScalef(scale,scale,scale);
-glPushMatrix();
-
-
-
-//glColor4f(1,1,1,0.6);			
-//grammar->context->getScene().draw();
-
-glColor4f(1,1,1,1);
-
-grammar->context->draw();
-
-
-glPopMatrix();
-
-
-
-
-
-
-
-
-  glutSwapBuffers(); 
-glutPostRedisplay();
-}
-//----------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-//----------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
-void pressNormalKey(unsigned char key, int x, int y){
-	
-}
-void releaseNormalKey(unsigned char key, int x, int y){
-	
-	
-}
-void pressSpecialKey(int key, int x, int y){
-	
-	GLuint tex_id=0;
-	
-	std::vector<std::string> files = globVector("./*.png");
-	int counter=0;
-	
-	switch (key) {
-      case GLUT_KEY_F1:    // F1: Toggle between full-screen and windowed mode
-		 delete grammar;
-		 grammar=new Grammar("./test.grammar");
-		 grammar->addContext();
-		
-		
-			
-		for (int i=0;i<files.size();i++){
-			std::cout<<counter;
-			counter++;
-			GLuint texid=load_texture(files[i].c_str());
-			grammar->context->loadTexture(texid);
-		
-		}
-		files = globVector("./*.jpg");
-		
-		for (int i=0;i<files.size();i++){
-			std::cout<<counter;
-			counter++;
-			GLuint texid=load_texture(files[i].c_str());
-			grammar->context->loadTexture(texid);
-		
-		}
-		
-		
-		grammar->context->genPrimitives();
-		
-		 grammar->generateGeometry();
-		 grammar->context->getScene().calc_normals();
-         break;
-      case GLUT_KEY_RIGHT:    // Right: increase x speed
-          break;
-      case GLUT_KEY_LEFT:     // Left: decrease x speed
-          break;
-      case GLUT_KEY_UP:       // Up: increase y speed
-          break;
-      case GLUT_KEY_DOWN:     // Down: decrease y speed
-          break;
-      case GLUT_KEY_PAGE_UP:  // Page-Up: increase ball's radius
-         break;
-      case GLUT_KEY_PAGE_DOWN: // Page-Down: decrease ball's radius
-         break;
-   }
-}
-void releaseSpecialKey(int key, int x, int y){
-	
-}
-
-
-
-
-
-
-//----------------------------------------------------------------------------------------------------------------------------------------
-void OnMouseClick(int button, int state, int x, int y)
-{
-  if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) 
-  { 
-		button_down=true;
-  }
-  else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) 
-  { 
-		button_down=false;
-  }	
-  else   if ((button == 3) || (button == 4)) // It's a wheel event
-   {
-       // Each wheel event reports like a button click, GLUT_DOWN then GLUT_UP
-       if (state == GLUT_UP){
-		   
-		    return;
-		} 
-       if(button==3){
-       scale_level++;
-		scale*=1.0f/1.05f;
-		}
-       else { 
-		scale*=1.05f;
-		scale_level--;
-		}
-       if(scale>1.0f){
-		scale=1.0f;
-		scale_level=0;
-		}
-   }
-}
-
-void glut_Motion(int x, int y)
-{
-
-mouse_x = x;
-mouse_y = y;
-glutPostRedisplay();
-}
-
-//==================================================================================================================================================
-
-//											 		Main program
-
-
-
-//==================================================================================================================================================
-
-
-#define iWidth 16
-#define iHeight 16
-#define iDepth 16
-
-
-static GLubyte image[iDepth][iHeight][iWidth][3];
-
-
-
-
-
-
-int main( int argc, char *argv[])
-{
-
-
-
-
-
-
-
-
-
-
-
-
-		
-		
-	
-	
-	// Initialize glut
-	glutInit(&argc, argv);
-	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH );
-	glutInitWindowPosition( 0, 0 );
-	glutInitWindowSize( SCREEN_WIDTH, SCREEN_HEIGHT );
- 
-	g_glutMainWin = glutCreateWindow( "RaceToMars" );
-
-	//glutFullScreen();  
-	glutDisplayFunc( glut_Display );
-	glutPassiveMotionFunc( glut_Motion );
-	glutMouseFunc(OnMouseClick); 
-	
-	glutKeyboardFunc(pressNormalKey);
-    glutKeyboardUpFunc(releaseNormalKey);
-    glutSpecialFunc(pressSpecialKey);
-    glutSpecialUpFunc(releaseSpecialKey);
     
     
-	glEnable( GL_BLEND );
-    //glDisable( GL_BLEND );
-    //	straight alpha
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-    //	premultiplied alpha (remember to do the same in glColor!!)
-    //glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 
-    //	do I want alpha thresholding?
-    glEnable( GL_ALPHA_TEST );
-    glAlphaFunc( GL_GREATER, 0.5f );
-    glPointSize(4);
     
-    // LoadGLTextures(); 
-	
+   
 
-srand(time(NULL));
+	srand(time(NULL));
     std::cout << std::fixed << std::showpoint;
 	std::cout.precision(2);
     grammar=new Grammar("./test.grammar");
@@ -762,90 +223,821 @@ srand(time(NULL));
 		grammar->addContext();
 	
 	
+	std::cout<<"Read files..."<<std::endl;
+	
+	
 	std::vector<std::string> files = globVector("./*.png");
+	
+	std::cout<<"files: "<<files.size()<<std::endl;
+
+	
+	
+	
+	int texid;
+	
 	int counter=0;
     for (int i=0;i<files.size();i++){
 		std::cout<<counter;
 		counter++;
-		GLuint texid=load_texture(files[i].c_str());
-		grammar->context->loadTexture(texid);
+		texid=generateTexture(files[i].c_str());
+		texture_list.push_back(texid);
 	
 	}
-	files = globVector("./*.jpg");
+	/*std::vector<std::string> files2 = globVector("./*.jpg");
 	
-    for (int i=0;i<files.size();i++){
+	
+	std::cout<<"files: "<<files2.size()<<std::endl;
+	
+	
+    for (int i=0;i<files2.size();i++){
 		std::cout<<counter;
 		counter++;
-		GLuint texid=load_texture(files[i].c_str());
-		grammar->context->loadTexture(texid);
+		GLuint texid=generateTexture(files2[i].c_str());
+		texture_list.push_back(texid);
 	
-	}
-
+	}*/
+	
+		for(int i=0;i<texture_list.size();i++){
+					grammar->context->loadTexture(texture_list[i]);
+			
+		}
 		
-		
-		
+	//back_texture=load_texture("paper.png");	
+		std::cout<<"generate primitives"<<std::endl;
 		grammar->context->genPrimitives();
 		
 		grammar->generateGeometry();
 		std::cout<<"Finished generating geometry..."<<std::endl;
 
-grammar->context->getScene().calc_normals();
-
-    
-	/* load an image file directly as a new OpenGL texture */
-/*
-	tex_2d=load_texture("earth.png");
-	tex_moon=load_texture("moon.png");
-
-	textile[0]=load_texture("sky-patch-1.png");
-	textile[1]=load_texture("sky-patch-2.png");
-	textile[2]=load_texture("sky-patch-3.png");
-	textile[3]=	load_texture("sky-patch-4.png");
-	textile[4]=load_texture("sky-patch-5.png");
-
-
-	number_tile[0]=load_texture("n0.png");
-	number_tile[1]=load_texture("n1.png");
-	number_tile[2]=load_texture("n2.png");
-	number_tile[3]=load_texture("n3.png");
-	number_tile[4]=load_texture("n4.png");
-	number_tile[5]=load_texture("n5.png");
-	number_tile[6]=load_texture("n6.png");
-	number_tile[7]=load_texture("n7.png");
-	number_tile[8]=load_texture("n8.png");
-	number_tile[9]=load_texture("n9.png");
-*/
-	 /* Enable a single OpenGL light. */
-	GLfloat light_ambient[] =
-	  {0.1, 0.1, 0.1 ,0.1};
-	  GLfloat light_diffuse[] =
-	  {0.8, 0.8, 0.8, 0.8};
-	  GLfloat light_specular[] =
-	  {1.0, 1.0, 1.0, 0.9};
-
-
-	  glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-	  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-	  glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-	  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
-	  glEnable(GL_LIGHT0);
-	  glDepthFunc(GL_LESS);
-	  glEnable(GL_DEPTH_TEST);
-	 glColorMaterial(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE);
-	glEnable(GL_COLOR_MATERIAL);
-	  glLightfv(GL_LIGHT1, GL_DIFFUSE, light_diffuse);
-	  glLightfv(GL_LIGHT1, GL_POSITION, light_position);
-	  glEnable(GL_LIGHT1);
-	  glEnable(GL_LIGHTING);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		// Call glut main loop  
-		glutMainLoop();
+//grammar->context->getScene().calc_normals();
 
 
 
-	return 1;
+
+  }
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+using glm::mat4;
+using glm::vec3;
+using glm::lookAt;
+using glm::perspective;
+using glm::rotate;
+using glm::translate;
+using glm::scale;
+
+const GLchar  *VERTEX_SOURCE =
+"#version 330\n"
+"in vec3 position;\n"
+"in vec3 normal;\n"
+"in vec2 texture;\n"
+"out vec3 fN;\n"
+"out vec3 fV;\n"
+"out vec3 fL;\n"
+"out vec2 tex_coord;\n"
+"uniform mat4 projection;\n"
+"uniform mat4 view;\n"
+"uniform mat4 model;\n"
+"uniform vec3 lightposition;\n"
+"uniform vec3 pos;\n"
+"void main(){\n"
+"    tex_coord = texture ;\n"
+"    fN = (model*view*vec4(normal,1.0)).xyz ;\n"
+"    fV = - (model*view*vec4(position+pos, 1.0)).xyz;\n"
+"    fL = lightposition.xyz - (model*view*vec4(position+pos, 1.0)).xyz ;\n"
+"    gl_Position = projection * view *(   (model * vec4(position, 1.0)) + vec4(pos,1.0) );\n"
+"}\n";
+
+
+
+
+
+
+const GLchar *FRAGMENT_SOURCE2 =
+"#version 330\n"
+"in vec3 fN ;\n"
+"in vec3 fL ;\n"
+"in vec3 fV ;\n"
+"in vec2 tex_coord;\n"
+"uniform vec4 ambientproduct, diffuseproduct, specularproduct ;\n"
+"uniform mat4 model;\n"
+"uniform mat4 view;\n"
+"uniform vec3 lightposition ;\n"
+"uniform float shinyness ;\n"
+"uniform sampler2D texture1;\n"
+"void main(){vec3 N = normalize(fN) ;\n"
+"vec3 V = normalize(fV) ;\n"
+"vec3 L = normalize(fL) ;\n"
+"vec3 H = normalize( L + V ) ;\n"
+"vec4 ambient = ambientproduct ;\n"
+"float Kd = max(dot(L, N), 0.0) ;\n"
+"vec4 diffuse = Kd*diffuseproduct ;\n"
+"float Ks = pow(max(dot(N, H), 0.0), shinyness) ;\n"
+"vec4 specular = Ks*specularproduct ;\n"
+"if( dot(L, N) < 0.0 )specular = vec4(0.0, 0.0, 0.0, 1.0) ;\n"
+"gl_FragColor = texture(texture1, tex_coord)*(ambient + diffuse + specular) ;\n"
+"gl_FragColor.a = 1.0;}\n"; 
+
+
+/* the GtkGLArea widget */
+
+
+/* The object we are drawing */
+static const GLfloat vertex_data[] = {
+  
+  //Y
+  
+  1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 1.0,-1.0,
+    1.0, -1.0, 1.0, 0.0, -1.0, 0.0,  1.0, 1.0,
+  -1.0, -1.0, 1.0, 0.0, -1.0, 0.0,-1.0, 1.0,
+  
+  
+    -1.0, -1.0, 1.0, 0.0, -1.0, 0.0,-1.0, 1.0, 
+  -1.0, -1.0,-1.0, 0.0, -1.0, 0.0,-1.0,-1.0,
+  1.0, -1.0, -1.0, 0.0, -1.0, 0.0, 1.0,-1.0,
+  
+
+  -1.0, 1.0, 1.0, 0.0, 1.0, 0.0, -1.0,1.0,
+   1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0,1.0,
+   1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 1.0,-1.0,
+   
+1.0, 1.0, -1.0, 0.0, 1.0, 0.0, 1.0,-1.0,
+  -1.0, 1.0,-1.0, 0.0, 1.0, 0.0, -1.0,-1.0,
+-1.0, 1.0, 1.0, 0.0, 1.0, 0.0, -1.0,1.0,  
+
+
+
+
+
+ //X 
+  -1.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0,-1.0,
+  -1.0, -1.0,-1.0, -1.0, 0.0, 0.0, -1.0,-1.0,
+  -1.0, -1.0, 1.0, -1.0, 0.0, 0.0, -1.0,1.0,//cw
+  
+  
+-1.0, -1.0, 1.0, -1.0, 0.0, 0.0, -1.0,1.0,
+  -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0,1.0,
+-1.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0,-1.0,//cw
+  
+  1.0, -1.0, 1.0,1.0, 0.0, 0.0, -1.0,1.0,
+  1.0, -1.0,-1.0,1.0, 0.0, 0.0, -1.0,-1.0,
+  1.0, 1.0, -1.0,1.0, 0.0, 0.0,  1.0,-1.0,//ccw
+  
+      
+  1.0, 1.0,-1.0 ,1.0, 0.0, 0.0, 1.0,-1.0,
+  1.0,  1.0, 1.0 ,1.0, 0.0, 0.0, 1.0,1.0,//ccw
+ 1.0, -1.0, 1.0 ,1.0, 0.0, 0.0,-1.0,1.0,
+
+
+//Z
+  
+  
+  
+  -1.0, 1.0, 1.0, 0.0, 0.0, 1.0, -1.0,1.0,
+  -1.0, -1.0,1.0, 0.0, 0.0, 1.0, -1.0,-1.0,
+  1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0,-1.0,
+
+  
+  
+  1.0, -1.0, 1.0, 0.0, 0.0, 1.0, 1.0,-1.0,
+  1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,1.0,
+  -1.0, 1.0, 1.0, 0.0, 0.0, 1.0, -1.0,1.0,
+  
+  
+  
+  -1.0, 1.0, -1.0, 0.0, 0.0, -1.0, -1.0, 1.0,
+  1.0,  1.0, -1.0, 0.0, 0.0, -1.0,  1.0, 1.0,
+  1.0, -1.0, -1.0, 0.0, 0.0, -1.0,  1.0,-1.0,
+  
+  
+  1.0, -1.0, -1.0, 0.0, 0.0, -1.0,   1.0,-1.0,
+  -1.0, -1.0, -1.0, 0.0, 0.0, -1.0, -1.0,-1.0,
+  -1.0, 1.0, -1.0, 0.0, 0.0, -1.0,  -1.0,1.0
+};
+
+long current_frame = 0.0;
+long delta_time = 0.0;
+GDateTime *last_frame;
+int dt = 0;
+
+static GLuint position_buffer;
+static GLuint program;
+static GLuint vao;
+
+mat4 model = mat4(1.0);
+
+
+/* Create and compile a shader */
+static GLuint
+create_shader (int  type)
+{
+  GLuint shader;
+  int status;
+  shader = glCreateShader (type);
+  if (type== GL_FRAGMENT_SHADER){
+    glShaderSource (shader, 1, &FRAGMENT_SOURCE2, NULL);
+  }
+  if (type== GL_VERTEX_SHADER){
+	  std::cout<<VERTEX_SOURCE<<std::endl;
+    glShaderSource (shader, 1, &VERTEX_SOURCE, NULL);
+  }
+  glCompileShader (shader);
+
+  glGetShaderiv (shader, GL_COMPILE_STATUS, &status);
+  if (status == GL_FALSE)
+  {
+    int log_len;
+    char *buffer;
+    glGetShaderiv (shader, GL_INFO_LOG_LENGTH, &log_len);
+    buffer = (char*)g_malloc (log_len + 1);
+    glGetShaderInfoLog (shader, log_len, NULL, buffer);
+    g_warning ("Compile failure in %s shader:\n%s",
+               type == GL_VERTEX_SHADER ? "vertex" : "fragment",
+               buffer);
+    g_free (buffer);
+    glDeleteShader (shader);
+    return 0;
+  }
+
+  return shader;
 }
+
+static void
+realize (GtkWidget *widget)
+{
+  //GdkGLContext *context;
+  gtk_gl_area_make_current (GTK_GL_AREA (widget));
+  if (gtk_gl_area_get_error (GTK_GL_AREA (widget)) != NULL)
+    return;
+  //context = gtk_gl_area_get_context (GTK_GL_AREA (widget));
+   gtk_gl_area_attach_buffers(GTK_GL_AREA (widget));
+  gtk_gl_area_set_auto_render (GTK_GL_AREA (widget),TRUE);
+  setup();
+     
+      std::string text="";
+  for(int i=0;i<grammar->lines.size();i++)text+=grammar->lines[i]+"\n";
+  
+
+  gtk_text_buffer_set_text (mybuffer,text.c_str(),text.length());
+     
+    float mydata[36*8];
+    for(int i=0;i<36*8;i++){
+		mydata[i]=vertex_data[i]; 
+	}
+	
+	
+	for(int i=0;i<36;i++){
+		for(int j=0;j<8;j++){
+			if(j==0 || j==2)mydata[i*8+j]*=0.5f;
+			if(j==1){
+				if(mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
+			}
+		}
+	}
+   
+   /* We only use one VAO, so we always keep it bound */
+  glGenVertexArrays (1, &vao);
+  glBindVertexArray (vao);
+
+  /* This is the buffer that holds the vertices */
+  glGenBuffers (1, &position_buffer);
+  glBindBuffer (GL_ARRAY_BUFFER, position_buffer);
+  glBufferData(GL_ARRAY_BUFFER,sizeof(float)*36*8,mydata,GL_STATIC_DRAW);
+  glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray (0);
+  glVertexAttribPointer (1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+  glEnableVertexAttribArray (1);
+   // texture coord attribute
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
+  glBindBuffer (GL_ARRAY_BUFFER, 0);
+
+  GLuint vertex, fragment;
+  int status;
+  vertex = create_shader (GL_VERTEX_SHADER);
+
+  if (vertex == 0)
+    {
+      return;
+    }
+
+  fragment = create_shader (GL_FRAGMENT_SHADER);
+
+  if (fragment == 0)
+    {
+      glDeleteShader (vertex);
+      return;
+    }
+
+  program = glCreateProgram ();
+  glAttachShader (program, vertex);
+  glAttachShader (program, fragment);
+
+  glLinkProgram (program);
+
+  glGetProgramiv (program, GL_LINK_STATUS, &status);
+  if (status == GL_FALSE)
+  {
+    int log_len;
+    char *buffer;
+
+    glGetProgramiv (program, GL_INFO_LOG_LENGTH, &log_len);
+
+    buffer = (char*)g_malloc (log_len + 1);
+    glGetProgramInfoLog (program, log_len, NULL, buffer);
+
+    g_warning ("Linking failure:\n%s", buffer);
+
+    g_free (buffer);
+
+    glDeleteProgram (program);
+    program = 0;
+
+    glDeleteShader (vertex);
+    glDeleteShader (fragment);
+
+    return;
+  }
+
+  glDetachShader (program, vertex);
+  glDetachShader (program, fragment);
+
+
+  glEnable(GL_DEPTH_TEST);
+
+glDepthFunc(GL_LESS);  
+  
+
+  
+  last_frame = g_date_time_new_now_local();  
+current_frame = g_date_time_get_microsecond(last_frame);
+  
+}
+/* We should tear down the state when unrealizing */
+static void
+unrealize (GtkWidget *widget)
+{
+  gtk_gl_area_make_current (GTK_GL_AREA (widget));
+
+  if (gtk_gl_area_get_error (GTK_GL_AREA (widget)) != NULL)
+    return;
+
+  glDeleteBuffers (1, &position_buffer);
+  glDeleteProgram (program);
+}
+
+int GLAREA_WIDTH;
+int GLAREA_HEIGHT;
+
+
+void
+ resize_glarea (GtkGLArea *area,
+               int        width,
+               int        height,
+               gpointer   user_data){
+				   
+				   GLAREA_WIDTH=width;
+				GLAREA_HEIGHT=height;
+				   
+				   
+			   }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//                      CUBE
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+float angle_view=0.0f;
+float scale_global=0.3;
+void draw_box(float angle_cube,vec3 scale_vec,vec3 position_vec,int tex_index)
+{
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture_list[tex_index]);
+  /* Use our shaders */
+  glUseProgram (program);
+  glUniform1i(glGetUniformLocation(program, "texture1"), 0);
+ // angle_cube+=(float)delta_time/1000;
+
+  //if(angle_cube>360.0)angle_cube=0.0f;
+  model = glm::mat4(1.0);
+  model = rotate(model, angle_cube, vec3(0,1,0));
+  //model = translate(model,position_vec);
+  scale_vec=vec3(scale_vec.x*scale_global/0.3,scale_vec.y*scale_global/0.3,scale_vec.z*scale_global/0.3);
+  model = scale(model,scale_vec);
+  
+  
+  glm::mat4 model2 = glm::mat4(1.0);
+  glm::vec4 pos2=glm::vec4(position_vec[0],position_vec[1],position_vec[2],1.0);
+  
+  position_vec=vec3(position_vec.x*scale_global/0.3,position_vec.y*scale_global/0.3,position_vec.z*scale_global/0.3);
+  vec3 pos(position_vec);
+  
+  //model2 = rotate(model2, angle_view, vec3(0,1,0));
+  //pos2=model2*pos2;
+  //pos=vec3(pos2.x,pos2.y,pos2.z);
+  
+  
+  glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, &model[0][0]);
+  
+  
+ 
+  
+  vec3 position = vec3(5.0*cos(angle_view*M_PI/180.0),0,5.0*sin(angle_view*M_PI/180.0));
+  
+  vec3 up = vec3(0,-1,0);
+  mat4 view = lookAt(position, vec3(0.0,0.0,0.0), up);
+  glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &view[0][0]);
+  
+  mat4 projection = perspective(43.0, double(GLAREA_WIDTH)/double(GLAREA_HEIGHT), 0.01, 100.0);
+  glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &projection[0][0]);
+  
+  vec3 lightposition=vec3(1.1,5.7,-1.3);
+  glUniform3fv(glGetUniformLocation(program,"lightposition"),1,&lightposition[0]);
+  
+  //pos=position_vec;
+  glUniform3fv(glGetUniformLocation(program,"pos"),1,&pos[0]);
+  
+  
+  glm::vec4 ambientproduct=glm::vec4(0.7,0.7,0.7,1.0);
+  glUniform4fv(glGetUniformLocation(program,"ambientproduct"),1,&ambientproduct[0]);
+  
+  glm::vec4 diffuseproduct=glm::vec4(0.5,0.5,0.5,1.0);
+  glUniform4fv(glGetUniformLocation(program,"diffuseproduct"),1,&diffuseproduct[0]);
+  
+  glm::vec4 specularproduct=glm::vec4(0.3,0.3,0.3,1.0);
+  glUniform4fv(glGetUniformLocation(program,"specularproduct"),1,&specularproduct[0]);
+  float shinyness=128.0f;
+  glUniform1f(glGetUniformLocation(program,"shinyness"),shinyness);
+  
+  
+  glBindVertexArray(vao);
+  /* Use the vertices in our buffer */
+
+  /* Draw the three vertices as a triangle */
+  glDrawArrays (GL_TRIANGLES, 0, 36*grammar->context->primitives.size());
+
+  /* We finished using the buffers and program */
+  glBindVertexArray(0);
+  glDisableVertexAttribArray (0);
+  glBindBuffer (GL_ARRAY_BUFFER, 0);
+  glUseProgram (0);
+}
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+//              RENDER
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+gboolean
+render (GtkGLArea    *area,
+        GdkGLContext *context)
+{
+gdk_gl_context_make_current (context);
+GDateTime *date_time;
+
+
+
+  date_time = g_date_time_new_now_local();  
+  current_frame = g_date_time_get_microsecond(date_time);
+  delta_time = g_date_time_difference(date_time, last_frame) / 1000;
+  last_frame = date_time;
+
+  if (gtk_gl_area_get_error (area) != NULL)
+    return FALSE;
+ angle_view+=(float)delta_time/1000.0;
+  if(angle_view>360.0)angle_view=0.0;
+  
+  
+  /* Clear the viewport */
+  glClearColor (1.0, 1.0, 1.0, 1.0);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  
+  /* Draw our object */
+  //draw_box (angle_view,vec3(0.5,1.0,0.5),vec3(0.0,0.0,0.0),0);
+  //draw_box (delta_time,vec3(1.0,0.1,1.0),vec3(0.0,0.0,0.6),1);
+  
+  grammar->context->draw();
+  
+  
+//display();
+//glFlush ();
+  gtk_gl_area_queue_render (area);
+return TRUE;
+}
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+//             MAIN
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+std::vector<std::string> breakup_into_lines(std::string input,std::string delimiter){
+		std::vector<std::string> output;
+	
+		int pos=-1;
+		
+		while( (pos = input.find(delimiter))!=-1){
+	
+			std::string str=input.substr(0, pos);
+			
+			input.erase(0, pos + delimiter.length());
+		
+		    output.push_back(str);
+		}
+		output.push_back(input);
+		
+		
+		
+		return output;
+}
+
+  
+void activate(GtkButton *item) {
+
+ 
+ 
+ 
+  
+	GtkTextIter start, end;
+		gtk_text_buffer_get_start_iter(mybuffer, &start);
+	gtk_text_buffer_get_end_iter(mybuffer, &end);
+	 grammar->lines=breakup_into_lines((std::string)gtk_text_buffer_get_text(mybuffer, &start, &end, FALSE),"\n");
+ 
+ 
+      grammar->Reread();    
+    
+    
+		grammar->addContext();
+
+ 
+	
+	
+	
+		for(int i=0;i<texture_list.size();i++){
+					grammar->context->loadTexture(texture_list[i]);
+			
+		}
+		
+	//back_texture=load_texture("paper.png");	
+		std::cout<<"generate primitives"<<std::endl;
+		grammar->context->genPrimitives();
+		
+		grammar->generateGeometry();
+		std::cout<<"Finished generating geometry..."<<std::endl;
+
+}
+
+  GtkFileChooserNative *native;
+   GtkFileChooser *chooser;
+   
+
+
+void save_to_file(char *filename){
+   std::ofstream fout(filename);
+    if (!fout.is_open()) {
+        std::cerr << "E: Could not open file for saving" << filename << std::endl;
+        return;
+    }
+    
+    for(int i=0;i<grammar->lines.size();i++){
+		fout<<grammar->lines[i]<<std::endl;
+	}	
+fout.close();
+}
+
+void scalesliderupdate(GtkRange *range){
+	
+	
+	scale_global=  gtk_range_get_value (range);
+	
+}
+
+void activate_saveas(GtkButton *item) {
+	
+gint res = gtk_native_dialog_run (GTK_NATIVE_DIALOG (native));
+if (res == GTK_RESPONSE_ACCEPT)
+  {
+    char *filename;
+
+    filename = gtk_file_chooser_get_filename (chooser);
+    save_to_file (filename);
+    g_free (filename);
+  }
+
+g_object_unref (native);
+
+}
+
+
+
+gboolean
+keypressed_textview (GtkWidget *widget,
+               GdkEvent  *event,
+               gpointer   user_data){
+				   gtk_text_view_reset_cursor_blink((GtkTextView *)view);
+				   std::cout<<"*";
+				   return TRUE;
+			   }
+			   
+			   
+			   
+			   
+void activate_app(GtkApplication *app){
+		GtkWidget *window, *box,*box2,*box3;
+	
+	uint64_t timeSeed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    std::seed_seq ss{uint32_t(timeSeed & 0xffffffff), uint32_t(timeSeed>>32)};
+    rng.seed(ss);
+    
+    
+   /* Create new top level window. */
+  window = gtk_application_window_new (app);//gtk_window_new( GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_default_size (GTK_WINDOW(window),SCREEN_WIDTH,SCREEN_HEIGHT);
+  gtk_window_set_title(GTK_WINDOW(window), "ProGen3d 0.3 Beta Proce3dural-Generator");
+  gtk_container_set_border_width(GTK_CONTAINER(window), 10);
+  box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
+  box2 = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
+  box3=gtk_box_new(GTK_ORIENTATION_VERTICAL, FALSE);
+  
+  
+  g_object_set (box, "margin", 12, NULL);
+  gtk_box_set_spacing (GTK_BOX (box), 6);
+  g_object_set (box2, "margin", 12, NULL);
+  gtk_box_set_spacing (GTK_BOX (box2), 6);
+  
+  
+  gtk_container_add (GTK_CONTAINER (window), box2);
+  
+  
+  gl_area = gtk_gl_area_new ();
+  
+  view = gtk_text_view_new();
+  gtk_text_view_set_wrap_mode((GtkTextView *)view,GTK_WRAP_WORD);
+    //scrollwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_widget_set_size_request(view, 950, 1150);
+    gtk_box_pack_start(GTK_BOX(box), view, TRUE, TRUE, 0);
+gtk_widget_set_double_buffered(gl_area, FALSE);
+
+//gtk_container_add (GTK_CONTAINER (scrollwin), view);
+
+  gtk_box_pack_start (GTK_BOX(box2), box3,1,1, 0);
+  gtk_box_pack_start (GTK_BOX(box2), box,1,1, 0);
+  
+  
+   GtkActionBar *actionbar=(GtkActionBar *)gtk_action_bar_new ();
+   GtkWidget *runbutton=gtk_button_new_with_label("Run");
+  GtkWidget *savebutton=gtk_button_new_with_label("SaveAs");
+  GtkWidget *scale_slider=gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL,0.3,3.0,0.05);
+   gtk_widget_set_hexpand (scale_slider, TRUE);
+  gtk_action_bar_pack_start (actionbar,runbutton);
+  gtk_action_bar_pack_start (actionbar,savebutton);
+  gtk_action_bar_pack_start (actionbar,scale_slider);
+  
+  gtk_widget_set_size_request((GtkWidget *)actionbar, 650,50);
+    gtk_widget_set_size_request((GtkWidget *)gl_area,650, 1100);
+  gtk_widget_set_size_request(runbutton,10, 30);
+  
+  gtk_box_pack_start (GTK_BOX(box3), (GtkWidget *)actionbar,1,1, 0);
+  gtk_box_pack_start (GTK_BOX(box3), gl_area,1,1, 0);
+  
+  
+  
+  gtk_widget_show((GtkWidget *)actionbar);
+  gtk_widget_show(runbutton);
+  
+  
+  
+   gtk_text_view_set_editable((GtkTextView *)view,TRUE);
+    //gtk_text_view_set_overwrite((GtkTextView *)view,TRUE);
+
+ 
+   GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+   
+
+   native = gtk_file_chooser_native_new ("Save File",
+                                      GTK_WINDOW(window),
+                                      action,
+                                      "_Save",
+                                      "_Cancel");
+   chooser = GTK_FILE_CHOOSER (native);
+
+   gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
+
+  
+    
+    mybuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+    
+    
+    g_signal_connect (runbutton ,"clicked", G_CALLBACK (activate), NULL);
+    g_signal_connect (savebutton ,"clicked", G_CALLBACK (activate_saveas), NULL); 
+    g_signal_connect (scale_slider ,"value-changed", G_CALLBACK (scalesliderupdate), NULL); 
+    
+    
+  
+  /* We need to initialize and free GL resources, so we use
+  * the realize and unrealize signals on the widget
+  */
+  gtk_gl_area_set_has_depth_buffer(GTK_GL_AREA (gl_area), TRUE);
+  g_signal_connect (gl_area, "realize", G_CALLBACK (realize), NULL);
+  g_signal_connect (gl_area, "unrealize", G_CALLBACK (unrealize), NULL);
+  g_signal_connect (gl_area, "resize", G_CALLBACK (resize_glarea), NULL);
+
+  /* The main "draw" call for GtkGLArea */
+  g_signal_connect (gl_area, "render", G_CALLBACK (render), NULL);
+  /* Quit form main if got delete event */
+  g_signal_connect(G_OBJECT(window), "delete-event",
+                 G_CALLBACK(gtk_main_quit), NULL);
+                 
+                 
+  g_signal_connect(view,"key-press-event",G_CALLBACK(keypressed_textview), NULL);
+                 
+  gtk_widget_show_all(GTK_WIDGET(window));
+ 
+   
+   
+    gtk_window_present (GTK_WINDOW (window));
+   
+   g_object_unref (native);
+}
+   
+int main( int argc, char* argv[] ){
+
+GtkApplication *app;
+
+
+
+	
+	 app= gtk_application_new ("au.org.progen3d", G_APPLICATION_FLAGS_NONE);
+	
+	
+       g_signal_connect (app ,"activate", G_CALLBACK (activate_app), NULL);
+   
+  
+  
+     int status = g_application_run (G_APPLICATION (app), argc, argv);
+  g_object_unref (app);
+
+  return status;
+  
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

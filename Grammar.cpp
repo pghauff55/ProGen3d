@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <stack>
 #include <vector>
+#include <random>
+#include <chrono>
 
 #include "PLYWriter.h"
 #include "Context.h"
@@ -16,7 +18,7 @@
 #include "LBAssembler.h"
 
 
-
+extern std::mt19937_64 rng;
 
 
 bool checkAlpha(std::string str){
@@ -32,8 +34,23 @@ bool isnumber(const std::string& s)
     return !s.empty() && it == s.end();
 }
 
-
-
+Variable::Variable(std::string name,float min,float max,bool i){
+		this->var_name=name;
+		this->min=min;
+		this->max=max;
+		std::uniform_real_distribution<double> unif(0, 1);
+		if(i)
+			this->value=floorf(unif(rng)*(max-min)+min);
+		else
+			this->value=unif(rng)*(max-min)+min;
+		this->integer=i;
+	}
+float Variable::getRandom(){
+	std::uniform_real_distribution<double> unif(0, 1);
+		if(integer)
+		return floorf(unif(rng)*(max-min)+min);
+		else return unif(rng)*(max-min)+min;
+	}
 
     std::vector<Variable *> variable_list;
     
@@ -82,12 +99,12 @@ void removeVariable(std::string var_name){
 
 
     
-void addVariable(std::string var_name,float min,float max){
+void addVariable(std::string var_name,float min,float max,bool integer){
 	
 	
 	int index=findVariableForward(var_name);
 	if(index==-1){
-		Variable *var=new Variable(var_name,min,max);
+		Variable *var=new Variable(var_name,min,max,integer);
 		var->value=var->getRandom();
 		variable_list.push_back(var);
 	}
@@ -202,7 +219,7 @@ void Token::performAction(Context *context){
 	
 	if(token_name=="R"){
 		
-		addVariable(var_name,arguments[0],arguments[1]);
+		addVariable(var_name,arguments[0],arguments[1],integer);
 		
 	}
 	else if(token_name=="S" || token_name=="Sr"){
@@ -289,9 +306,9 @@ void Token::performAction(Context *context){
 			
 	}
 	else if(token_name=="I"){
-	    glm::mat4 transform = context->getCurrentScope()->getTransform();
-		Mesh instance = Mesh::getInstance(instance_type);
-		instance.apply(transform);
+	    //glm::mat4 transform = context->getCurrentScope()->getTransform();
+		//Mesh instance = Mesh::getInstance(instance_type);
+		//instance.apply(transform);
 		int texindex=0;
 		
 		if(var_name!=""){
@@ -299,10 +316,11 @@ void Token::performAction(Context *context){
 			//std::cout<<"MathS2: "<<texindex<<" "<<std::endl;
 			}
 		int arg=0;
+		float val=0.125f;
 		if(arguments.size()>0)arg=(int)arguments[0];
-		
-		context->addPrimitive(instance_type,context->getCurrentScope(),texindex,arg);
-		context->getScene().add(instance);
+		if(arguments.size()>1)val=arguments[1];
+		context->addPrimitive(instance_type,context->getCurrentScope(),texindex,arg,val);
+		//context->getScene().add(instance);
 	}
 	else if(token_name=="["){
 		 context->pushScope();
@@ -389,8 +407,18 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 						
 					}
 				}
-				else if(token_str=="R"){
+				else if(token_str=="R" || token_str=="R*"){
+					
+					if(token_str=="R*"){
+					
+					token=new Token("R");
+					token->integer=true;
+					
+					}
+					else {
 					token=new Token(token_str);
+					}
+					
 					lin>>token_str;
 				
 					token->var_name=token_str;
@@ -417,7 +445,7 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 					
 					
 		
-					addVariable(token->var_name,token->arguments[0],token->arguments[1]);
+					addVariable(token->var_name,token->arguments[0],token->arguments[1],token->integer);
 					
 					rule->addToken(token,index_k);
 					}
@@ -460,7 +488,13 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 							     lin>>token_str;
 						}
 						
-						
+						if(token_str!=")"){
+							std::cout<<"token_str: "<<token_str<<" ";
+							//token->var_name=token_str;
+							     value=atof(token_str.c_str());
+							     token->addArgument(value);
+							     lin>>token_str;
+						}	
 								
 						
 						if(token_str==")"){
@@ -674,6 +708,10 @@ std::string Grammar::ruleAlternate(Rule *rule,std::string line){
 		return "";
 	
 }
+
+
+
+
 Grammar::Grammar(std::string filePath)
 {
 
@@ -685,7 +723,7 @@ Grammar::Grammar(std::string filePath)
 
     std::string line;
     while(std::getline(fin, line) ) {
-
+        lines.push_back(line);
         if(line!="" && line[0]!='#'){
 			
 			std::vector<std::string> rule_sections;
@@ -731,6 +769,70 @@ Grammar::Grammar(std::string filePath)
 }
 
 
+void Grammar::Reread()
+{
+   
+   
+   for(int i=0;i<tokens_new.size();i++){
+   delete tokens_new[i];
+}
+for(int i=0;i<rule_list.size();i++){
+   delete rule_list[i];
+   
+}
+
+tokens_new.clear();
+rule_list.clear();
+    
+    std::string line;
+    for(int i=0;i<lines.size();i++){
+        line=lines[i];
+        if(line!="" && line[0]!='#'){
+			
+			std::vector<std::string> rule_sections;
+
+			std::string delimiter = "->";
+			
+			rule_sections=breakup(line,delimiter);
+
+			
+
+
+			
+			
+			std::istringstream lin(rule_sections[0]+" ->");
+			std::string rulename;
+			lin >> rulename;
+			//std::cout<<"Rule name:"<<rulename<<" "<<line<<std::endl;
+			Rule *rule=new Rule(rulename,1);
+			
+			line=ruleBody(rule,lin,rule_sections[1]);
+			
+			if(rule_sections.size()>2)ruleAlternate(rule,rule_sections[2]);
+			
+			
+		}
+		
+	}
+	
+	
+	
+
+		
+		
+		tokens_new=Recurse(rule_list[0]);
+		
+	
+	std::cout<<"Finshed Re-reading Grammar file..."<<std::endl;
+		
+	//exit(1);
+	
+	
+	
+}
+
+
+
 
 
 std::vector<Token *> Grammar::Recurse(Rule *rule){
@@ -763,8 +865,8 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 		
 		float roll=1.1f;
 		if(rule->alternate!=NULL){
-			
-			roll=rand()/(float)RAND_MAX;
+			std::uniform_real_distribution<double> unif(0, 1);
+			roll=unif(rng);//rand()/(float)RAND_MAX;
 		
 		//std::cout<<"Roll<<roll<<std::endl;
 		if(rule->probability>roll){
@@ -1022,6 +1124,7 @@ int Grammar::findRule(std::string rule_name){
 
 void Grammar::addContext(){
 std::cout<<"Adding Context..."<<std::endl;
+//if(context!=NULL)delete context;
     this->context=new Context();
 }
 
