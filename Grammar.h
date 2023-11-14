@@ -4,12 +4,7 @@ class Variable{
 	std::string var_name;
 	float value;
 	int instance_count=0;
-	Variable(std::string name,float min,float max){
-		this->var_name=name;
-		this->min=min;
-		this->max=max;
-		this->value=rand()/(float)RAND_MAX*(max-min)+min;
-	}
+	Variable(std::string name,float min,float max,bool i);
 	Variable(std::string name,float value){
 		this->var_name=name;
 		this->min=0;
@@ -20,11 +15,9 @@ class Variable{
 		//this->value=rand()/(float)RAND_MAX*(max-min)+min;
 		return this->value;
 	}
-	float getRandom(){
-		
-		return rand()/(float)RAND_MAX*(max-min)+min;
-	}
+	float getRandom();
 	float min,max;
+	bool integer=false;
 };
 class Token{
 	public:
@@ -103,6 +96,7 @@ class Token{
 	std::string var_names[3];
 	bool modify[3];
 	bool divideby2[3];
+	bool integer=false;
 };
 
 class Rule {
@@ -148,7 +142,7 @@ public:
     ~Grammar();
 	std::string ruleAlternate(Rule *rule,std::string line);
 	std::string ruleBody(Rule *,std::istringstream &lin,std::string line);
-    
+    void Reread();
 	int findRule(std::string rule_name);
 	std::string MathS(std::string input);
 	std::vector<Token *> Recurse(Rule *rule);
@@ -158,7 +152,8 @@ public:
 
     std::vector<Rule *> rule_list;
 	std::vector<Token *> tokens_new;
-	Context *context;
+	Context *context=NULL;
+	std::vector<std::string> lines;
 };
 
 

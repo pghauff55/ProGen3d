@@ -24,7 +24,7 @@ class Primitive{
 	Primitive(std::string type,GLuint texId_name,bool,bool,bool);
 	
 	
-	void draw(Scope *scope,int texindex,int rotate);
+	void draw(Scope *scope,int texindex,int rotate,float texscale);
 	
 	
 	std::string type;
@@ -55,9 +55,10 @@ public:
     Mesh &getScene();
     GLuint loadTexture(GLuint texid);
     void draw();
-    void addPrimitive(std::string type,Scope *scope,int texindex,int rotate);
+    GLfloat *calc(const GLfloat *);
+    void addPrimitive(std::string type,Scope *scope,int texindex,int rotate,float texscale);
     void genPrimitives();
-private:
+
     Scope *current_scope=NULL;
     std::stack<Scope *> scopes;
     Mesh scene;
@@ -71,6 +72,8 @@ private:
     std::vector<Scope *> primitive_scopes;
     std::vector<int> texindexes;
     std::vector<int> rotates;
+    std::vector<float> texscales;
+    
     
     
 };

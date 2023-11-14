@@ -17,9 +17,9 @@ public:
     glm::vec3 getPosition() const;
     glm::vec3 getSize() const;
     glm::vec3 setPosition(glm::vec3 pos);
-
-private:
-    glm::vec3 position;
+	glm::vec3 position;
     glm::vec3 size;
+private:
+   
     glm::vec3 x, y, z;
 };
