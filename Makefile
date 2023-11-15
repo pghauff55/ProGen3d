@@ -43,4 +43,8 @@ $(TARGET):$(OBJS)
 
 clean:
 	rm -f $(TARGET) *.o
+install:
+	mv ProGen3d $(DESTDIR)
+	cp texture*.png $(DESTDIR)
+	cp test.grammar $(DESTDIR)
 
