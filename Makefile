@@ -6,7 +6,7 @@ OBJS=main.o MathParser.o Evaluate.o lexer.o NFunction.o Rule.o string-switch.o G
        Context.o   Mesh.o  PLYWriter.o  Scope.o 
        
 CXX = gcc
-CXXFLAGS =  -g -O3 -I /usr/include/atkmm-1.6/ -I /usr/include/pangomm-1.4/ -I /usr/include/freetype2/ -I /usr/include/cairomm-1.0/ \
+CXXFLAGS =  -g -O3 -I /usr/include -I /usr/include/atkmm-1.6/ -I /usr/include/pangomm-1.4/ -I /usr/include/freetype2/ -I /usr/include/cairomm-1.0/ \
              -I /usr/lib/x86_64-linux-gnu/pangomm-1.4/include/  \
               -I /usr/lib/x86_64-linux-gnu/sigc++-2.0/include/ -I /usr/include/sigc++-2.0/   \
               -I /usr/include/gtk-3.0/ -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pango-1.0 -I/usr/include/harfbuzz \
