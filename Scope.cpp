@@ -1,6 +1,6 @@
 #include "Scope.h"
 
-#include "glm/ext.hpp"
+#include <glm/ext.hpp>
 
 Scope::Scope()
     : position(0.0f)
