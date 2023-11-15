@@ -36,7 +36,7 @@ LIBSA =            			   /usr/lib/x86_64-linux-gnu/libgmodule-2.0.a  \
 # Rules start here
 
 $(TARGET):$(OBJS)
-	 $(CXX) $(CXXFLAGS) -o $(TARGET)  $^   $(LIBS) $(LIBSA) /usr/lib/x86_64-linux-gnu/libharfbuzz.a $(LIBDYN)
+	 $(CXX) $(CXXFLAGS) -o $(TARGET)  $^    $(LIBDYN)
 
 .o:.cpp
 	$(CC) $(CXXFLAGS) -c $<
