@@ -1,4 +1,4 @@
-name: progen3d-snap
+name: progen3d
 version: "0.3-svn"
 summary: Grammar based 3d Procedural Generator
 description: 
@@ -6,7 +6,7 @@ description:
 confinement: strict
 base: core20
 parts:
-  progen3d-snap:
+  progen3d:
     plugin: make
     source-type: git
     source: https://github.com/pghauff55/ProGen3d.git
@@ -66,6 +66,6 @@ parts:
 
     
 apps:
-  progen3d-snap:
+  progen3d:
     command: ProGen3d
   
