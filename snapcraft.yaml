@@ -1,5 +1,5 @@
 name: progen3d-snap
-version: "0.74-svn"
+version: "0.3-svn"
 summary: Grammar based 3d Procedural Generator
 description: 
   ProGen3d is a grammar based procedural generator with textures and can export to PLY format.
@@ -19,6 +19,51 @@ parts:
       - libgl1-mesa-glx
       - libglu1-mesa-dev
       - libepoxy-dev
+      - libglm-dev
+    stage-packages:
+      - libatk-bridge2.0-0
+      - libatk1.0-0
+      - libatspi2.0-0
+      - libcairo-gobject2
+      - libcairo2
+      - libdatrie1
+      - libepoxy0
+      - libfontconfig1
+      - libfreetype6
+      - libfribidi0
+      - libgdk-pixbuf2.0-0
+      - libgl1
+      - libglvnd0
+      - libglx0
+      - libgraphite2-3
+      - libgtk-3-0
+      - libharfbuzz0b
+      - libpango-1.0-0
+      - libpangocairo-1.0-0
+      - libpangoft2-1.0-0
+      - libpixman-1-0
+      - libpng16-16
+      - libthai0
+      - libwayland-client0
+      - libwayland-cursor0
+      - libwayland-egl1
+      - libx11-6
+      - libxau6
+      - libxcb-render0
+      - libxcb-shm0
+      - libxcb1
+      - libxcomposite1
+      - libxcursor1
+      - libxdamage1
+      - libxdmcp6
+      - libxext6
+      - libxfixes3
+      - libxi6
+      - libxinerama1
+      - libxkbcommon0
+      - libxrandr2
+      - libxrender1
+
     
 apps:
   progen3d-snap:
