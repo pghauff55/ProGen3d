@@ -4,7 +4,12 @@
 ProGen3d is a grammar that uses variables and symbolic math objects for calculations.
 Based on https://github.com/santipaprika/procedural-buildings and https://github.com/mathSlib-dev/mathSlib .
 
-Uses glm vector math, SoiL.h texture loading, Imath vector math, and Glut glu opengl.
+Uses glm vector math, texture loading, glu and opengl.
+
+<a href="https://snapcraft.io/progen3d">
+  <img alt="Get it from the Snap Store" src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" />
+</a>
+
 
 ### Screenshot1
 
