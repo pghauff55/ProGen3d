@@ -5,6 +5,9 @@ description:
   ProGen3d is a grammar based procedural generator with textures and can export to PLY format.
 confinement: strict
 base: core20
+architectures:
+  - build-on: [amd64]
+    build-for: [amd64]
 parts:
   progen3d:
     plugin: make
