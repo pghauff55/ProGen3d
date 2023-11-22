@@ -148,6 +148,7 @@ public:
 	std::vector<Token *> Recurse(Rule *rule);
 	void generateGeometry();
 	void ReadTokens(Rule *rule,std::string token_str,int i);
+	void ReadTokens2(Rule *rule,std::string rule_str,int index_k);
 	void addContext();
 
     std::vector<Rule *> rule_list;

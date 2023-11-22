@@ -88,7 +88,7 @@ static int SCREEN_HEIGHT=1200;
 
 
 static GtkWidget *window;
-
+static GtkWidget *notebook,*layout;
 static GtkWidget *gl_area;
 static GtkTextBuffer *mybuffer;
 static GtkWidget *view;
@@ -321,7 +321,7 @@ const GLchar  *VERTEX_SOURCE =
 "    fN = (model*view*vec4(normal,1.0)).xyz ;\n"
 "    fV = - (model*view*vec4(position+pos, 1.0)).xyz;\n"
 "    fL = lightposition.xyz - (model*view*vec4(position+pos, 1.0)).xyz ;\n"
-"    gl_Position = projection * view *(   (model * vec4(position, 1.0)) + vec4(pos,1.0) );\n"
+"    gl_Position = projection * view *(   (model * vec4(position+pos, 1.0)) );\n"
 "}\n";
 
 
@@ -627,29 +627,30 @@ void
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 float angle_view=0.0f;
-float scale_global=0.3;
-void draw_box(float angle_cube,vec3 scale_vec,vec3 position_vec,int tex_index)
+float scale_global=0.3f;
+void draw_box(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int tex_index)
 {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture_list[tex_index]);
   /* Use our shaders */
   glUseProgram (program);
   glUniform1i(glGetUniformLocation(program, "texture1"), 0);
- // angle_cube+=(float)delta_time/1000;
-
-  //if(angle_cube>360.0)angle_cube=0.0f;
+ 
+ 
+ 
+ position_vec=vec3(position_vec.x*scale_global,position_vec.y*scale_global,position_vec.z*scale_global);
+ 
   model = glm::mat4(1.0);
   model = rotate(model, angle_cube, vec3(0,1,0));
-  //model = translate(model,position_vec);
-  scale_vec=vec3(scale_vec.x*scale_global/0.3,scale_vec.y*scale_global/0.3,scale_vec.z*scale_global/0.3);
+  model = translate(model,position_vec);
+  scale_vec=vec3(scale_vec.x*scale_global,scale_vec.y*scale_global,scale_vec.z*scale_global);
   model = scale(model,scale_vec);
   
   
-  glm::mat4 model2 = glm::mat4(1.0);
-  glm::vec4 pos2=glm::vec4(position_vec[0],position_vec[1],position_vec[2],1.0);
   
-  position_vec=vec3(position_vec.x*scale_global/0.3,position_vec.y*scale_global/0.3,position_vec.z*scale_global/0.3);
-  vec3 pos(position_vec);
+  
+  
+  //vec3 pos(0,0,0);
   
   //model2 = rotate(model2, angle_view, vec3(0,1,0));
   //pos2=model2*pos2;
@@ -849,6 +850,32 @@ void scalesliderupdate(GtkRange *range){
 	
 }
 
+GtkWidget *frames[10];
+int frame_counter=0;
+void activate_add(GtkButton *item) {
+	frames[frame_counter++]=gtk_frame_new ("frame");
+	GtkWidget *box5 = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
+	GtkWidget *label=gtk_label_new("Rulename:");
+	GtkWidget *entry1=gtk_entry_new ();
+	GtkWidget *textview1=gtk_text_view_new();
+	GtkWidget *scrollwin=gtk_scrolled_window_new (NULL,NULL);
+	gtk_widget_set_size_request(entry1,60,20);
+	gtk_widget_set_size_request(scrollwin,260,180);
+	gtk_container_add (GTK_CONTAINER (scrollwin), textview1);
+	//gtk_text_view_set_wrap_mode((GtkTextView *)textview1,GTK_WRAP_WORD);
+	gtk_layout_put ((GtkLayout *)layout,scrollwin,80,80);
+	gtk_layout_put ((GtkLayout *)layout,entry1,80,40);
+	gtk_layout_put ((GtkLayout *)layout,label,20,50);
+	gtk_layout_put ((GtkLayout *)layout,frames[frame_counter-1],20,20);
+	gtk_widget_show (scrollwin);
+	gtk_widget_show (textview1);
+	gtk_widget_show (entry1);
+	gtk_widget_show (label);
+	 gtk_widget_set_size_request (frames[frame_counter-1], 220, 175);
+	gtk_widget_show(frames[frame_counter-1]);
+	
+	gtk_widget_show (layout);
+}
 void activate_saveas(GtkButton *item) {
 	
  
@@ -948,7 +975,8 @@ GtkFileChooserNative *native;
 }			   
 			   
 void activate_app(GtkApplication *app){
-		GtkWidget *box,*box2,*box3;
+		GtkWidget *box,*box2,*box3,*box4,*box5;
+		
 	
 	uint64_t timeSeed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     std::seed_seq ss{uint32_t(timeSeed & 0xffffffff), uint32_t(timeSeed>>32)};
@@ -963,13 +991,18 @@ void activate_app(GtkApplication *app){
   box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
   box2 = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
   box3=gtk_box_new(GTK_ORIENTATION_VERTICAL, FALSE);
-  
+  box4=gtk_box_new(GTK_ORIENTATION_VERTICAL, FALSE);
+  //box5 = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
   
   g_object_set (box, "margin", 12, NULL);
   gtk_box_set_spacing (GTK_BOX (box), 6);
   g_object_set (box2, "margin", 12, NULL);
   gtk_box_set_spacing (GTK_BOX (box2), 6);
   
+ GtkActionBar *actionbar2=(GtkActionBar *)gtk_action_bar_new ();
+
+  gtk_box_pack_start (GTK_BOX(box4), (GtkWidget *)actionbar2,1,1, 0);
+
   
   gtk_container_add (GTK_CONTAINER (window), box2);
   
@@ -980,8 +1013,28 @@ void activate_app(GtkApplication *app){
   gtk_text_view_set_wrap_mode((GtkTextView *)view,GTK_WRAP_WORD);
     //scrollwin = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(view, 950, 1150);
-    gtk_box_pack_start(GTK_BOX(box), view, TRUE, TRUE, 0);
-gtk_widget_set_double_buffered(gl_area, FALSE);
+    
+notebook=gtk_notebook_new ();
+
+    gtk_box_pack_start(GTK_BOX(box),notebook, TRUE, TRUE, 0);
+    gtk_notebook_append_page ((GtkNotebook *)notebook,
+                          view,
+                          gtk_label_new ("text view"));
+    layout=gtk_layout_new (NULL,NULL);
+
+
+gtk_box_pack_start (GTK_BOX(box4), layout,1,1, 0);
+
+gtk_notebook_append_page ((GtkNotebook *)notebook,
+                          box4,
+                          gtk_label_new ("layout"));
+    
+  GtkWidget *addbutton=gtk_button_new_with_label("Add");
+ gtk_action_bar_pack_start (actionbar2,addbutton);            
+                  gtk_widget_set_size_request((GtkWidget *)actionbar2, 950,50);
+                      gtk_widget_set_size_request((GtkWidget *)layout,950, 1100);
+  gtk_widget_set_size_request(addbutton,10, 30);
+  
 
 //gtk_container_add (GTK_CONTAINER (scrollwin), view);
 
@@ -1023,7 +1076,7 @@ gtk_widget_set_double_buffered(gl_area, FALSE);
     
     mybuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
     
-    
+    g_signal_connect (addbutton ,"clicked", G_CALLBACK (activate_add), NULL);    
     g_signal_connect (runbutton ,"clicked", G_CALLBACK (activate), NULL);
     g_signal_connect (savebutton ,"clicked", G_CALLBACK (activate_saveas), NULL); 
     g_signal_connect (plybutton ,"clicked", G_CALLBACK (activateply), NULL); 

@@ -1,49 +1,74 @@
-X -> R xlen ( 4 6 ) R ylen ( 2 3 )  R WindowGapSides ( 0.2 0.3 ) R WindowGapTop ( 0.1 0.2 ) R WindowGapBottom ( 0.35 0.5 ) S ( 2.4 2.4 2.4 ) Y
-
-
-
-Y  6 xlen ylen ->  [ Floor ] [ T ( -xlen 0 ylen ) GenX ]  [ T ( -xlen 0 -ylen ) S ( 1 1 -1 ) GenX ] T ( 0 1 0 )
-
-
-
-Floor -> [ S ( 2*xlen+2 0.1 2*ylen ) I ( Cube 16 ) ] [ T ( xlen+0.5 0 -ylen ) FenceY ]
-
-
-
-GenX xlen  WindowGapSides WindowGapTop WindowGapBottom -> | ChooseBlankWallX T ( 1 0 0 ) ChooseDoorWindowX T ( 1 0 0 )
-
-
-ChooseBlankWallX ; 0.2 -> [ S ( 1 1 0.1 ) I ( CubeX 17 ) ] -> WindowDoorWindowX
-
-ChooseDoorWindowX ; 0.8 -> WindowDoorSectionX -> WindowSectionX
+X -> R edge ( 0.01 0.05 ) R z ( 0.1 0.1 ) R* xlen ( 4 6 ) R* ylen ( 2 3 )  R WindowGapSides ( 0.2 0.3 ) R WindowGapTop ( 0.1 0.2 ) R WindowGapBottom ( 0.35 0.5 )  Y
 
 
 
 
+Y 6 xlen ylen WindowGapSides  WindowGapTop  WindowGapBottom edge  z ->  T ( 0 -3 0  )  |  [ T ( -xlen/2 0  ylen/2  ) Gen  ] [ T ( xlen/2+z 0 -ylen/2  ) GenY  ] [ T ( -xlen/2 0 -ylen/2  )  S ( 1 1 -1 ) Gen  ]  [ T ( -xlen/2 0 -ylen/2  ) S ( -1 1 1 )  GenY  ] T ( 0 1 0 )
 
-WindowSectionX ->  WindowTop  WindowBottom  WindowLeftSide WindowRightSide
+Gen xlen -> choose1 T ( 1 0 0 )
+GenY ylen -> chooseY T ( 0 0 1 ) 
 
+choose1 ; 0.68 -> choose3-> choose2
+choose2 ; 0.6 -> WindowSectionX1 -> WindowSectionX
+choose3 ; 0.3 -> Wall -> [ S ( 0.5 1 1 ) WindowSectionX ] [ T ( 0.5 0 0 ) S ( 0.5 1 1 ) WindowSectionX ]
 
-WindowTop -> [ S ( 1 WindowGapBottom 0.1 ) I ( CubeX 17 ) ] [ T ( WindowGapSides WindowGapBottom 0.1 ) S ( 1-2*WindowGapSides 0.05 0.025 ) I ( CubeX 3 ) ]
-WindowBottom -> [ T ( 0 1-WindowGapTop 0 ) S ( 1 WindowGapTop 0.1 ) I ( CubeX 17 ) ] [ T ( WindowGapSides 1-WindowGapTop 0.1 ) S ( 1-2*WindowGapSides 0.05 0.025 ) I ( CubeX 3 ) ]
-WindowLeftSide -> [ T ( 0 WindowGapBottom 0 ) S ( WindowGapSides 1-WindowGapTop-WindowGapBottom 0.1 ) I ( CubeX 17 ) ] [ T ( WindowGapSides WindowGapBottom 0.1 ) S ( 0.05 1-WindowGapTop-WindowGapBottom 0.025 ) I ( CubeX 3 ) ]
-WindowRightSide -> [ T ( 1-WindowGapSides WindowGapBottom 0 ) S ( WindowGapSides 1-WindowGapTop-WindowGapBottom 0.1 ) I ( CubeX 17 ) ] [ T ( 1-WindowGapSides-0.05 WindowGapBottom 0.1 ) S ( 0.05 1-WindowGapTop-WindowGapBottom 0.025 ) I ( CubeX 3 ) ]
+chooseY ; 0.68 -> WindowSectionY -> WallY
 
-
-WindowDoorSectionX -> Top SideRight SideLeft Bottom Verandah
-
-
-Verandah -> [ T ( 0.5 0 0 ) S ( 1 0.025 1 ) I ( Cube 16 ) ] [ Fence ]
-Top -> [ S ( 1 WindowGapTop/2 0.1 ) I ( CubeX 17 ) ] [ T ( WindowGapSides 0.025 0.1 ) S ( 1-2*WindowGapSides 0.05 0.0125 ) I ( CubeX 12 ) ] 
-Bottom -> [ T ( 0 1-WindowGapTop 0 ) S ( 1 WindowGapTop 0.1 ) I ( CubeX 17 ) ] [ T ( WindowGapSides 1-WindowGapTop-0.025 0.1 ) S ( 1-2*WindowGapSides 0.05 0.0125 ) I ( CubeX 12 ) ] 
-SideLeft -> [ T ( 0 WindowGapTop/2 0 ) S ( WindowGapSides 1-WindowGapTop-WindowGapTop/2 0.1 ) I ( CubeX 17 ) ] [ T ( WindowGapSides WindowGapTop/2 0.1 ) S ( 0.05  1-WindowGapTop-WindowGapTop/2  0.0125 ) I ( CubeX 12 ) ]
-SideRight -> [ T ( 1-WindowGapSides WindowGapTop/2 0 ) S ( WindowGapSides 1-WindowGapTop-WindowGapTop/2 0.1 ) I ( CubeX 17 ) ] [ T ( 1-WindowGapSides-0.05 WindowGapTop/2 0.1 ) S ( 0.05  1-WindowGapTop-WindowGapTop/2  0.0125 ) I ( CubeX 12 ) ]
+Wall -> [ S ( 1 1 0.1 ) I ( CubeX 11 ) ] 
+WallY -> [ S ( 0.1 1 1 ) I ( CubeY 10 ) ] 
 
 
+WindowSectionX ->  WindowTop  WindowBottom  WindowLeftSide WindowRightSide WindowEdgeRightSide WindowEdgeLeftSide WindowEdgeBottom WindowEdgeTop
 
 
-Fence 6 ->   [ T ( 0.5 0.1 0.5 ) S ( 1 0.0125 0.0125 ) I ( Cube 15 ) ] [ T ( 0.5 0.4 0.5 ) S ( 1 0.0125 0.0125 ) I ( Cube 15 ) ] | [ T ( 0 0 0.5 ) S ( 0.0125 0.4 0.0125 ) I ( Cube 15 ) ] T ( 1/6 0 0 ) | [ T ( 0 0 0.5 ) S ( 0.0125 0.4 0.0125 ) I ( Cube 15 ) ] 
+WindowBottom -> [ T ( WindowGapSides 0 0 ) S ( 1-2*WindowGapSides WindowGapBottom z ) I ( CubeX 5 ) ] 
+WindowTop -> [ T ( WindowGapSides 1-WindowGapTop 0 ) S ( 1-2*WindowGapSides WindowGapTop z ) I ( CubeX 5 ) ] 
+WindowLeftSide -> [ T ( 0 0 0 ) S ( WindowGapSides 1 z ) I ( CubeX 5 ) ] 
+WindowRightSide -> [ T ( 1-WindowGapSides 0 0 ) S ( WindowGapSides 1 z ) I ( CubeX 5 ) ] 
+
+WindowEdgeLeftSide ->  [  T ( WindowGapSides-edge WindowGapBottom-edge z/2+z/5 )  S ( edge  1-WindowGapTop-WindowGapBottom+2*edge z/5  ) I ( CubeX 2 )  ] 
+WindowEdgeRightSide ->  [  T ( 1-WindowGapSides WindowGapBottom-edge z/2+z/5 )  S ( edge  1-WindowGapTop-WindowGapBottom+2*edge z/5 )  I  ( CubeX 2 )  ] 
+
+WindowEdgeBottom ->  [  T ( WindowGapSides WindowGapBottom-edge z/2+z/5 )  S (  1-WindowGapSides*2 edge z/5  ) I ( CubeX 2 )  ] 
+
+WindowEdgeTop ->  [  T ( WindowGapSides 1-WindowGapTop  z/2+z/5 )  S (  1-WindowGapSides*2 edge z/5  ) I ( CubeX 2 )  ] 
+
+
+#window door
+
+WindowSectionX1 ->  WindowTop1  WindowBottom1  WindowLeftSide1 WindowRightSide1 WindowEdgeRightSide1 WindowEdgeLeftSide1 WindowEdgeBottom1 WindowEdgeTop1 Verandah
+
+
+WindowBottom1 -> [ T ( WindowGapSides 0 0 ) S ( 1-2*WindowGapSides WindowGapBottom/3 z ) I ( CubeX 5 ) ] 
+WindowTop1 -> [ T ( WindowGapSides 1-WindowGapTop 0 ) S ( 1-2*WindowGapSides WindowGapTop z ) I ( CubeX 5 ) ] 
+WindowLeftSide1 -> [ T ( 0 0 0 ) S ( WindowGapSides 1 z ) I ( CubeX 5 ) ] 
+WindowRightSide1 -> [ T ( 1-WindowGapSides 0 0 ) S ( WindowGapSides 1 z ) I ( CubeX 5 ) ] 
+
+WindowEdgeLeftSide1 ->  [  T ( WindowGapSides-edge WindowGapBottom/3-edge z/2+z/5 )  S ( edge  1-WindowGapTop-WindowGapBottom/3+2*edge z/5  ) I ( CubeX 2 )  ] 
+WindowEdgeRightSide1 ->  [  T ( 1-WindowGapSides WindowGapBottom/3-edge z/2+z/5 )  S ( edge  1-WindowGapTop-WindowGapBottom/3+2*edge z/5 )  I  ( CubeX 2 )  ] 
+
+WindowEdgeBottom1 ->  [  T ( WindowGapSides WindowGapBottom/3-edge z/2+z/5 )  S (  1-WindowGapSides*2 edge z/5  ) I ( CubeX 2 )  ] 
+
+WindowEdgeTop1 ->  [  T ( WindowGapSides 1-WindowGapTop  z/2+z/5 )  S (  1-WindowGapSides*2 edge z/5  ) I ( CubeX 2 )  ] 
+
+Verandah -> [ T ( 0 0 0.3 ) S ( 1 0.03 0.5 ) I ( CubeX 5 ) ] [ Fence ]
+
+Fence 6 ->  [ T ( 0.5 0.3 0.5 )  S ( 1 0.03 0.03 ) I ( CubeY 1 )  ] |  [ T ( 0 0.03 0.5 ) S ( 0.07 0.3 0.01 ) I ( CubeX 1  )  ] T ( 1/6 0 0 )
 
 
 
-FenceY ylen*12 ->   [ T ( 0.5 0.1 0.5 ) S ( 0.0125 0.0125 1 ) I ( Cube 15 ) ] [ T ( 0.5 0.4 0.5 ) S ( 0.0125 0.0125 1 ) I ( Cube 15 ) ] | [ T ( 0.5 0 0 ) S ( 0.0125 0.4 0.0125 ) I ( Cube 15 ) ] T ( 0 0 1/6 ) | [ T ( 0.5 0 0 ) S ( 0.0125 0.4 0.0125 ) I ( Cube 15 ) ] 
+WindowSectionY ->  WindowTopY  WindowBottomY  WindowLeftSideY WindowRightSideY WindowEdgeRightSideY WindowEdgeLeftSideY WindowEdgeBottomY WindowEdgeTopY
+
+
+WindowBottomY -> [ T ( 0 0 WindowGapSides  ) S ( z WindowGapBottom 1-2*WindowGapSides ) I ( CubeY 5 ) ] 
+WindowTopY -> [ T ( 0 1-WindowGapTop WindowGapSides ) S (  z WindowGapTop 1-2*WindowGapSides ) I ( CubeY 5 ) ] 
+WindowLeftSideY -> [ T ( 0 0 0 ) S (  z 1 WindowGapSides ) I ( CubeY 5 ) ] 
+WindowRightSideY -> [ T ( 0 0 1-WindowGapSides ) S ( z 1 WindowGapSides ) I ( CubeY 5 ) ] 
+
+WindowEdgeLeftSideY ->  [  T (  z/2+z/5 WindowGapBottom-edge WindowGapSides-edge )  S ( z/5  1-WindowGapTop-WindowGapBottom+2*edge edge  ) I ( CubeY 2 )  ] 
+WindowEdgeRightSideY ->  [  T ( z/2+z/5 WindowGapBottom-edge 1-WindowGapSides )  S ( z/5  1-WindowGapTop-WindowGapBottom+2*edge edge )  I  ( CubeY 2 )  ] 
+
+WindowEdgeBottomY ->  [  T ( z/2+z/5 WindowGapBottom-edge WindowGapSides )  S (  z/5 edge 1-WindowGapSides*2  ) I ( CubeY 2 )  ] 
+
+WindowEdgeTopY ->  [  T ( z/2+z/5 1-WindowGapTop  WindowGapSides )  S (  z/5 edge 1-WindowGapSides*2  ) I ( CubeY 2 )  ] 
+
