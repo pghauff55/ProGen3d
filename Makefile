@@ -45,5 +45,5 @@ clean:
 	rm -f $(TARGET) *.o
 
 install: $(TARGET)
-	install -d $(DESTDIR)/bin/
+	install -m 644 $(TARGET) $(DESTDIR)
 
