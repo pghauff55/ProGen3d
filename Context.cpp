@@ -3,11 +3,11 @@
 #include <iostream>
 #include <GL/gl.h>
 #include <GL/glu.h>
+//#include <GL/glut.h>
 
 
 
-
-	extern void draw_box(float angle_cube,glm::vec3 scale_vec,glm::vec3 position_vec,glm::vec3 pos,int tex_index);
+	extern void draw_box(float angle_cube,glm::vec3 scale_vec,glm::vec3 position_vec,glm::vec3 pos,int tex_index,float texscale);
 
 Primitive::Primitive(std::string type,GLuint texId, bool x,bool y,bool z){
 this->texId=texId;
@@ -61,7 +61,7 @@ glBindTexture(GL_TEXTURE_2D,tex);
 	}
 	else if(type=="Cube" || type=="CubeX" || type=="CubeY"){
 	
-	std::cout<<"draw"<<std::endl;
+	//std::cout<<"draw"<<std::endl;
 	
 	
 	//float y_val=0.0f,x_val=0.0f,z_val=0.0f;
@@ -84,11 +84,11 @@ glBindTexture(GL_TEXTURE_2D,tex);
 	float Y=scope->position.y;
 	
 	if(type=="Cube")
-	draw_box(90.0f*float(rotate),glm::vec3(x,y,z),glm::vec3(X,Y,Z),glm::vec3(0,0,0),tex);
+	draw_box(90.0f*float(rotate),glm::vec3(x,y,z),glm::vec3(X,Y,Z),glm::vec3(0,0,0),tex,scaletex);
 	else if(type=="CubeX")
-	draw_box(90.0f*float(rotate),glm::vec3(x,y,z),glm::vec3(X,Y,Z),glm::vec3(0.5,0,0),tex);
+	draw_box(90.0f*float(rotate),glm::vec3(x,y,z),glm::vec3(X,Y,Z),glm::vec3(0.5,0,0),tex,scaletex);
 	else if(type=="CubeY")
-	draw_box(90.0f*float(rotate),glm::vec3(x,y,z),glm::vec3(X,Y,Z),glm::vec3(0,0,0.5),tex);
+	draw_box(90.0f*float(rotate),glm::vec3(x,y,z),glm::vec3(X,Y,Z),glm::vec3(0,0,0.5),tex,scaletex);
 	
 	/*
 	
@@ -202,36 +202,36 @@ void Context::addPrimitive(std::string type,Scope *scope,int texindex, int rotat
 	
 	
 	if(type=="Cube"){
-		std::cout<<"Adding Primitive "<<Cube->type<<std::endl;
+		//std::cout<<"Adding Primitive "<<Cube->type<<std::endl;
 		primitives.push_back(Cube);
 		}
 	
 	else if(type=="CubeX"){
-		std::cout<<"Adding Primitive "<<Cube->type<<std::endl;
+		//std::cout<<"Adding Primitive "<<Cube->type<<std::endl;
 		primitives.push_back(CubeX);
 		}
 	else if(type=="CubeY"){
-		std::cout<<"Adding Primitive "<<Cube->type<<std::endl;
+		//std::cout<<"Adding Primitive "<<Cube->type<<std::endl;
 		primitives.push_back(CubeY);
 		}
 	else if(type=="Cylinder"){
 		primitives.push_back(Cylinder);
-		std::cout<<"Adding Primitive "<<Cylinder->type<<std::endl;
+		//std::cout<<"Adding Primitive "<<Cylinder->type<<std::endl;
 		}
 	else if(type=="Sphere") {
 		primitives.push_back(Sphere);
-		std::cout<<"Adding Primitive "<<Sphere->type<<std::endl;
+		//std::cout<<"Adding Primitive "<<Sphere->type<<std::endl;
 		}
 	else {
-		std::cout<<"primitive not added!"<<std::endl;
+		//std::cout<<"primitive not added!"<<std::endl;
 		return;
 	}
 	
 	glm::vec3 pos=scope->getPosition();
 	glm::vec3 size=scope->getSize();
 	
-	std::cout<<pos.x<<","<<pos.y<<","<<pos.z<<std::endl;
-	std::cout<<size.x<<","<<size.y<<","<<size.z<<std::endl;
+	//std::cout<<pos.x<<","<<pos.y<<","<<pos.z<<std::endl;
+	//std::cout<<size.x<<","<<size.y<<","<<size.z<<std::endl;
 	
 	primitive_scopes.push_back(new Scope(scope));
 	texindexes.push_back(texids[texindex]);

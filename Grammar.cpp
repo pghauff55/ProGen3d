@@ -341,7 +341,7 @@ void Token::performAction(Context *context){
 			//std::cout<<"MathS2: "<<texindex<<" "<<std::endl;
 			}
 		int arg=0;
-		float val=0.125f;
+		float val=1.0f;
 		if(arguments.size()>0)arg=(int)arguments[0];
 		if(arguments.size()>1)val=arguments[1];
 		context->addPrimitive(instance_type,context->getCurrentScope(),texindex,arg,val);
@@ -373,7 +373,7 @@ void Token::performAction(Context *context){
 
 std::vector<std::string> breakup(std::string input,std::string delimiter){
 		std::vector<std::string> output;
-	     std::cout<<"|"<<input<<"|"<<std::endl;
+	   //  std::cout<<"|"<<input<<"|"<<std::endl;
 		int pos=-1;
 		
 		while( (pos = input.find(delimiter))!=-1){
@@ -523,7 +523,7 @@ void Grammar::ReadTokens2(Rule *rule,std::string rule_str,int index_k){
 									rule->addToken(token,index_k);
 									if(pos2+1<rule_str.length())
 										ReadTokens(rule,rule_str.substr(pos2+1,rule_str.length()-pos2-1),index_k);
-									std::cout<<"return"<<std::endl;
+									//std::cout<<"return"<<std::endl;
 									return;
 								}
 								else return;
@@ -830,12 +830,12 @@ std::string Grammar::ruleBody(Rule *rule,std::istringstream &lin,std::string lin
 
 		
 		if(num_sections==1){
-			std::cout<<"read section"<<std::endl;
+			//std::cout<<"read section"<<std::endl;
 			ReadTokens(rule,line,1);
 		}
 		else {
 			for(int i=0;i<num_sections;i++){
-				std::cout<<"read section: "<< i<<std::endl;
+				//std::cout<<"read section: "<< i<<std::endl;
 							ReadTokens(rule,sections[i],i);
 			}
 		
@@ -904,7 +904,7 @@ Grammar::Grammar(std::string filePath)
 			std::istringstream lin(rule_sections[0]+" ->");
 			std::string rulename;
 			lin >> rulename;
-			std::cout<<"Rule name:"<<rulename<<" "<<line<<std::endl;
+			//std::cout<<"Rule name:"<<rulename<<" "<<line<<std::endl;
 			Rule *rule=new Rule(rulename,1);
 			
 			line=ruleBody(rule,lin,rule_sections[1]);
@@ -974,7 +974,7 @@ variable_list.clear();
 			std::istringstream lin(rule_sections[0]+" ->");
 			std::string rulename;
 			lin >> rulename;
-			std::cout<<"Rule name:"<<rulename<<" "<<line<<std::endl;
+			//std::cout<<"Rule name:"<<rulename<<" "<<line<<std::endl;
 			Rule *rule=new Rule(rulename,1);
 			
 			line=ruleBody(rule,lin,rule_sections[1]);
@@ -1019,7 +1019,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 			addVariable(variable_list[index]->var_name);
 		}
 		
-		std::cout<<"Rule Var Name: "<<rule->var_name;
+		//std::cout<<"Rule Var Name: "<<rule->var_name;
 		
 		
 		//int index=findVariable
@@ -1039,7 +1039,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 			std::uniform_real_distribution<double> unif(0, 1);
 			roll=unif(rng);//rand()/(float)RAND_MAX;
 		
-		std::cout<<"Roll"<<roll<<std::endl;
+		//std::cout<<"Roll"<<roll<<std::endl;
 		if(rule->probability>roll){
 			
 			std::vector<Token *> more_tokens=Recurse(rule->alternate);
@@ -1309,7 +1309,7 @@ void Grammar::generateGeometry()
     
     for(int k=0;k<tokens_new.size();k++){
 		//tokens_new[k]->print();
-		std::cout<<".";
+		//std::cout<<".";
 			tokens_new[k]->performAction(context);
 			
 	}		

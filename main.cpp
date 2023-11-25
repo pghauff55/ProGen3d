@@ -84,11 +84,11 @@ static int SCREEN_HEIGHT=1200;
 
 
 
-
+extern std::vector<Variable *> variable_list;
 
 
 static GtkWidget *window;
-static GtkWidget *notebook,*layout;
+static GtkWidget *notebook,*layout,*layout2,*layout3,*layout4;
 static GtkWidget *gl_area;
 static GtkTextBuffer *mybuffer;
 static GtkWidget *view;
@@ -98,7 +98,7 @@ char const * filterPatterns[1] = { "*.grammar"  };
 
 
 std::vector<int> texture_list;
-
+std::vector<std::string> texture_filenames;
 
 
 
@@ -166,7 +166,7 @@ int generateTexture(const char * filename)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB , picWidth , picHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     //glGenerateMipmap(GL_TEXTURE_2D);
     
-    
+    //texture_data_list.push_back(image);
     
    // std::cout<<"Image START#####"<<picWidth<<":"<<picHeight<<":"<<picWidth*picHeight*3<<"#####################"<<std::endl;
    // for(int i=0;i<picWidth*picHeight*3;i++)std::cout<<(unsigned int)image[i]<<",";
@@ -227,7 +227,7 @@ void   setup(){
 	
 	
 	std::vector<std::string> files = globVector("./*.png");
-	
+	texture_filenames=files;
 	std::cout<<"files: "<<files.size()<<std::endl;
 
 	
@@ -241,7 +241,8 @@ void   setup(){
 		counter++;
 		texid=generateTexture(files[i].c_str());
 		texture_list.push_back(texid);
-	
+		
+	    
 	}
 	/*std::vector<std::string> files2 = globVector("./*.jpg");
 	
@@ -316,8 +317,17 @@ const GLchar  *VERTEX_SOURCE =
 "uniform mat4 model;\n"
 "uniform vec3 lightposition;\n"
 "uniform vec3 pos;\n"
+"uniform vec3 scale_vec;\n"
 "void main(){\n"
-"    tex_coord = texture ;\n"
+"    if(normal.y==0.0 && normal.z==0.0){\n"
+"       tex_coord.x=texture.x*scale_vec.z;	\n"
+"       tex_coord.y=texture.y*scale_vec.y;}	\n"
+"    else if(normal.y==0.0 && normal.x==0.0){\n"
+"       tex_coord.x=texture.x*scale_vec.x;	\n"
+"       tex_coord.y=texture.y*scale_vec.y;}	\n"
+"    else {\n"
+"       tex_coord.x=texture.x*scale_vec.x;	\n"
+"       tex_coord.y=texture.y*scale_vec.z;}	\n"
 "    fN = (model*view*vec4(normal,1.0)).xyz ;\n"
 "    fV = - (model*view*vec4(position+pos, 1.0)).xyz;\n"
 "    fL = lightposition.xyz - (model*view*vec4(position+pos, 1.0)).xyz ;\n"
@@ -386,24 +396,23 @@ static const GLfloat vertex_data[] = {
 
 
  //X 
-  -1.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0,-1.0,
+  -1.0, 1.0, -1.0, -1.0, 0.0, 0.0, -1.0,1.0,
   -1.0, -1.0,-1.0, -1.0, 0.0, 0.0, -1.0,-1.0,
-  -1.0, -1.0, 1.0, -1.0, 0.0, 0.0, -1.0,1.0,//cw
+  -1.0, -1.0, 1.0, -1.0, 0.0, 0.0, 1.0,-1.0,//cw
   
   
--1.0, -1.0, 1.0, -1.0, 0.0, 0.0, -1.0,1.0,
+-1.0, -1.0, 1.0, -1.0, 0.0, 0.0, 1.0,-1.0,
   -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 1.0,1.0,
--1.0, 1.0, -1.0, -1.0, 0.0, 0.0, 1.0,-1.0,//cw
+-1.0, 1.0, -1.0, -1.0, 0.0, 0.0, -1.0,1.0,//cw
   
-  1.0, -1.0, 1.0,1.0, 0.0, 0.0, -1.0,1.0,
+  1.0, -1.0, 1.0,1.0, 0.0, 0.0, 1.0,-1.0,
   1.0, -1.0,-1.0,1.0, 0.0, 0.0, -1.0,-1.0,
-  1.0, 1.0, -1.0,1.0, 0.0, 0.0,  1.0,-1.0,//ccw
+  1.0, 1.0, -1.0,1.0, 0.0, 0.0,  -1.0,1.0,//ccw
   
       
-  1.0, 1.0,-1.0 ,1.0, 0.0, 0.0, 1.0,-1.0,
+  1.0, 1.0,-1.0 ,1.0, 0.0, 0.0, -1.0,1.0,
   1.0,  1.0, 1.0 ,1.0, 0.0, 0.0, 1.0,1.0,//ccw
- 1.0, -1.0, 1.0 ,1.0, 0.0, 0.0,-1.0,1.0,
-
+ 1.0, -1.0, 1.0 ,1.0, 0.0, 0.0,1.0,-1.0,
 
 //Z
   
@@ -628,7 +637,7 @@ void
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 float angle_view=0.0f;
 float scale_global=0.3f;
-void draw_box(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int tex_index)
+void draw_box(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int tex_index,float texscale)
 {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture_list[tex_index]);
@@ -643,11 +652,11 @@ void draw_box(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int tex
   model = glm::mat4(1.0);
   model = rotate(model, angle_cube, vec3(0,1,0));
   model = translate(model,position_vec);
-  scale_vec=vec3(scale_vec.x*scale_global,scale_vec.y*scale_global,scale_vec.z*scale_global);
-  model = scale(model,scale_vec);
+  vec3 scale_vec2=vec3(scale_vec.x*scale_global,scale_vec.y*scale_global,scale_vec.z*scale_global);
+  model = scale(model,scale_vec2);
   
   
-  
+  scale_vec=vec3(scale_vec.x*texscale,scale_vec.y*texscale,scale_vec.z*texscale);
   
   
   //vec3 pos(0,0,0);
@@ -676,7 +685,7 @@ void draw_box(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int tex
   
   //pos=position_vec;
   glUniform3fv(glGetUniformLocation(program,"pos"),1,&pos[0]);
-  
+  glUniform3fv(glGetUniformLocation(program,"scale_vec"),1,&scale_vec[0]);  
   
   glm::vec4 ambientproduct=glm::vec4(0.7,0.7,0.7,1.0);
   glUniform4fv(glGetUniformLocation(program,"ambientproduct"),1,&ambientproduct[0]);
@@ -768,6 +777,19 @@ return TRUE;
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+GtkWidget *labels[20];
+GtkWidget *ruleslabel[100];
+bool setup_textures=true;
+bool setup_vars=true;
+bool setup_rules=true;
+GtkWidget *frames[10];
+GtkWidget *images[20];
+int frame_counter=0;
+
+
+GtkFileChooserNative *native;
+GtkFileChooser *chooser;
+
 
 std::vector<std::string> breakup_into_lines(std::string input,std::string delimiter){
 		std::vector<std::string> output;
@@ -808,7 +830,12 @@ void activate(GtkButton *item) {
 		grammar->addContext();
 
  
+		for(int i=0;i<variable_list.size();i++){
+		gtk_label_set_text((GtkLabel *)labels[i],(variable_list[i]->var_name+":="+std::to_string(variable_list[i]->value)).c_str());
+		
+		gtk_widget_show (labels[i]);
 	
+	}
 	
 	
 		for(int i=0;i<texture_list.size();i++){
@@ -825,8 +852,6 @@ void activate(GtkButton *item) {
 
 }
 
-  GtkFileChooserNative *native;
-   GtkFileChooser *chooser;
    
 
 
@@ -850,8 +875,7 @@ void scalesliderupdate(GtkRange *range){
 	
 }
 
-GtkWidget *frames[10];
-int frame_counter=0;
+
 void activate_add(GtkButton *item) {
 	frames[frame_counter++]=gtk_frame_new ("frame");
 	GtkWidget *box5 = gtk_box_new (GTK_ORIENTATION_VERTICAL, FALSE);
@@ -867,6 +891,16 @@ void activate_add(GtkButton *item) {
 	gtk_layout_put ((GtkLayout *)layout,entry1,80,40);
 	gtk_layout_put ((GtkLayout *)layout,label,20,50);
 	gtk_layout_put ((GtkLayout *)layout,frames[frame_counter-1],20,20);
+	
+	
+	
+	
+	//GtkWidget *myimage=gtk_image_new_from_file("129_concrete brick wall texture-seamless.png");
+	//gtk_layout_put ((GtkLayout *)layout,myimage,80,130);
+	//gtk_widget_show (myimage);
+	
+	
+	
 	gtk_widget_show (scrollwin);
 	gtk_widget_show (textview1);
 	gtk_widget_show (entry1);
@@ -876,6 +910,82 @@ void activate_add(GtkButton *item) {
 	
 	gtk_widget_show (layout);
 }
+
+void generate_widgets(){
+if(setup_textures){				   
+	for(int i=0;i<texture_filenames.size();i++){
+		images[i]=gtk_image_new_from_file(texture_filenames[i].c_str());
+		int j=i%7;
+		int k=i/7;
+		gtk_layout_put ((GtkLayout *)layout2,images[i],80+k*130,j*135);
+		gtk_widget_show (images[i]);
+	
+	}
+	setup_textures=false;  
+		
+}
+if(setup_vars){				   
+for(int i=0;i<variable_list.size();i++){
+		labels[i]=gtk_label_new ((variable_list[i]->var_name+":="+std::to_string(variable_list[i]->value)).c_str());
+		gtk_layout_put ((GtkLayout *)layout3,labels[i],80,i*20);
+		gtk_widget_show (labels[i]);
+	
+	}
+	setup_vars=false;
+}
+if(setup_rules){				   
+for(int i=0;i<grammar->rule_list.size();i++){
+	
+	std::string rule_str=grammar->rule_list[i]->rule_name;
+	if(grammar->rule_list[i]->var_names[0]!="")rule_str+="(";
+	for(int j=0;j<9;j++){
+		if(grammar->rule_list[i]->var_names[j]!=""){
+			rule_str+=grammar->rule_list[i]->var_names[j];
+			if(grammar->rule_list[i]->var_names[j+1]!=""){
+			rule_str+=",";
+			}
+		
+		}
+		
+	}
+	rule_str+=")";
+	
+	ruleslabel[i]=gtk_label_new ((rule_str).c_str());
+	gtk_layout_put ((GtkLayout *)layout4,ruleslabel[i],80,i*20);
+	gtk_widget_show (ruleslabel[i]);
+	
+	}
+	setup_rules=false;
+}
+}
+
+
+
+gboolean
+rule_focus (GtkWidget       *widget,
+               GtkDirectionType direction,
+               gpointer         user_data){
+generate_widgets();
+return true;
+}
+
+gboolean
+vars_focus (GtkWidget       *widget,
+               GtkDirectionType direction,
+               gpointer         user_data){
+generate_widgets();
+return true;
+}
+
+
+gboolean
+texture_focus (GtkWidget       *widget,
+               GtkDirectionType direction,
+               gpointer         user_data){
+generate_widgets();
+return true;				   
+}
+			   
 void activate_saveas(GtkButton *item) {
 	
  
@@ -1008,26 +1118,29 @@ void activate_app(GtkApplication *app){
   
   
   gl_area = gtk_gl_area_new ();
-  
+  GtkWidget *scrollwin=gtk_scrolled_window_new (NULL,NULL);
   view = gtk_text_view_new();
+  gtk_container_add (GTK_CONTAINER (scrollwin), view);
   gtk_text_view_set_wrap_mode((GtkTextView *)view,GTK_WRAP_WORD);
-    //scrollwin = gtk_scrolled_window_new(NULL, NULL);
+  //GtkWidget *scrollwin2 = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(view, 950, 1150);
     
 notebook=gtk_notebook_new ();
 
     gtk_box_pack_start(GTK_BOX(box),notebook, TRUE, TRUE, 0);
     gtk_notebook_append_page ((GtkNotebook *)notebook,
-                          view,
-                          gtk_label_new ("text view"));
+                          scrollwin,
+                          gtk_label_new ("Grammar Text"));
     layout=gtk_layout_new (NULL,NULL);
-
+layout2=gtk_layout_new (NULL,NULL);
+layout3=gtk_layout_new (NULL,NULL);
+layout4=gtk_layout_new (NULL,NULL);
 
 gtk_box_pack_start (GTK_BOX(box4), layout,1,1, 0);
 
 gtk_notebook_append_page ((GtkNotebook *)notebook,
                           box4,
-                          gtk_label_new ("layout"));
+                          gtk_label_new ("Layout View"));
     
   GtkWidget *addbutton=gtk_button_new_with_label("Add");
  gtk_action_bar_pack_start (actionbar2,addbutton);            
@@ -1036,8 +1149,21 @@ gtk_notebook_append_page ((GtkNotebook *)notebook,
   gtk_widget_set_size_request(addbutton,10, 30);
   
 
-//gtk_container_add (GTK_CONTAINER (scrollwin), view);
+//gtk_container_add (GTK_CONTAINER (scrollwin2), layout2);
+gtk_notebook_append_page ((GtkNotebook *)notebook,
+                          layout2,
+                          gtk_label_new ("Texture"));
 
+
+gtk_notebook_append_page ((GtkNotebook *)notebook,
+                          layout3,
+                          gtk_label_new ("Variables"));
+
+gtk_notebook_append_page ((GtkNotebook *)notebook,
+                          layout4,
+                          gtk_label_new ("Rules"));
+                          
+                          
   gtk_box_pack_start (GTK_BOX(box2), box3,1,1, 0);
   gtk_box_pack_start (GTK_BOX(box2), box,1,1, 0);
   
@@ -1075,7 +1201,9 @@ gtk_notebook_append_page ((GtkNotebook *)notebook,
   
     
     mybuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
-    
+    g_signal_connect (layout4 ,"focus", G_CALLBACK (rule_focus), NULL);  
+    g_signal_connect (layout2 ,"focus", G_CALLBACK (texture_focus), NULL);  
+    g_signal_connect (layout3 ,"focus", G_CALLBACK (vars_focus), NULL);   
     g_signal_connect (addbutton ,"clicked", G_CALLBACK (activate_add), NULL);    
     g_signal_connect (runbutton ,"clicked", G_CALLBACK (activate), NULL);
     g_signal_connect (savebutton ,"clicked", G_CALLBACK (activate_saveas), NULL); 
