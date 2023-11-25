@@ -10,12 +10,12 @@ https://snapcraft.io/progen3d
 <a href="https://snapcraft.io/progen3d">
   <img alt="Get it from the Snap Store" src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" />
 </a>
-[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-white.svg)](https://snapcraft.io/progen3d)
+
 
 ### Screenshot1
 
 <div align="center">
-    <img src="Screenshot41.png" width="1200px"</img> 
+    <img src="Screencast from 25-11-23 15:44:57.webm" width="1200px"</img> 
 </div>
 
 ### Screenshot2
