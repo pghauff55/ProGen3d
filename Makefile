@@ -46,4 +46,6 @@ clean:
 
 install: $(TARGET)
 	install -m 644 $(TARGET) $(DESTDIR)
+	cp *.png $(DESTDIR)
+	cp test.grammar $(DESTDIR)
 
