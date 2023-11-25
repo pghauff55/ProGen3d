@@ -46,4 +46,4 @@ clean:
 
 install: $(TARGET)
 	install -d $(DESTDIR)/bin/
-	install -D $^ $(DESTDIR)/bin/
+
