@@ -2,10 +2,11 @@
 3d Procedural Generator
 
 ProGen3d is a grammar that uses variables and symbolic math objects for calculations.
-Based on https://github.com/santipaprika/procedural-buildings and https://github.com/mathSlib-dev/mathSlib .
+Based on https://github.com/santipaprika/procedural-buildings 
+Uses glm vector math, texture loading, opengl.
 
-Uses glm vector math, texture loading, glu and opengl.
-https://snapcraft.io/progen3d
+See https://snapcraft.io/progen3d for ProGen3d 0.4a linux version.
+See Release for 0.4a windows 11 version of ProGen3d.exe 
 
 <a href="https://snapcraft.io/progen3d">
   <img alt="Get it from the Snap Store" src="https://snapcraft.io/static/images/badges/en/snap-store-black.svg" />
