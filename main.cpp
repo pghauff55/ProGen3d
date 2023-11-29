@@ -24,7 +24,7 @@
 
 #include <epoxy/gl.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
+//#include <GL/glu.h>
 //#include <GL/glut.h>
 
 
@@ -44,8 +44,7 @@
 #include "Context.h"
 #include "Scope.h"
 #include "grammar.h"
-#include "MathParser.h"
-#include "LBAssembler.h"
+
 
 
 
