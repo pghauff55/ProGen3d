@@ -161,14 +161,14 @@ void addVariable(std::string var_name){
 
 std::string MathS2(std::string input){
 		//mathS::Assembler assembler;
-				//std::cout<<"IN:"<<input<<";";
+				std::cout<<"IN:"<<input<<";";
 			bool remove_var=false;
 			//replace variables with floats
 		for(int i=variable_list.size()-1;i>=0;i--){
 			std::string str2 = variable_list[i]->var_name;
 					int pos=0;
 		      while((pos=input.find(str2))!=-1){
-				  //std::cout<<"===="<<str2;
+				  std::cout<<"===="<<str2;
 				  remove_var=true;
 				  input.replace(pos,str2.length(),std::to_string(variable_list[i]->value));	
 				
@@ -191,11 +191,11 @@ std::string MathS2(std::string input){
 				
 				if(j>0){
 					mul_div.push_back(minus[j]);
-					sign_addition.push_back(1);
+					sign_addition.push_back(-1);
 				}
 				else {
 					mul_div.push_back(minus[j]);
-					sign_addition.push_back(-1);
+					sign_addition.push_back(1);
 				}
 			}
 		}
@@ -207,13 +207,13 @@ std::string MathS2(std::string input){
 				std::vector<std::string> div=breakup(mul[j],"/");
 				if(div.size()==2)out*=atof(div[0].c_str())/atof(div[1].c_str());
 				else out*=atof(div[0].c_str());
-						 
+						 std::cout<<out<<"+";
 				}
 			sum+=out;
 			}
 		
 		
-		
+		std::cout<<"OUT="<<sum<<std::endl;
 		
 		
 	
@@ -226,14 +226,14 @@ std::string MathS2(std::string input){
 
 std::string Grammar::MathS(std::string input){
 		//mathS::Assembler assembler;
-				//std::cout<<"IN:"<<input<<";";
+				std::cout<<"IN:"<<input<<";";
 			//replace variables with floats
 		for(int i=variable_list.size()-1;i>=0;i--){
 			if(variable_list[i]->max==variable_list[i]->min){
 			std::string str2 = variable_list[i]->var_name;
 					
 		      if(input.find(str2)!=-1){
-				  //std::cout<<"===="<<str2;
+				  std::cout<<"===="<<str2;
 				  input.replace(input.find(str2),str2.length(),std::to_string(variable_list[i]->value));	
 				 break;
 			  }
@@ -247,13 +247,13 @@ std::string Grammar::MathS(std::string input){
 			std::string str2 = variable_list[i]->var_name;
 					
 		      if(input.find(str2)!=-1){
-				  //std::cout<<"===="<<str2;
+				  std::cout<<"===="<<str2;
 				  input.replace(input.find(str2),str2.length(),std::to_string(variable_list[i]->value));	
 				 break;
 			  }
 		  }
 		}
-		//std::cout<<"IN:"<<input<<";";
+		std::cout<<"IN:"<<input<<";";
 		
 		
 		
@@ -267,11 +267,11 @@ std::string Grammar::MathS(std::string input){
 				
 				if(j>0){
 					mul_div.push_back(minus[j]);
-					sign_addition.push_back(1);
+					sign_addition.push_back(-1);
 				}
 				else {
 					mul_div.push_back(minus[j]);
-					sign_addition.push_back(-1);
+					sign_addition.push_back(1);
 				}
 			}
 		}
@@ -285,6 +285,7 @@ std::string Grammar::MathS(std::string input){
 				else out*=atof(div[0].c_str());
 						 
 				}
+				std::cout<<out<<"+";
 			sum+=out;
 			}
 		
@@ -435,7 +436,7 @@ void Token::performAction(Context *context){
 //////////////////////////////////Read Grammar Script from Grammar file/////////////////////////////////////
 
 
-void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
+void Grammar::ReadTokens2(Rule *rule,std::string rule_str,int index_k){
 			float value;
 			for(char& c : rule_str) {
 					if(c=='['){
@@ -534,8 +535,7 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 			
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
+
 
 void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 	std::istringstream lin(rule_str);
@@ -738,7 +738,7 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 			
 			}
 }
-*/
+
 
 
 std::string Grammar::ruleBody(Rule *rule,std::istringstream &lin,std::string line){
