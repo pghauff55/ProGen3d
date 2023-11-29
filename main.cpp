@@ -179,10 +179,10 @@ long delta_time = 0.0;
 GDateTime *last_frame;
 int dt = 0;
 
-static GLuint position_buffer,position_buffer1[20];
+static GLuint position_buffer,position_buffer1[50];
 static GLuint program;
-static GLuint vao,vao1[20];
-int tex_count[20];
+static GLuint vao,vao1[50];
+int tex_count[50];
 
 
 
@@ -448,7 +448,7 @@ void   setup(){
 		
 		float *my_vertex_data=grammar->context->calc(mydata,i);
 		//tex_count[i]=texcount;
-		if(tex_count[i]>0){
+		
 		  glGenVertexArrays (1, &vao1[i]);
 		  glBindVertexArray (vao1[i]);
 
@@ -465,7 +465,7 @@ void   setup(){
 		  glEnableVertexAttribArray(2);
 		  glBindBuffer (GL_ARRAY_BUFFER, 0);
 		  delete my_vertex_data;
-	  }
+	  
 
 	}
 
