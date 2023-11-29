@@ -211,15 +211,15 @@ std::string MathS2(std::string input){
 				}
 			sum+=out;
 			}
-		}
+		
 		
 		
 		
 		
 	
-	std::string out=std::to_string(sum);
-	if(isnumber(out))
-		return out;
+	std::string out_str=std::to_string(sum);
+	if(isnumber(out_str))
+		return out_str;
 	else
 	return input;
 }
@@ -287,10 +287,10 @@ std::string Grammar::MathS(std::string input){
 				}
 			sum+=out;
 			}
-		}
-	std::string out=std::to_string(sum);
-	if(isnumber(out))
-		return out;
+		
+	std::string out_str=std::to_string(sum);
+	if(isnumber(out_str))
+		return out_str;
 	else
 	return input;
 }
@@ -1336,7 +1336,6 @@ Grammar::~Grammar(){
 	
 	
 }
-
 
 
 
