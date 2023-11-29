@@ -14,39 +14,7 @@ Mesh::~Mesh()
 
 }
 void Mesh::draw(){
-	glColor3f(1,1,1);
-	glBegin(GL_TRIANGLES);
-	for(int i=0;i<faces.size();i++){
-		
-		glm::ivec3 face=faces[i];
-		glm::vec3 normal=normals[i];
-		
-		
-		glNormal3f(normal[0],normal[1],normal[2]);
 	
-		glVertex3f(vertices[face[0]][0],vertices[face[0]][1],vertices[face[0]][2]);
-		glVertex3f(vertices[face[1]][0],vertices[face[1]][1],vertices[face[1]][2]);
-		glVertex3f(vertices[face[2]][0],vertices[face[2]][1],vertices[face[2]][2]);
-		
-	}
-
-	glEnd();
-	glColor3f(1,0,0);
-	glBegin(GL_LINE_LOOP);
-	for(int i=0;i<faces.size();i++){
-		
-		glm::ivec3 face=faces[i];
-		//glm::vec3 normal=normals[i];
-		
-		
-		//glNormal3f(normal[0],normal[1],normal[2]);
-		glVertex3f(vertices[face[0]][0],vertices[face[0]][1],vertices[face[0]][2]);
-		glVertex3f(vertices[face[1]][0],vertices[face[1]][1],vertices[face[1]][2]);
-		glVertex3f(vertices[face[2]][0],vertices[face[2]][1],vertices[face[2]][2]);
-		
-	}
-
-	glEnd();
 	
 }
 
