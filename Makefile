@@ -2,8 +2,7 @@
 
 
 TARGET=ProGen3d
-OBJS=main.o MathParser.o Evaluate.o lexer.o NFunction.o Rule.o string-switch.o Grammar.o ExtendedCMath.o LBAssembler.o MathObject.o NFunctionalOperator.o NMathObject.o  RuleLib.o \
-       Context.o   Mesh.o  PLYWriter.o  Scope.o 
+OBJS=main.o Grammar.o  Context.o   Mesh.o  PLYWriter.o  Scope.o 
        
 CXX = gcc
 CXXFLAGS =  -g -O3 -I /usr/include -I /usr/include/atkmm-1.6/ -I /usr/include/pangomm-1.4/ -I /usr/include/freetype2/ -I /usr/include/cairomm-1.0/ \
