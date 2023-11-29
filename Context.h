@@ -55,7 +55,7 @@ public:
     Mesh &getScene();
     GLuint loadTexture(GLuint texid);
     void draw();
-    GLfloat *calc(const GLfloat *);
+    GLfloat *calc(const GLfloat *,int texindex);
     void addPrimitive(std::string type,Scope *scope,int texindex,int rotate,float texscale);
     void genPrimitives();
 
