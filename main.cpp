@@ -105,196 +105,6 @@ std::vector<std::string> texture_filenames;
 
 void display( void );
 
-
-
-
-int generateTexture(int index)
-{
-	GLuint mTexture;
-    glGenTextures(1 , &mTexture);
-    glBindTexture(GL_TEXTURE_2D, mTexture);// Bind our 2D texture so that following set up will be applied
-
-    //Set texture wrapping parameter
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-
-    //Set texture Filtering parameter
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-
-    //Load the image
-    
-    unsigned char *image=NULL;
-    if(index==0)image=texture_image_array0;
-    else if(index==1)image=texture_image_array1;
-    else if(index==2)image=texture_image_array2;
-    //Generate the image
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB , 128 , 128, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    //glGenerateMipmap(GL_TEXTURE_2D);
-    
-    
-    
-    
-    glBindTexture(GL_TEXTURE_2D,0); //Unbind 2D textures
-    
-    return mTexture;
-
-}
-
-
-int generateTexture(const char * filename)
-{
-	GLuint mTexture;
-    glGenTextures(1 , &mTexture);
-    glBindTexture(GL_TEXTURE_2D, mTexture);// Bind our 2D texture so that following set up will be applied
-
-    //Set texture wrapping parameter
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-
-    //Set texture Filtering parameter
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-
-    //Load the image
-    int picWidth,picHeight,n;
-    unsigned char* image = stbi_load(filename, &picWidth, &picHeight, &n,STBI_rgb);
-    if (image == NULL ) {
-        std::cout<<"Failed to load image: "<<stbi_failure_reason()<<std::endl;
-    }
-    //Generate the image
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB , picWidth , picHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    //glGenerateMipmap(GL_TEXTURE_2D);
-    
-    //texture_data_list.push_back(image);
-    
-   // std::cout<<"Image START#####"<<picWidth<<":"<<picHeight<<":"<<picWidth*picHeight*3<<"#####################"<<std::endl;
-   // for(int i=0;i<picWidth*picHeight*3;i++)std::cout<<(unsigned int)image[i]<<",";
-   // std::cout<<"Image END##########################"<<std::endl;
-
-    stbi_image_free(image);// Free the reference to the image
-    glBindTexture(GL_TEXTURE_2D,0); //Unbind 2D textures
-    
-    return mTexture;
-
-}
-
-
-
-std::vector<std::string> globVector(const std::string& pattern){
-    glob_t glob_result;
-    memset(&glob_result, 0, sizeof(glob_result));
-    
-     int return_value,count=0;
-    while((return_value=glob(pattern.c_str(),GLOB_TILDE,NULL,&glob_result))!=0){
-		 
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
-		if(count++>20){
-			std::cout<<"glob_error"<<std::endl;
-			exit(0);
-		}
-	}
-    
-    
-    std::vector<std::string> files;
-    for(unsigned int i=0;i<glob_result.gl_pathc;++i){
-        files.push_back(std::string(glob_result.gl_pathv[i]));
-    }
-    globfree(&glob_result);
-    return files;
-}
-
-
-void   setup(){
-  
-    
-    
-
-    
-   
-
-	srand(time(NULL));
-    std::cout << std::fixed << std::showpoint;
-	std::cout.precision(2);
-    grammar=new Grammar("./test.grammar");
-    
-    
-    
-		grammar->addContext();
-	
-	
-	std::cout<<"Read files..."<<std::endl;
-	
-	
-	std::vector<std::string> files = globVector("./*.png");
-	texture_filenames=files;
-	std::cout<<"files: "<<files.size()<<std::endl;
-
-	
-	
-	
-	int texid;
-	
-	int counter=0;
-    for (int i=0;i<files.size();i++){
-		std::cout<<counter;
-		counter++;
-		texid=generateTexture(files[i].c_str());
-		texture_list.push_back(texid);
-		
-	    
-	}
-	/*std::vector<std::string> files2 = globVector("./*.jpg");
-	
-	
-	std::cout<<"files: "<<files2.size()<<std::endl;
-	
-	
-    for (int i=0;i<files2.size();i++){
-		std::cout<<counter;
-		counter++;
-		GLuint texid=generateTexture(files2[i].c_str());
-		texture_list.push_back(texid);
-	
-	}*/
-	
-		for(int i=0;i<texture_list.size();i++){
-					grammar->context->loadTexture(texture_list[i]);
-			
-		}
-		
-	//back_texture=load_texture("paper.png");	
-		std::cout<<"generate primitives"<<std::endl;
-		grammar->context->genPrimitives();
-		
-		grammar->generateGeometry();
-		std::cout<<"Finished generating geometry..."<<std::endl;
-
-//grammar->context->getScene().calc_normals();
-
-
-
-
-  }
-  
-  
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 using glm::mat4;
 using glm::vec3;
 using glm::lookAt;
@@ -319,15 +129,8 @@ const GLchar  *VERTEX_SOURCE =
 "uniform vec3 pos;\n"
 "uniform vec3 scale_vec;\n"
 "void main(){\n"
-"    if(normal.y==0.0 && normal.z==0.0){\n"
-"       tex_coord.x=texture.x*scale_vec.z;	\n"
-"       tex_coord.y=texture.y*scale_vec.y;}	\n"
-"    else if(normal.y==0.0 && normal.x==0.0){\n"
-"       tex_coord.x=texture.x*scale_vec.x;	\n"
-"       tex_coord.y=texture.y*scale_vec.y;}	\n"
-"    else {\n"
-"       tex_coord.x=texture.x*scale_vec.x;	\n"
-"       tex_coord.y=texture.y*scale_vec.z;}	\n"
+"       tex_coord.x=texture.x;	\n"
+"       tex_coord.y=texture.y;	\n"
 "    fN = (model*view*vec4(normal,1.0)).xyz ;\n"
 "    fV = - (model*view*vec4(position+pos, 1.0)).xyz;\n"
 "    fL = lightposition.xyz - (model*view*vec4(position+pos, 1.0)).xyz ;\n"
@@ -362,13 +165,31 @@ const GLchar *FRAGMENT_SOURCE2 =
 "vec4 specular = Ks*specularproduct ;\n"
 "if( dot(L, N) < 0.0 )specular = vec4(0.0, 0.0, 0.0, 1.0) ;\n"
 "gl_FragColor = texture(texture1, tex_coord)*(ambient + diffuse + specular) ;\n"
-"gl_FragColor.a = 1.0;}\n"; 
+"}\n"; 
 
 
 /* the GtkGLArea widget */
 
 
 /* The object we are drawing */
+
+
+long current_frame = 0.0;
+long delta_time = 0.0;
+GDateTime *last_frame;
+int dt = 0;
+
+static GLuint position_buffer,position_buffer1[20];
+static GLuint program;
+static GLuint vao,vao1[20];
+int tex_count[20];
+
+
+
+
+
+mat4 model = mat4(1.0);
+
 static const GLfloat vertex_data[] = {
   
   //Y
@@ -440,16 +261,236 @@ static const GLfloat vertex_data[] = {
   -1.0, 1.0, -1.0, 0.0, 0.0, -1.0,  -1.0,1.0
 };
 
-long current_frame = 0.0;
-long delta_time = 0.0;
-GDateTime *last_frame;
-int dt = 0;
+int generateTexture(int index)
+{
+	/*GLuint mTexture;
+    glGenTextures(1 , &mTexture);
+    glBindTexture(GL_TEXTURE_2D, mTexture);// Bind our 2D texture so that following set up will be applied
 
-static GLuint position_buffer;
-static GLuint program;
-static GLuint vao;
+    //Set texture wrapping parameter
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
 
-mat4 model = mat4(1.0);
+    //Set texture Filtering parameter
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+
+    //Load the image
+    
+    unsigned char *image=NULL;
+    if(index==0)image=texture_image_array0;
+    else if(index==1)image=texture_image_array1;
+    else if(index==2)image=texture_image_array2;
+    //Generate the image
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB , 128 , 128, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    //glGenerateMipmap(GL_TEXTURE_2D);
+    
+    
+    
+    
+    glBindTexture(GL_TEXTURE_2D,0); //Unbind 2D textures
+    
+    return mTexture;
+*/
+}
+
+
+int generateTexture(const char * filename)
+{
+	GLuint mTexture;
+    glGenTextures(1 , &mTexture);
+    glBindTexture(GL_TEXTURE_2D, mTexture);// Bind our 2D texture so that following set up will be applied
+
+    //Set texture wrapping parameter
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+
+    //Set texture Filtering parameter
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+
+    //Load the image
+    int picWidth,picHeight,n;
+    unsigned char* image = stbi_load(filename, &picWidth, &picHeight, &n,STBI_rgb_alpha);
+    if (image == NULL ) {
+        std::cout<<"Failed to load image: "<<stbi_failure_reason()<<std::endl;
+    }
+    //Generate the image
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA , picWidth , picHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+    //glGenerateMipmap(GL_TEXTURE_2D);
+    
+    //texture_data_list.push_back(image);
+    
+   // std::cout<<"Image START#####"<<picWidth<<":"<<picHeight<<":"<<picWidth*picHeight*3<<"#####################"<<std::endl;
+   // for(int i=0;i<picWidth*picHeight*3;i++)std::cout<<(unsigned int)image[i]<<",";
+   // std::cout<<"Image END##########################"<<std::endl;
+
+    stbi_image_free(image);// Free the reference to the image
+    glBindTexture(GL_TEXTURE_2D,0); //Unbind 2D textures
+    
+    return mTexture;
+
+}
+
+
+
+std::vector<std::string> globVector(const std::string& pattern){
+    glob_t glob_result;
+    memset(&glob_result, 0, sizeof(glob_result));
+    
+     int return_value,count=0;
+    while((return_value=glob(pattern.c_str(),GLOB_TILDE,NULL,&glob_result))!=0){
+		 
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		if(count++>20){
+			std::cout<<"glob_error"<<std::endl;
+			exit(0);
+		}
+	}
+    
+    
+    std::vector<std::string> files;
+    for(unsigned int i=0;i<glob_result.gl_pathc;++i){
+        files.push_back(std::string(glob_result.gl_pathv[i]));
+    }
+    globfree(&glob_result);
+    return files;
+}
+
+
+void   setup(){
+  
+    
+    
+
+    
+   
+
+	srand(time(NULL));
+    //std::cout << std::fixed << std::showpoint;
+	std::cout.precision(2);
+    grammar=new Grammar("./test.grammar");
+    
+    
+    
+		grammar->addContext();
+	
+	
+	std::cout<<"Read files..."<<std::endl;
+	
+	
+	std::vector<std::string> files = globVector("./*.png");
+	texture_filenames=files;
+	std::cout<<"files: "<<files.size()<<std::endl;
+
+	
+	
+	
+	int texid;
+	
+	int counter=0;
+    for (int i=0;i<files.size();i++){
+		std::cout<<counter;
+		counter++;
+		texid=generateTexture(files[i].c_str());
+		texture_list.push_back(texid);
+		
+	    
+	}
+	/*std::vector<std::string> files2 = globVector("./*.jpg");
+	
+	
+	std::cout<<"files: "<<files2.size()<<std::endl;
+	
+	
+    for (int i=0;i<files2.size();i++){
+		std::cout<<counter;
+		counter++;
+		GLuint texid=generateTexture(files2[i].c_str());
+		texture_list.push_back(texid);
+	
+	}*/
+	
+	for(int i=0;i<texture_list.size();i++){
+					grammar->context->loadTexture(texture_list[i]);
+			
+		}
+		
+	//back_texture=load_texture("paper.png");	
+		std::cout<<"generate primitives"<<std::endl;
+		grammar->context->genPrimitives();
+		
+		grammar->generateGeometry();
+		std::cout<<"Finished generating geometry..."<<std::endl;
+
+
+
+
+
+//grammar->context->getScene().calc_normals();
+ float mydata[36*8];
+    for(int i=0;i<36*8;i++){
+		mydata[i]=vertex_data[i]; 
+	}
+	
+	
+	for(int i=0;i<36;i++){
+		for(int j=0;j<8;j++){
+			if(j==0 || j==2)mydata[i*8+j]*=0.5f;
+			if(j==1){
+				if(mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
+			}
+			if(j==6 && mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
+			if(j==7 && mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
+		}
+	}
+	for(int i=0;i<texture_list.size();i++){
+		
+		float *my_vertex_data=grammar->context->calc(mydata,i);
+		//tex_count[i]=texcount;
+		if(tex_count[i]>0){
+		  glGenVertexArrays (1, &vao1[i]);
+		  glBindVertexArray (vao1[i]);
+
+		  /* This is the buffer that holds the vertices */
+		  glGenBuffers (1, &position_buffer1[i]);
+		  glBindBuffer (GL_ARRAY_BUFFER, position_buffer1[i]);
+		  glBufferData(GL_ARRAY_BUFFER,sizeof(float)*36*8*tex_count[i],my_vertex_data,GL_DYNAMIC_DRAW);
+		  glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		  glEnableVertexAttribArray (0);
+		  glVertexAttribPointer (1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		  glEnableVertexAttribArray (1);
+		   // texture coord attribute
+		  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		  glEnableVertexAttribArray(2);
+		  glBindBuffer (GL_ARRAY_BUFFER, 0);
+		  delete my_vertex_data;
+	  }
+
+	}
+
+
+
+}
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Create and compile a shader */
@@ -591,7 +632,11 @@ realize (GtkWidget *widget)
   glEnable(GL_DEPTH_TEST);
 
 glDepthFunc(GL_LESS);  
-  
+glEnable(GL_BLEND);
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   
+
+
+
 
   
   last_frame = g_date_time_new_now_local();  
@@ -606,7 +651,9 @@ unrealize (GtkWidget *widget)
 
   if (gtk_gl_area_get_error (GTK_GL_AREA (widget)) != NULL)
     return;
-
+	for(int i=0;i<texture_list.size();i++){
+		glDeleteBuffers (1, &position_buffer1[i]);
+	}
   glDeleteBuffers (1, &position_buffer);
   glDeleteProgram (program);
 }
@@ -703,7 +750,7 @@ void draw_box(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int tex
   /* Use the vertices in our buffer */
 
   /* Draw the three vertices as a triangle */
-  glDrawArrays (GL_TRIANGLES, 0, 36*grammar->context->primitives.size());
+  glDrawArrays (GL_TRIANGLES, 0, 36);
 
   /* We finished using the buffers and program */
   glBindVertexArray(0);
@@ -712,6 +759,88 @@ void draw_box(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int tex
   glUseProgram (0);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//                      BUFFER
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void draw_buffer(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int tex_index,float texscale)
+{
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture_list[tex_index]);
+  /* Use our shaders */
+  glUseProgram (program);
+  glUniform1i(glGetUniformLocation(program, "texture1"), 0);
+ 
+ 
+ 
+ position_vec=vec3(position_vec.x*scale_global,position_vec.y*scale_global,position_vec.z*scale_global);
+ 
+  model = glm::mat4(1.0);
+  model = rotate(model, angle_cube, vec3(0,1,0));
+  model = translate(model,position_vec);
+  vec3 scale_vec2=vec3(scale_vec.x*scale_global,scale_vec.y*scale_global,scale_vec.z*scale_global);
+  model = scale(model,scale_vec2);
+  
+  
+  scale_vec=vec3(scale_vec.x*texscale,scale_vec.y*texscale,scale_vec.z*texscale);
+  
+  
+  //vec3 pos(0,0,0);
+  
+  //model2 = rotate(model2, angle_view, vec3(0,1,0));
+  //pos2=model2*pos2;
+  //pos=vec3(pos2.x,pos2.y,pos2.z);
+  
+  
+  glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, &model[0][0]);
+  
+  
+ 
+  
+  vec3 position = vec3(5.0*cos(angle_view*M_PI/180.0),0,5.0*sin(angle_view*M_PI/180.0));
+  
+  vec3 up = vec3(0,-1,0);
+  mat4 view = lookAt(position, vec3(0.0,0.0,0.0), up);
+  glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &view[0][0]);
+  
+  mat4 projection = perspective(43.0, double(GLAREA_WIDTH)/double(GLAREA_HEIGHT), 0.01, 100.0);
+  glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &projection[0][0]);
+  
+  vec3 lightposition=vec3(1.1,5.7,-1.3);
+  glUniform3fv(glGetUniformLocation(program,"lightposition"),1,&lightposition[0]);
+  
+  //pos=position_vec;
+  glUniform3fv(glGetUniformLocation(program,"pos"),1,&pos[0]);
+  glUniform3fv(glGetUniformLocation(program,"scale_vec"),1,&scale_vec[0]);  
+  
+  glm::vec4 ambientproduct=glm::vec4(0.7,0.7,0.7,1.0);
+  glUniform4fv(glGetUniformLocation(program,"ambientproduct"),1,&ambientproduct[0]);
+  
+  glm::vec4 diffuseproduct=glm::vec4(0.5,0.5,0.5,1.0);
+  glUniform4fv(glGetUniformLocation(program,"diffuseproduct"),1,&diffuseproduct[0]);
+  
+  glm::vec4 specularproduct=glm::vec4(0.3,0.3,0.3,1.0);
+  glUniform4fv(glGetUniformLocation(program,"specularproduct"),1,&specularproduct[0]);
+  float shinyness=128.0f;
+  glUniform1f(glGetUniformLocation(program,"shinyness"),shinyness);
+  
+  
+  glBindVertexArray(vao1[tex_index]);
+  /* Use the vertices in our buffer */
+
+  /* Draw the three vertices as a triangle */
+  glDrawArrays (GL_TRIANGLES, 0, 36*tex_count[tex_index]);
+
+  /* We finished using the buffers and program */
+  glBindVertexArray(0);
+  glDisableVertexAttribArray (0);
+  glBindBuffer (GL_ARRAY_BUFFER, 0);
+  glUseProgram (0);
+}
 
 
 
@@ -754,8 +883,10 @@ GDateTime *date_time;
   //draw_box (angle_view,vec3(0.5,1.0,0.5),vec3(0.0,0.0,0.0),0);
   //draw_box (delta_time,vec3(1.0,0.1,1.0),vec3(0.0,0.0,0.6),1);
   
-  grammar->context->draw();
-  
+  //grammar->context->draw();
+  for(int i=0;i<texture_list.size();i++){
+		if(tex_count[i]>0)draw_buffer(0,vec3(1,1,1),vec3(0,0,0),vec3(0,0,0),i,1);
+	}
   
 //display();
 //glFlush ();
@@ -785,7 +916,7 @@ bool setup_rules=true;
 GtkWidget *frames[10];
 GtkWidget *images[20];
 int frame_counter=0;
-
+bool init_buffer=false;
 
 GtkFileChooserNative *native;
 GtkFileChooser *chooser;
@@ -838,10 +969,10 @@ void activate(GtkButton *item) {
 	}
 	
 	
-		for(int i=0;i<texture_list.size();i++){
-					grammar->context->loadTexture(texture_list[i]);
-			
-		}
+		//for(int i=0;i<texture_list.size();i++){
+		//			grammar->context->loadTexture(texture_list[i]);
+		//	
+		//}
 		
 	//back_texture=load_texture("paper.png");	
 		std::cout<<"generate primitives"<<std::endl;
@@ -849,10 +980,50 @@ void activate(GtkButton *item) {
 		
 		grammar->generateGeometry();
 		std::cout<<"Finished generating geometry..."<<std::endl;
+		init_buffer=false;
+
+
+	for(int i=0;i<texture_list.size();i++){
+		std::cout<<i<<texture_list[i]<<";";
+		//glDeleteBuffers (1, &position_buffer1[i]);
+	}
+
+		
+	float mydata[36*8];
+    for(int i=0;i<36*8;i++){
+		mydata[i]=vertex_data[i]; 
+	}
+	
+	
+	for(int i=0;i<36;i++){
+		for(int j=0;j<8;j++){
+			if(j==0 || j==2)mydata[i*8+j]*=0.5f;
+			if(j==1){
+				if(mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
+			}
+		}
+	}
+	for(int i=0;i<texture_list.size();i++){
+		
+		float *my_vertex_data=grammar->context->calc(mydata,i);
+		//tex_count[i]=texcount;
+		if(tex_count[i]>0){
+		  //glGenVertexArrays (1, &vao1[i]);
+		  glBindVertexArray (vao1[i]);
+
+		  /* This is the buffer that holds the vertices */
+		  //glGenBuffers (1, &position_buffer1[i]);
+		  glBindBuffer (GL_ARRAY_BUFFER, position_buffer1[i]);
+		  glBufferData(GL_ARRAY_BUFFER,sizeof(float)*36*8*tex_count[i],my_vertex_data,GL_DYNAMIC_DRAW);
+		  
+		  delete my_vertex_data;
+	  }
+
+	}
 
 }
 
-   
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 void save_to_file(char *filename){
@@ -1032,12 +1203,92 @@ void activate_saveas(GtkButton *item) {
 
 
 
+
+void
+txt_changed (GtkTextBuffer *textbuffer,
+               gpointer       user_data){
+GtkTextIter start, end;
+GtkTextTag *tag,*tag2,*boldtag;
+bool keyword_initiated=false;
+char keyword[100];
+int start_of_keyword=0,end_of_keyword=0;
+int keyword_counter=0;
+tag = gtk_text_buffer_create_tag (textbuffer, "blue_foreground",
+	   		            "foreground", "blue", NULL); 
+tag2 = gtk_text_buffer_create_tag (textbuffer, "purple_foreground",
+	   		            "foreground", "purple", NULL); 
+boldtag = gtk_text_buffer_create_tag (textbuffer, "bold", "weight", 600, NULL);
+
+if(init_buffer==false){
+	gtk_text_buffer_get_start_iter (textbuffer,&start);
+	gtk_text_buffer_get_iter_at_offset (textbuffer, &end, 0);
+
+	int counter=1;
+	char character;
+	while((character=gtk_text_iter_get_char (&end))!=0){
+		
+		
+		if( !((character>='a' && character<='z') || (character>='A' && character<='Z')) ){
+			keyword_initiated=false;
+			end_of_keyword=counter;
+			keyword[keyword_counter]=0;
+			keyword_counter=0;
+			bool matched=false;
+			if(matched==false){
+			 if('R'==keyword[0]  || 'S'==keyword[0] || 'T'==keyword[0] || 'I'==keyword[0] ){
+				 	 gtk_text_buffer_get_iter_at_offset (textbuffer, &end, end_of_keyword);
+					 gtk_text_buffer_get_iter_at_offset (textbuffer, &start, start_of_keyword);
+					 gtk_text_buffer_apply_tag (textbuffer, boldtag, &start, &end);
+					 matched=true;
+			 }
+			}
+			if(matched==false){
+					for(int i=0;i<variable_list.size();i++){
+				   if(variable_list[i]->var_name==std::string(keyword)){
+					 gtk_text_buffer_get_iter_at_offset (textbuffer, &end, end_of_keyword);
+					 gtk_text_buffer_get_iter_at_offset (textbuffer, &start, start_of_keyword);
+					 gtk_text_buffer_apply_tag (textbuffer, tag2, &start, &end);
+					 matched=true;
+					 break;	   
+				   }	
+				}
+			}
+			if(matched==false){
+				for(int i=0;i<grammar->rule_list.size();i++){
+				 if(grammar->rule_list[i]->rule_name==std::string(keyword)){
+					 gtk_text_buffer_get_iter_at_offset (textbuffer, &end, end_of_keyword);
+					 gtk_text_buffer_get_iter_at_offset (textbuffer, &start, start_of_keyword);
+					 gtk_text_buffer_apply_tag (textbuffer, tag, &start, &end);
+					 matched=true;
+					 break;					 
+				 }
+				}
+			}
+		}
+		else {
+			if(keyword_initiated==false){
+				keyword_initiated=true;
+				start_of_keyword=counter;
+			}
+			keyword[keyword_counter]=character;
+			keyword_counter++;
+			
+		}
+		
+		counter++;
+		gtk_text_buffer_get_iter_at_offset (textbuffer, &end, counter);
+	}
+	init_buffer=true;
+}
+
+}
+
 gboolean
 keypressed_textview (GtkWidget *widget,
                GdkEvent  *event,
                gpointer   user_data){
-				   gtk_text_view_reset_cursor_blink((GtkTextView *)view);
-				   std::cout<<"*";
+				   //gtk_text_view_reset_cursor_blink((GtkTextView *)view);
+				   //std::cout<<"*";
 				   return TRUE;
 			   }
 			   
@@ -1096,7 +1347,7 @@ void activate_app(GtkApplication *app){
    /* Create new top level window. */
   window = gtk_application_window_new (app);//gtk_window_new( GTK_WINDOW_TOPLEVEL);
   gtk_window_set_default_size (GTK_WINDOW(window),SCREEN_WIDTH,SCREEN_HEIGHT);
-  gtk_window_set_title(GTK_WINDOW(window), "ProGen3d 0.3 Beta Proce3dural-Generator");
+  gtk_window_set_title(GTK_WINDOW(window), "ProGen3d 0.4a");
   gtk_container_set_border_width(GTK_CONTAINER(window), 10);
   box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
   box2 = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
@@ -1122,6 +1373,11 @@ void activate_app(GtkApplication *app){
   view = gtk_text_view_new();
   gtk_container_add (GTK_CONTAINER (scrollwin), view);
   gtk_text_view_set_wrap_mode((GtkTextView *)view,GTK_WRAP_WORD);
+  gtk_text_view_set_monospace ((GtkTextView *)view,TRUE);
+  
+  
+  
+  
   //GtkWidget *scrollwin2 = gtk_scrolled_window_new(NULL, NULL);
     gtk_widget_set_size_request(view, 950, 1150);
     
@@ -1201,6 +1457,8 @@ gtk_notebook_append_page ((GtkNotebook *)notebook,
   
     
     mybuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
+    
+    g_signal_connect (mybuffer ,"changed", G_CALLBACK (txt_changed), NULL);  
     g_signal_connect (layout4 ,"focus", G_CALLBACK (rule_focus), NULL);  
     g_signal_connect (layout2 ,"focus", G_CALLBACK (texture_focus), NULL);  
     g_signal_connect (layout3 ,"focus", G_CALLBACK (vars_focus), NULL);   

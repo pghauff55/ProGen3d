@@ -232,53 +232,71 @@ void Context::addPrimitive(std::string type,Scope *scope,int texindex, int rotat
 	
 	//std::cout<<pos.x<<","<<pos.y<<","<<pos.z<<std::endl;
 	//std::cout<<size.x<<","<<size.y<<","<<size.z<<std::endl;
-	
+	//std::cout<<texindex<<std::endl;
 	primitive_scopes.push_back(new Scope(scope));
-	texindexes.push_back(texids[texindex]);
+	texindexes.push_back(texindex);
 	rotates.push_back(rotate);
 	texscales.push_back(texscale);
 	
 	
 }
 
+extern int tex_count[20];
 
-
-GLfloat *Context::calc(const GLfloat *vertex_data){
+GLfloat *Context::calc(const GLfloat *vertex_data,int tex_index){
 	GLfloat SCALE=1.0f;
 	int NUM=36;
-	GLfloat *vertex_buffer=new GLfloat[NUM*8*primitives.size()];
 	
+	int texcount=0;
 	for(int i=0;i<primitives.size();i++){
-		float x=primitive_scopes[i]->size.x*SCALE;
-		float y=primitive_scopes[i]->size.y*SCALE;
-		float z=primitive_scopes[i]->size.z*SCALE;
-		float X=primitive_scopes[i]->position.x*SCALE;
-		float Y=primitive_scopes[i]->position.y*SCALE;
-		float Z=primitive_scopes[i]->position.z*SCALE;
-		
-		for (int j=0;j<NUM;j++){
-			vertex_buffer[i*NUM*8+j*8]=vertex_data[j*8]*x+X;
-			vertex_buffer[i*NUM*8+j*8+1]=vertex_data[j*8+1]*y+Y;
-			vertex_buffer[i*NUM*8+j*8+2]=vertex_data[j*8+2]*z+Z;
-			vertex_buffer[i*NUM*8+j*8+3]=vertex_data[j*8+3];
-			vertex_buffer[i*NUM*8+j*8+4]=vertex_data[j*8+4];
-			vertex_buffer[i*NUM*8+j*8+5]=vertex_data[j*8+5];
-			if(vertex_data[j*NUM+3]==1.0f){
-				vertex_buffer[i*NUM*8+j*8+6]=vertex_data[j*8+6];
-				vertex_buffer[i*NUM*8+j*8+7]=vertex_data[j*8+7];
-			}
-			else if(vertex_data[j*NUM+4]==1.0f){
-				vertex_buffer[i*NUM*8+j*8+6]=vertex_data[j*8+6];
-				vertex_buffer[i*NUM*8+j*8+7]=vertex_data[j*8+7];
-				
-			}
-			else {
-				vertex_buffer[i*NUM*8+j*8+6]=vertex_data[j*8+6];
-				vertex_buffer[i*NUM*8+j*8+7]=vertex_data[j*8+7];
-			}
+		if(texindexes[i]==tex_index)texcount++;
+	}
+	
+	std::cout<<"size:"<<primitives.size()<<"texindex:"<<tex_index<<" texcount:"<<texcount<<std::endl;
+	tex_count[tex_index]=texcount;
+	if(texcount==0)return NULL;
+	GLfloat *vertex_buffer=new GLfloat[NUM*8*texcount];
+	
+	
+	
+	int k=0;
+	for(int i=0;i<primitives.size();i++){
+		//std::cout<<"texindexes:"<<texindexes[i];
+		if(texindexes[i]==tex_index){
+			float x=primitive_scopes[i]->size.x*SCALE;
+			float y=primitive_scopes[i]->size.y*SCALE;
+			float z=primitive_scopes[i]->size.z*SCALE;
+			float X=primitive_scopes[i]->position.x*SCALE;
+			float Y=primitive_scopes[i]->position.y*SCALE;
+			float Z=primitive_scopes[i]->position.z*SCALE;
 			
-			//for(int k=0;k<8;k++)std::cout<<vertex_buffer[i*NUM*8+j*8+k]<<":";
-			//std::cout<<std::endl;
+			for (int j=0;j<NUM;j++){
+				if(primitives[i]->type=="CubeX")vertex_buffer[k*NUM*8+j*8]=(vertex_data[j*8]+0.5)*x+X;
+				else vertex_buffer[k*NUM*8+j*8]=vertex_data[j*8]*x+X;
+				
+				vertex_buffer[k*NUM*8+j*8+1]=vertex_data[j*8+1]*y+Y;
+				if(primitives[i]->type=="CubeY")vertex_buffer[k*NUM*8+j*8+2]=(vertex_data[j*8+2]+0.5)*z+Z;
+				else vertex_buffer[k*NUM*8+j*8+2]=vertex_data[j*8+2]*z+Z;
+				
+				vertex_buffer[k*NUM*8+j*8+3]=vertex_data[j*8+3];
+				vertex_buffer[k*NUM*8+j*8+4]=vertex_data[j*8+4];
+				vertex_buffer[k*NUM*8+j*8+5]=vertex_data[j*8+5];
+				if(vertex_data[j*8+3]==1.0f || vertex_data[j*8+3]==-1.0f ){
+					vertex_buffer[k*NUM*8+j*8+6]=vertex_data[j*8+6]*z;
+					vertex_buffer[k*NUM*8+j*8+7]=vertex_data[j*8+7]*y;
+				}
+				else if(vertex_data[j*8+4]==1.0f || vertex_data[j*8+4]==-1.0f){
+					vertex_buffer[k*NUM*8+j*8+6]=vertex_data[j*8+6]*x;
+					vertex_buffer[k*NUM*8+j*8+7]=vertex_data[j*8+7]*z;
+					
+				}
+				else {
+					vertex_buffer[k*NUM*8+j*8+6]=vertex_data[j*8+6]*x;
+					vertex_buffer[k*NUM*8+j*8+7]=vertex_data[j*8+7]*y;
+				}
+			}
+			k++;
+			//std::cout<<":"<<k;
 		}
 	}
  return vertex_buffer;	
@@ -311,8 +329,8 @@ void Context::genPrimitives(){
 Cube=new Primitive("Cube",0,false,true,false);
 CubeX=new Primitive("CubeX",0,true,true,false);
 CubeY=new Primitive("CubeY",0,false,true,true);
-	Cylinder=new Primitive("Cylinder",0,false,false,false);
-	Sphere=new Primitive("Sphere",0,false,false,false);
+	//Cylinder=new Primitive("Cylinder",0,false,false,false);
+	//Sphere=new Primitive("Sphere",0,false,false,false);
 }
 
 Context::Context()
@@ -320,8 +338,9 @@ Context::Context()
 {
 	
 	
-	
-	
+	primitives.clear();
+	texids.clear();
+	texindexes.clear();
 	
 	if(current_scope==NULL)current_scope=new Scope();
     
@@ -329,12 +348,11 @@ Context::Context()
 
 Context::~Context()
 {
-	for(int i=0;i<primitives.size();i++){
-		
-		
-		delete primitives[i];
-	}
- 	for(int i=0;i<primitives.size();i++){
+	delete Cube;
+	delete CubeX;
+	delete CubeY;
+
+		for(int i=0;i<primitive_scopes.size();i++){
 		
 		delete primitive_scopes[i];
 	}

@@ -340,10 +340,11 @@ void Token::performAction(Context *context){
 			texindex=(int)atof(MathS2(var_name).c_str());
 			//std::cout<<"MathS2: "<<texindex<<" "<<std::endl;
 			}
+		else texindex=arguments[0];
 		int arg=0;
 		float val=1.0f;
-		if(arguments.size()>0)arg=(int)arguments[0];
-		if(arguments.size()>1)val=arguments[1];
+		if(arguments.size()>1)arg=(int)arguments[1];
+		if(arguments.size()>2)val=arguments[2];
 		context->addPrimitive(instance_type,context->getCurrentScope(),texindex,arg,val);
 		context->getScene().add(instance);
 	}
@@ -654,8 +655,8 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 						if(token_str!=")"){
 						//	std::cout<<"token_str: "<<token_str<<" ";
 							token->var_name=token_str;
-							     //value=0.0f;
-							     //token->addArgument(value);
+							     value=0.0f;
+							     token->addArgument(value);
 							     lin>>token_str;
 						}
 						
@@ -1009,7 +1010,7 @@ variable_list.clear();
 std::vector<Token *> Grammar::Recurse(Rule *rule){
 	
 		
-		std::cout<<"Rule Name: "<<rule->rule_name;
+		//std::cout<<"Rule Name: "<<rule->rule_name;
 		
 		std::vector<Token *> new_tokens;
 		for(int i=0;i<rule->var_counter;i++){
@@ -1056,7 +1057,14 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 										check_token->var_names[i]="";
 									}
 						}
-					}		
+				}
+				else if(check_token->token_name=="I"){
+							if(check_token->var_name!=""){
+							 check_token-> arguments[0] =atof(MathS(check_token->var_name).c_str());
+							 check_token->var_name="";
+							}
+						}
+			
 				new_tokens.push_back(more_tokens[k]);
 		
 				}
@@ -1091,6 +1099,12 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 														check_token->var_names[i]="";
 													}
 												}
+											}
+											else if(check_token->token_name=="I"){
+												if(check_token->var_name!=""){
+												 check_token-> arguments[0] =atof(MathS(check_token->var_name).c_str());
+												 check_token->var_name="";
+												}
 											}		
 											
 											new_tokens.push_back(more_tokens[k]);
@@ -1113,6 +1127,13 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 										}
 									}
 								}
+								else if(check_token->token_name=="I"){
+												if(check_token->var_name!=""){
+												 check_token-> arguments[0] =atof(MathS(check_token->var_name).c_str());
+												 check_token->var_name="";
+												}
+								}		
+
 								new_tokens.push_back(check_token);
 							}
 							
@@ -1167,7 +1188,13 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 														check_token->var_names[i]="";
 													}
 												}
-											}		
+											}
+											else if(check_token->token_name=="I"){
+												if(check_token->var_name!=""){
+												 check_token-> arguments[0] =atof(MathS(check_token->var_name).c_str());
+												 check_token->var_name="";
+												}
+											}				
 											
 											new_tokens.push_back(more_tokens[k]);
 										}
@@ -1189,6 +1216,12 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 										}
 									}
 								}
+								else if(check_token->token_name=="I"){
+												if(check_token->var_name!=""){
+												 check_token-> arguments[0] =atof(MathS(check_token->var_name).c_str());
+												 check_token->var_name="";
+												}
+								}		
 								new_tokens.push_back(check_token);
 							}
 							
@@ -1221,7 +1254,13 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 													check_token->var_names[i]="";
 												}
 											}
-										}		
+										}	
+										else if(check_token->token_name=="I"){
+												if(check_token->var_name!=""){
+												 check_token-> arguments[0] =atof(MathS(check_token->var_name).c_str());
+												 check_token->var_name="";
+												}
+										}			
 										new_tokens.push_back(more_tokens[k]);
 									}
 									//std::cout<<"HERE007";
@@ -1244,7 +1283,12 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 										}
 									}
 								}
-								
+								else if(check_token->token_name=="I"){
+												if(check_token->var_name!=""){
+												 check_token-> arguments[0] =atof(MathS(check_token->var_name).c_str());
+												 check_token->var_name="";
+												}
+								}		
 								
 								new_tokens.push_back(check_token);
 							}
@@ -1294,8 +1338,8 @@ int Grammar::findRule(std::string rule_name){
 
 
 void Grammar::addContext(){
-std::cout<<"Adding Context..."<<std::endl;
-//if(context!=NULL)delete context;
+std::cout<<"Adding new Context..."<<std::endl;
+if(this->context!=NULL)delete this->context;
     this->context=new Context();
 }
 
