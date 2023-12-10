@@ -67,8 +67,8 @@ parts:
       - libxrender1
       - libcairo
       - libopencv_core
-      - libopencv_imgproc 
-      - libopencv_highgui
+       
+      
 
 
     
