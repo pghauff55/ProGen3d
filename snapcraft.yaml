@@ -68,7 +68,6 @@ parts:
       - libcairo
       - libopencv_core
       - libopencv_imgproc 
-      - libopencv_imgcodecs
       - libopencv_highgui
 
 
