@@ -18,6 +18,14 @@
 //#include "LBAssembler.h"
 
 
+
+
+
+
+std::vector<Variable *> variable_list;
+std::vector<Variable *> full_variable_list;
+
+
 extern std::mt19937_64 rng;
 
 std::vector<std::string> breakup(std::string input,std::string delimiter){
@@ -61,6 +69,10 @@ bool isnumber(const std::string& s)
     return !s.empty() && it == s.end();
 }
 
+
+
+
+
 Variable::Variable(std::string name,float min,float max,bool i){
 		this->var_name=name;
 		this->min=min;
@@ -79,7 +91,7 @@ float Variable::getRandom(){
 		else return unif(rng)*(max-min)+min;
 	}
 
-    std::vector<Variable *> variable_list;
+    
     
 int findVariable(std::string var_name){
 	////std::cout<<"Searching Back for "<<var_name<<std::endl;
@@ -134,6 +146,7 @@ void addVariable(std::string var_name,float min,float max,bool integer){
 		Variable *var=new Variable(var_name,min,max,integer);
 		var->value=var->getRandom();
 		variable_list.push_back(var);
+		full_variable_list.push_back(var);
 	}
 	
 	
@@ -148,6 +161,7 @@ void addVariable(std::string var_name){
 		Variable *var=new Variable(var_name,variable_list[index]->getRandom());
 		var->instance_count=variable_list[index]->instance_count+1;
 		variable_list.push_back(var);
+		full_variable_list.push_back(var);
 		////std::cout<<" SUCCESS"<<var->instance_count<<std::endl;
 	}
 	//else 
@@ -288,7 +302,7 @@ std::string Grammar::MathS(std::string input){
 				std::cout<<out<<"+";
 			sum+=out;
 			}
-		
+			std::cout<<"OUT="<<sum<<std::endl;
 	std::string out_str=std::to_string(sum);
 	if(isnumber(out_str))
 		return out_str;
@@ -394,14 +408,15 @@ void Token::performAction(Context *context){
 		instance.apply(transform);
 		int texindex=0;
 		
-		if(var_name!=""){
+		if(var_names[0]!=""){
 			texindex=(int)atof(MathS2(var_name).c_str());
 			//std::cout<<"MathS2: "<<texindex<<" "<<std::endl;
 			}
+			else texindex=(int)arguments[0];
 		int arg=0;
 		float val=0.125f;
-		if(arguments.size()>0)arg=(int)arguments[0];
-		if(arguments.size()>1)val=arguments[1];
+		if(arguments.size()>1)arg=(int)arguments[1];
+		if(arguments.size()>2)val=arguments[2];
 		context->addPrimitive(instance_type,context->getCurrentScope(),texindex,arg,val);
 		context->getScene().add(instance);
 	}
@@ -651,9 +666,16 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 						lin>>token_str;
 						if(token_str!=")"){
 						//	std::cout<<"token_str: "<<token_str<<" ";
-							token->var_name=token_str;
-							     //value=0.0f;
-							     //token->addArgument(value);
+							if(!isnumber(token_str)){
+								
+								token->var_names[0]=token_str;
+							     value=0.0f;
+							}
+							else {
+								token->var_names[0]="";
+								value=atof(token_str.c_str());
+							}
+							token->addArgument(value);
 							     lin>>token_str;
 						}
 						
@@ -943,6 +965,8 @@ for(int i=0;i<rule_list.size();i++){
 
 tokens_new.clear();
 rule_list.clear();
+variable_list.clear();
+full_variable_list.clear();
     
     std::string line;
     for(int i=0;i<lines.size();i++){
@@ -992,6 +1016,30 @@ rule_list.clear();
 }
 
 
+void Grammar::update_token(Token *check_token){
+
+						if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
+										
+						for(int i=0;i<3;i++){
+								if(check_token->var_names[i]!=""){
+													
+										check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
+													
+										check_token->var_names[i]="";
+									}
+						}
+					}
+						if(check_token->token_name=="I" ){
+							if(check_token->var_names[0]!=""){
+													
+										check_token->arguments[0]=atof(MathS(check_token->var_names[0]).c_str());
+													
+										check_token->var_names[0]="";
+									}
+							
+						}
+
+}
 
 
 
@@ -1034,19 +1082,8 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 			std::vector<Token *> more_tokens=Recurse(rule->alternate);
 		
 				for(int k=0;k<more_tokens.size();k++){
-						Token *check_token=more_tokens[k];
-						if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
-										
-						for(int i=0;i<3;i++){
-								if(check_token->var_names[i]!=""){
-													
-										check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
-													
-										check_token->var_names[i]="";
-									}
-						}
-					}		
-				new_tokens.push_back(more_tokens[k]);
+					update_token(more_tokens[k]);		
+					new_tokens.push_back(more_tokens[k]);
 		
 				}
 				
@@ -1069,19 +1106,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 										std::vector<Token *> more_tokens=Recurse(fromtoken);
 										////std::cout<<"HERE007";
 										for(int k=0;k<more_tokens.size();k++){
-											Token *check_token=more_tokens[k];
-											if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
-												
-												for(int i=0;i<3;i++){
-													if(check_token->var_names[i]!=""){
-														
-														check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
-														
-														check_token->var_names[i]="";
-													}
-												}
-											}		
-											
+											update_token(more_tokens[k]);
 											new_tokens.push_back(more_tokens[k]);
 										}
 									}
@@ -1092,16 +1117,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 							else {
 								    //std::cout<<"notRULE";
 								Token *check_token=new Token(rule->section_tokens[1][j]);
-								if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
-									
-									for(int i=0;i<3;i++){
-										if(check_token->var_names[i]!=""){
-											check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
-											
-											check_token->var_names[i]="";
-										}
-									}
-								}
+								update_token(check_token);
 								new_tokens.push_back(check_token);
 							}
 							
@@ -1145,19 +1161,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 										std::vector<Token *> more_tokens=Recurse(fromtoken);
 										////std::cout<<"HERE007";
 										for(int k=0;k<more_tokens.size();k++){
-											Token *check_token=more_tokens[k];
-											if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
-												
-												for(int i=0;i<3;i++){
-													if(check_token->var_names[i]!=""){
-														
-														check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
-														
-														check_token->var_names[i]="";
-													}
-												}
-											}		
-											
+											update_token(more_tokens[k]);
 											new_tokens.push_back(more_tokens[k]);
 										}
 									
@@ -1168,16 +1172,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 							else {
 								    //std::cout<<"notRULE";
 								Token *check_token=new Token(rule->section_tokens[m][j]);
-								if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
-									
-									for(int i=0;i<3;i++){
-										if(check_token->var_names[i]!=""){
-											check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
-											
-											check_token->var_names[i]="";
-										}
-									}
-								}
+								update_token(check_token);
 								new_tokens.push_back(check_token);
 							}
 							
@@ -1199,18 +1194,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 									std::vector<Token *> more_tokens=Recurse(fromtoken);
 									//std::cout<<"HERE006";
 									for(int k=0;k<more_tokens.size();k++){
-										Token *check_token=more_tokens[k];
-										if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
-											
-											for(int i=0;i<3;i++){
-												if(check_token->var_names[i]!=""){
-													
-													check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
-													
-													check_token->var_names[i]="";
-												}
-											}
-										}		
+										update_token(more_tokens[k]);
 										new_tokens.push_back(more_tokens[k]);
 									}
 									//std::cout<<"HERE007";
@@ -1222,19 +1206,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 								
 								
 								Token *check_token=new Token(rule->section_tokens[m][j]);
-								if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
-									
-									for(int i=0;i<3;i++){
-										if(check_token->var_names[i]!=""){
-											
-											check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
-											
-											check_token->var_names[i]="";
-										}
-									}
-								}
-								
-								
+								update_token(check_token);
 								new_tokens.push_back(check_token);
 							}
 							

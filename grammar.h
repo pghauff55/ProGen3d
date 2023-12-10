@@ -142,6 +142,7 @@ public:
     ~Grammar();
 	std::string ruleAlternate(Rule *rule,std::string line);
 	std::string ruleBody(Rule *,std::istringstream &lin,std::string line);
+	void update_token(Token *check_token);
     void Reread();
 	int findRule(std::string rule_name);
 	std::string MathS(std::string input);
