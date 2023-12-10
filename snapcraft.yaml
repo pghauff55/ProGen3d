@@ -22,6 +22,7 @@ parts:
       - libglu1-mesa-dev
       - libepoxy-dev
       - libglm-dev
+      - libopencv-dev
     stage-packages:
       - libatk-bridge2.0-0
       - libatk1.0-0
@@ -66,7 +67,11 @@ parts:
       - libxrandr2
       - libxrender1
       - libcairo
-      - libopencv_core
+      - libopencv-core4.2
+      - libopencv-highgui4.2
+      - libopencv-imgcodecs4.2
+      - libopencv-imgproc4.2
+      - libopencv-videoio4.2
        
       
 
