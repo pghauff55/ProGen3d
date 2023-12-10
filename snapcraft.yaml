@@ -65,7 +65,7 @@ parts:
       - libxinerama1
       - libxkbcommon0
       - libxrandr2
-      - libxrender
+      - libxrender1
       - libopencv-core4.2
       - libopencv-highgui4.2
       - libopencv-imgcodecs4.2
