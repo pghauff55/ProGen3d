@@ -65,6 +65,12 @@ parts:
       - libxkbcommon0
       - libxrandr2
       - libxrender1
+      - libcairo
+      - libopencv_core
+      - libopencv_imgproc 
+      - libopencv_imgcodecs
+      - libopencv_highgui
+
 
     
 apps:
