@@ -72,7 +72,7 @@ parts:
       - libopencv-imgproc4.2
       - libopencv-videoio4.2
       - libssl-dev
-      - libcrypto
+      
        
       
 
