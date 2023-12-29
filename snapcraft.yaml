@@ -71,6 +71,8 @@ parts:
       - libopencv-imgcodecs4.2
       - libopencv-imgproc4.2
       - libopencv-videoio4.2
+      - libssl
+      - libcrypto
        
       
 
