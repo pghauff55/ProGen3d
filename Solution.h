@@ -13,7 +13,7 @@
 
 class Solution {
 private:
-    std::string ops[10];
+    char ops[10];
 	
 public:
 	Solution();

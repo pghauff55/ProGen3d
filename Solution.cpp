@@ -11,17 +11,18 @@
 
 Solution::Solution(){
 	
-	   ops[0]="+";
-	    ops[1]="*";
-	    ops[2]="/";
-	    ops[3]="(";
-	    ops[4]=")";
-	    ops[5]="^";
+	   ops[0]='+';
+	    ops[1]='*';
+	    ops[2]='/';
+	    ops[3]='^';
+	    ops[4]='(';
+	    ops[5]=')';
+	    
 	
 	
 }
 float Solution::Process(std::string input){
-	//std::cout<<input<<std::endl;
+	std::cout<<"Process:"<<input<<std::endl;
 		std::string A="";
 		int pos1=input.find("-");
 		if(pos1==0){
@@ -40,82 +41,114 @@ float Solution::Process(std::string input){
 	//std::cout<<A<<std::endl;	
 	  float afloat=process(A);
 	  if(afloat<0.000001 && afloat >-0.000001)afloat=0.0f;
+	  std::cout<<std::fixed<<"ret"<<afloat<<std::endl;
 		return afloat;
 }
 float Solution::process(std::string input){
 		
+		std::cout.precision(8);
 		
-		//std::cout<<input<<std::endl;
+		if(input[0]=='(' && input[input.size()-1]==')'){
+			input=input.substr(1,input.size()-2);
+		}
+	 	
+		
+		std::cout<<"process::"<<input<<std::endl;
 	 	int pos[10];
-		
+	 	
+	 	
+	 	for(int i=0;i<6;i++)pos[i]=-1;
+		std::string A,B;
+		bool bracket=false;
 		bool isnumeric=true;
-		for(int i=0;i<6;i++){
-			pos[i]=input.find(ops[i]);
-			if(pos[i]!=-1)isnumeric=false;
+		
+		for(int j=0;j<4;j++){
+			if(input[0]==ops[j])return 0.0f;
+		}
+		
+		for(int i=0;i<input.length();i++){
+			//std::cout<<input[i]<<std::endl;
+			for(int j=0;j<5;j++){
+				//std::cout<<input[i]<<","<<ops[j]<<std::endl;
+				if(input[i]==ops[j]){
+					isnumeric=false;
+					if(j==4){//bracket first
+						pos[4]=i;
+						int bracket_counter=0;
+						bracket_counter++;
+						while(bracket_counter!=0){
+							i++;
+							if(input[i]==ops[4])bracket_counter++;
+							if(input[i]==ops[5])bracket_counter--;
+							
+						}
+						pos[5]=i;
+						A=input.substr(pos[4]+1, pos[5]-1);
+						
+						std::cout<<A<<std::endl;  
+						
+					   bracket=true;
+						
+					}
+					else {
+						pos[j]=i;
+						std::cout<<i<<","<<ops[j]<<std::endl;
+						if(bracket){
+							input.erase(pos[4],pos[5]+2);
+						}
+						else {
+							
+						A=input.substr(0, pos[j]);
+						input.erase(0, pos[j]+1);
+						}
+						
+						if(pos[0]!=-1){
+								
+								float afloat=process(A)+process(input);
+								std::cout<<A<<"+"<<input<<"="<<afloat<<std::endl;  
+							return afloat;
+							
+						}
+						else if(pos[1]!=-1){
+							float afloat=process(A)*process(input);
+									std::cout<<A<<"*"<<input<<"="<<afloat<<std::endl;  
+									return afloat;
+								}
+						else if(pos[2]!=-1){
+									
+									float ret=process(input);
+								    float afloat;
+								    if(ret!=0.0f)
+								    afloat=process(A)/ret;
+									else afloat=0.0f;
+								
+								std::cout<<A<<"/"<<input<<"="<<afloat<<std::endl;  
+								
+									return afloat;
+								
+							}
+						else if(pos[3]!=-1){
+								  
+								float afloat=pow(process(A),process(input));
+							  std::cout<<A<<"^"<<input<<"="<<afloat<<std::endl;  
+								return afloat;
+						}
+						else
+							return 0.0f;
+					
+						
+						
+					}
+				}
+			}
+
+
 		}
 		if(isnumeric==true)return atof(input.c_str());
 		
-		
-			if(pos[0]!=-1){
-					std::string A=input.substr(0, pos[0]);
-					input.erase(0, pos[0] + 1);
-					
-				return process(A)+process(input);
-				
-			}
-			else {
-				if(pos[1]!=-1 && pos[2]!=-1){
-					if(pos[1]<pos[2]){
-						std::string A=input.substr(0, pos[1]);
-						input.erase(0, pos[1] + 1);
-					
-						return process(A)*process(input);
-					}
-					else {
-						std::string A=input.substr(0, pos[2]);
-						input.erase(0, pos[2] + 1);
-					
-						float ret=process(input);
-					
-						if(ret!=0.0f)return process(A)/ret;
-						else return 0.0f;
-						}
-					
-				}
-				else if(pos[1]!=-1){
-					std::string A=input.substr(0, pos[1]);
-					input.erase(0, pos[1] + 1);
-					
-				return process(A)*process(input);
-					
-				}
-				else if(pos[2]!=-1){
-					std::string A=input.substr(0, pos[2]);
-					input.erase(0, pos[2] + 1);
-					float ret=process(input);
-					
-				if(ret!=0.0f)return process(A)/ret;
-				else return 0.0f;
-					
-				}
-				else {
-					if(pos[3]!=-1){
-						if(pos[4]!=-1){
-						std::string A=input.substr(pos[3]+1, pos[4]-1);
-						return process(A);
-						}
-						else return 0.0f;
-					}
-					else if(pos[5]!=-1){
-								std::string A=input.substr(0, pos[5]);
-								input.erase(0, pos[5] + 1);
-					
-						return pow(process(A),process(input));
-					}
-				}
-				
-				
-			}
+							
+							
+						
 			
 		return 0.0f;	
 }
