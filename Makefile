@@ -10,12 +10,12 @@ CXXFLAGS =  -g -O3 -I /usr/include -I /usr/include/atkmm-1.6/ -I /usr/include/pa
               -I /usr/lib/x86_64-linux-gnu/sigc++-2.0/include/ -I /usr/include/sigc++-2.0/   \
               -I /usr/include/gtk-3.0/ -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pango-1.0 -I/usr/include/harfbuzz \
              -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/at-spi2-atk/2.0 -I/usr/include/at-spi-2.0 -I/usr/include/dbus-1.0 \
-             -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/include/atk-1.0  -I /usr/include/opencv4/ -L /usr/local/lib/ -L /usr/lib/x86_64-linux-gnu/
+             -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/include/atk-1.0  -I /usr/include/opencv4/  -L /usr/lib/x86_64-linux-gnu/
              
              
 LIBS =                /lib/x86_64-linux-gnu/libGLU.a         /lib/x86_64-linux-gnu/libpng16.a                          /lib/x86_64-linux-gnu/libX11.a      
-LIBDYN = -lstdc++ -lgtk-3 -lpango-1.0 -lgdk-3 -lgdk_pixbuf-2.0 -lpangocairo-1.0    \
-  -lgio-2.0 -lgobject-2.0 -lglib-2.0  -lGLU -lGL   -lepoxy -ldl -lm -lpthread -lcairo -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui  -lssl -lcrypto
+LIBDYN = -lstdc++ -lssl -lcrypto -lgtk-3 -lpango-1.0 -lgdk-3 -lgdk_pixbuf-2.0 -lpangocairo-1.0    \
+  -lgio-2.0 -lgobject-2.0 -lglib-2.0  -lGLU -lGL   -lepoxy -ldl -lm -lpthread -lcairo -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui  
 
 
 LIBSA =            			   /usr/lib/x86_64-linux-gnu/libgmodule-2.0.a  \
