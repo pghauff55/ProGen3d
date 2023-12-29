@@ -15,7 +15,7 @@ CXXFLAGS =  -g -O3 -I /usr/include -I /usr/include/atkmm-1.6/ -I /usr/include/pa
              
 LIBS =                /lib/x86_64-linux-gnu/libGLU.a         /lib/x86_64-linux-gnu/libpng16.a                          /lib/x86_64-linux-gnu/libX11.a      
 LIBDYN = -lstdc++ -lgtk-3 -lpango-1.0 -lgdk-3 -lgdk_pixbuf-2.0 -lpangocairo-1.0    \
-  -lgio-2.0 -lgobject-2.0 -lglib-2.0  -lGLU -lGL   -lepoxy -ldl -lm -lpthread -lcairo -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui $(pkg-config --cflags --libs libcrypto)
+  -lgio-2.0 -lgobject-2.0 -lglib-2.0  -lGLU -lGL   -lepoxy -ldl -lm -lpthread -lcairo -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -lcrypto
 
 
 LIBSA =            			   /usr/lib/x86_64-linux-gnu/libgmodule-2.0.a  \
