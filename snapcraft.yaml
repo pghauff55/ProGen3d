@@ -66,11 +66,11 @@ parts:
       - libxkbcommon0
       - libxrandr2
       - libxrender1
-      - libopencv-core4.2
-      - libopencv-highgui4.2
-      - libopencv-imgcodecs4.2
-      - libopencv-imgproc4.2
-      - libopencv-videoio4.2
+      - libopencv-core4.5
+      - libopencv-highgui4.5
+      - libopencv-imgcodecs4.5
+      - libopencv-imgproc4.5
+      - libopencv-videoio4.5
       - libssl-dev
       - libopencv-dev
       - libopencv-contrib-dev
