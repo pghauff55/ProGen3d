@@ -1,5 +1,5 @@
 name: progen3d
-version: "0.4c"
+version: "0.8a"
 summary: Grammar based 3d Procedural Generator
 description: 
   ProGen3d is a grammar based procedural generator with textures and can export to PLY format.
