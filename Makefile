@@ -10,7 +10,7 @@ CXXFLAGS =  -g -O3 -I /usr/include -I /usr/include/atkmm-1.6/ -I /usr/include/pa
               -I /usr/lib/x86_64-linux-gnu/sigc++-2.0/include/ -I /usr/include/sigc++-2.0/   \
               -I /usr/include/gtk-3.0/ -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pango-1.0 -I/usr/include/harfbuzz \
              -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/at-spi2-atk/2.0 -I/usr/include/at-spi-2.0 -I/usr/include/dbus-1.0 \
-             -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/include/atk-1.0  -I /usr/local/include/opencv4/ -L /usr/local/lib/
+             -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/include/atk-1.0  -I /usr/include/opencv4/ -L /usr/local/lib/
              
              
 LIBS =                /lib/x86_64-linux-gnu/libGLU.a         /lib/x86_64-linux-gnu/libpng16.a                          /lib/x86_64-linux-gnu/libX11.a      
