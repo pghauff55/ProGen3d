@@ -46,5 +46,6 @@ clean:
 	
 
 install: $(TARGET)
-	install -d $(DESTDIR)/bin/
-	install -D $^ $(DESTDIR)/bin/
+	mv ProGen3d $(DESTDIR)
+	cp *.png $(DESTDIR)
+	cp test.grammar $(DESTDIR)
