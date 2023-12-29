@@ -57,32 +57,64 @@ class Token{
 		if(token_name!="{" && token_name!="}" && token_name!="+" && token_name!="*" && token_name!="[" && token_name!="]" && instance_type=="" && arguments.size()==0)return token_name;
 		else return "";
 	}
-	void print(){
-		std::cout<<"Token: "<<token_name<<" -> ";
-		if(var_name!="")std::cout<<var_name<<":";
-		if(arguments.size()>0){
-			std::cout<<" ( ";
-			for(int i=0;i<arguments.size();i++){
-			std::cout<<arguments[i]<<" ";
-			}
-			std::cout<<" ) ";
+	std::string print(){
+		std::stringstream ss;
+		
+		ss.precision(5);
+		if(token_name=="R" && integer==true)ss<<token_name<<"* ";
+		else ss<<token_name<<" ";
+		if(token_name=="[" || token_name=="]" || isRule()!="")return ss.str();
+		if(var_name!="")ss<<var_name<<" ";
+		ss<<"( ";
+		if(instance_type!=""){
+			ss<<instance_type<<" ";
 		}
 		if(var_names[0]!=""){
-		
+		   ss<<var_names[0]<<" ";
 		}
+		else {
+		std::stringstream ss2;	
+			ss2<<std::fixed<<arguments[0]<<" ";
+			std::string str1=ss2.str();
+			int pos=str1.find(".00000");
+			if(pos!=-1){
+				str1.erase(str1.begin()+pos,str1.begin()+pos+6+1);
+			}
+			ss<<str1+" ";
+		}
+		
 		if(var_names[1]!=""){
-	            	
+	         ss<<var_names[1]<<" "; 	
 		}
-		if(var_names[2]!=""){
-		
+		else {
+		std::stringstream ss2;	
+			ss2<<std::fixed<<arguments[1]<<" ";
+			std::string str1=ss2.str();
+			int pos=str1.find(".00000");
+			if(pos!=-1){
+				str1.erase(str1.begin()+pos,str1.begin()+pos+6+1);
+			}
+			ss<<str1+" ";
 		}
-		
-		std::cout<<"["<<var_names[0]<<" "<<var_names[1]<<" "<<var_names[2]<<"]";
-		if(instance_type!=""){
-			std::cout<<instance_type<<":"<<instance_type;
+		if(arguments.size()>2){
+			if(var_names[2]!=""){
+				ss<<var_names[2]<<" "; 	
+			}
+			else {
+			std::stringstream ss2;	
+			ss2<<std::fixed<<arguments[2]<<" ";
+			std::string str1=ss2.str();
+			int pos=str1.find(".00000");
+			if(pos!=-1){
+				str1.erase(str1.begin()+pos,str1.begin()+pos+6+1);
+			}
+			ss<<str1+" ";
+				
+				
+			}
 		}
-		std::cout<<std::endl;
-		
+		ss<<") ";
+		return ss.str();
 	}
 	
 	void performAction(Context *context);
@@ -122,12 +154,36 @@ class Rule {
 		if(count==repeat)return false;
 		else return true;
 	}
-	
+	std::string print(){
+		std::stringstream ss;
+		ss<<rule_name<<" ";
+		if(var_name!="")ss<<var_name<<" ";
+		else ss<<repeat<<" ";
+		for(int i=0;i<var_counter;i++){
+			if(var_names[i]!="")ss<<var_names[i]<<" ";
+		}
+		if(probability<1.0f)ss<<"; "<<probability<<" ";
+		ss<<"-> ";
+		for(int k=0;k<3;k++){
+			for(int j=0;j<section_tokens[k].size();j++){
+				ss<<section_tokens[k][j]->print();
+			}
+			if(k==0 && section_tokens[0].size()!=0)ss<<"| ";
+			if(k==1 && section_tokens[2].size()!=0)ss<<"| ";
+		}
+		if(alternate!=NULL){
+			ss<<"-> ";
+			for(int j=0;j<alternate->section_tokens[1].size();j++){
+				ss<<alternate->section_tokens[1][j]->print();
+			}
+		}
+		return ss.str();
+	}
 	int repeat=1,count=0;
 	std::string rule_name;
 	std::vector<Token *> tokens,section_tokens[3];
 	std::string var_name;
-	std::string var_names[10];
+	std::string var_names[20];
 	bool modify;
 	bool divideby2;
 	int var_counter=0;

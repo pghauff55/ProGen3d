@@ -14,8 +14,7 @@
 #include "Context.h"
 #include "Scope.h"
 #include "grammar.h"
-//#include "MathParser.h"
-//#include "LBAssembler.h"
+#include "Solution.h"
 
 
 
@@ -27,6 +26,17 @@ std::vector<Variable *> full_variable_list;
 
 
 extern std::mt19937_64 rng;
+
+std::string removeSpaces(std::string word) {
+    std::string newWord;
+    for (int i = 0; i < word.length(); i++) {
+        if (word[i] != ' ') {
+            newWord += word[i];
+        }
+    }
+
+    return newWord;
+}
 
 std::vector<std::string> breakup(std::string input,std::string delimiter){
 		std::vector<std::string> output;
@@ -41,20 +51,13 @@ std::vector<std::string> breakup(std::string input,std::string delimiter){
 		
 		    output.push_back(str);
 		}
+		//input=removeSpaces(input);
+		//if(input!="")
 		output.push_back(input);
 		return output;
 }
 
-std::string removeSpaces(std::string word) {
-    std::string newWord;
-    for (int i = 0; i < word.length(); i++) {
-        if (word[i] != ' ') {
-            newWord += word[i];
-        }
-    }
 
-    return newWord;
-}
 
 bool checkAlpha(std::string str){
     for(int i = 0; i < str.size(); i++)
@@ -174,15 +177,19 @@ void addVariable(std::string var_name){
 
 
 std::string MathS2(std::string input){
+	Solution X;
+	//return std::to_string(X.Solve(input));
+	
+	
 		//mathS::Assembler assembler;
-				std::cout<<"IN:"<<input<<";";
+				//std::cout<<"IN:"<<input<<";";
 			bool remove_var=false;
 			//replace variables with floats
 		for(int i=variable_list.size()-1;i>=0;i--){
 			std::string str2 = variable_list[i]->var_name;
 					int pos=0;
 		      while((pos=input.find(str2))!=-1){
-				  std::cout<<"===="<<str2;
+				//  std::cout<<"===="<<str2;
 				  remove_var=true;
 				  input.replace(pos,str2.length(),std::to_string(variable_list[i]->value));	
 				
@@ -194,8 +201,98 @@ std::string MathS2(std::string input){
 			   }
 		}
 		
+	return std::to_string(X.Process(input));	
+		/*
+		 * 
+std::string replacevars(std::string input,bool remove_var){
+	
+		std::string output="";
 		
+	    std::string ops[7];
+		ops[0]="+";
+	    ops[1]="*";
+	    ops[2]="/";
+	    ops[3]="(";
+	    ops[4]=")";
+	    ops[5]="^";
+	    ops[6]="-";
+	    std::vector<std::pair<int,int>> pos_ops_list;
+	    
+		for(int i=0;i<7;i++){
+			int pos;
+			
+			while((pos=input.find(ops[i]))!=-1){
+				input.replace(pos,1," ");
+				std::cout<<input<<":"<<pos<<":"<<ops[i]<<std::endl;
+				pos_ops_list.push_back(std::make_pair(pos,i));
+			}
+		}
+		  if(pos_ops_list.size()==0){
+		std::cout<<":"<<input<<":"<<std::endl;
+			  for(int i=variable_list.size()-1;i>=0;i--){
+					if(variable_list[i]->max==variable_list[i]->min){
+						std::string str2 = variable_list[i]->var_name;
+						std::string str1=removeSpaces(input);
+						if(str1==str2){
+							output=std::to_string(variable_list[i]->value);
+							if(remove_var)removeVariable(str2);
+						}
+					}
+			  }
+		  }
+		  else {
+			  std::sort(pos_ops_list.begin(), pos_ops_list.end());
 		
+			std::string varstr;
+			std::vector<std::string> lines=breakup(input," ");
+			int counter=0;
+			if(pos_ops_list[counter].first==0){
+					output+=ops[pos_ops_list[counter++].second];
+			}
+			
+			for(int j=0;j<lines.size();j++){
+			
+					bool matched=false;
+					for(int i=variable_list.size()-1;i>=0;i--){
+						if(variable_list[i]->max==variable_list[i]->min){
+							std::string str2 = variable_list[i]->var_name;
+							std::string str1=removeSpaces(lines[j]);
+							if(str1==str2){
+								output+=std::to_string(variable_list[i]->value);
+								if(counter<pos_ops_list.size())output+=ops[pos_ops_list[counter++].second];
+								matched=true;
+								if(remove_var)removeVariable(str2);
+								break;
+							}
+						}
+					}
+					if(matched==false){
+						output+=removeSpaces(lines[j]);
+						if(counter<pos_ops_list.size())output+=ops[pos_ops_list[counter++].second];
+				}
+				
+			}
+		
+	}
+		std::cout<<output<<std::endl;
+	return output;
+}
+
+
+std::string MathS2(std::string input){
+	Solution X;
+
+	return std::to_string(X.Process(replacevars(input,true)));	
+
+}
+std::string Grammar::MathS(std::string input){
+	Solution X;
+		
+		return std::to_string(X.Process(replacevars(input,false)));	
+		
+	
+}
+
 		std::vector<std::string> mul_div;
 		std::vector<int> sign_addition;
 		std::vector<std::string> addition=breakup(input,"+");
@@ -227,7 +324,7 @@ std::string MathS2(std::string input){
 			}
 		
 		
-		std::cout<<"OUT="<<sum<<std::endl;
+		//std::cout<<"OUT="<<sum<<std::endl;
 		
 		
 	
@@ -235,79 +332,30 @@ std::string MathS2(std::string input){
 	if(isnumber(out_str))
 		return out_str;
 	else
+	return input;*/
+}
+
+std::string replacevars(std::string input){
+	for(int i=variable_list.size()-1;i>=0;i--){
+			if(variable_list[i]->max==variable_list[i]->min){
+			std::string str2 = variable_list[i]->var_name;
+					
+		      if(input.find(str2)!=-1){
+				 
+				  input.replace(input.find(str2),str2.length(),std::to_string(variable_list[i]->value));	
+				 break;
+			  }
+		  }
+		}
 	return input;
 }
 
 std::string Grammar::MathS(std::string input){
-		//mathS::Assembler assembler;
-				std::cout<<"IN:"<<input<<";";
-			//replace variables with floats
-		for(int i=variable_list.size()-1;i>=0;i--){
-			if(variable_list[i]->max==variable_list[i]->min){
-			std::string str2 = variable_list[i]->var_name;
-					
-		      if(input.find(str2)!=-1){
-				  std::cout<<"===="<<str2;
-				  input.replace(input.find(str2),str2.length(),std::to_string(variable_list[i]->value));	
-				 break;
-			  }
-		  }
-		}
-		//std::cout<<"IN:"<<input<<";";
+	Solution X;
 		
-			//replace variables with floats
-		for(int i=variable_list.size()-1;i>=0;i--){
-			if(variable_list[i]->max==variable_list[i]->min){
-			std::string str2 = variable_list[i]->var_name;
-					
-		      if(input.find(str2)!=-1){
-				  std::cout<<"===="<<str2;
-				  input.replace(input.find(str2),str2.length(),std::to_string(variable_list[i]->value));	
-				 break;
-			  }
-		  }
-		}
-		std::cout<<"IN:"<<input<<";";
+		return std::to_string(X.Process(replacevars(replacevars(replacevars(replacevars(input))))));	
 		
-		
-		
-		
-		std::vector<std::string> mul_div;
-		std::vector<int> sign_addition;
-		std::vector<std::string> addition=breakup(input,"+");
-		for(int i=0;i<addition.size();i++){
-			std::vector<std::string> minus=breakup(addition[i],"-");
-			for(int j=0;j<minus.size();j++){
-				
-				if(j>0){
-					mul_div.push_back(minus[j]);
-					sign_addition.push_back(-1);
-				}
-				else {
-					mul_div.push_back(minus[j]);
-					sign_addition.push_back(1);
-				}
-			}
-		}
-		float sum=0.0f;
-		for(int i=0;i<mul_div.size();i++){
-			std::vector<std::string> mul=breakup(mul_div[i],"*");
-			float out=1.0f*(float)sign_addition[i];
-			for(int j=0;j<mul.size();j++){
-				std::vector<std::string> div=breakup(mul[j],"/");
-				if(div.size()==2)out*=atof(div[0].c_str())/atof(div[1].c_str());
-				else out*=atof(div[0].c_str());
-						 
-				}
-				std::cout<<out<<"+";
-			sum+=out;
-			}
-			std::cout<<"OUT="<<sum<<std::endl;
-	std::string out_str=std::to_string(sum);
-	if(isnumber(out_str))
-		return out_str;
-	else
-	return input;
+	
 }
 
 
@@ -841,13 +889,16 @@ std::string Grammar::ruleBody(Rule *rule,std::istringstream &lin,std::string lin
 		sections=breakup(line,delimiter);
 		
 		int num_sections=sections.size();
-		 
+		
+		if( line[line.length()-1]=='|'){
+			num_sections--;std::cout<<"CORRECTION | trailing"<<std::endl;
+		}
 		 
 		 if(num_sections>3){
 			 std::cout<<"Too many sections "<<num_sections<<std::endl;
-			 exit(0);
+			 return "";
 		 }
-
+		std::cout<<"sections: "<<num_sections<<"{"<<line<<"}"<<std::endl;
 		
 		if(num_sections==1){
 			ReadTokens(rule,line,1);
@@ -923,11 +974,12 @@ Grammar::Grammar(std::string filePath)
 			std::string rulename;
 			lin >> rulename;
 			//std::cout<<"Rule name:"<<rulename<<" "<<line<<std::endl;
-			Rule *rule=new Rule(rulename,1);
 			
-			line=ruleBody(rule,lin,rule_sections[1]);
+				Rule *rule=new Rule(rulename,1);
 			
-			if(rule_sections.size()>2)ruleAlternate(rule,rule_sections[2]);
+				line=ruleBody(rule,lin,rule_sections[1]);
+			
+				if(rule_sections.size()>2)ruleAlternate(rule,rule_sections[2]);
 			
 			
 		}
@@ -988,11 +1040,12 @@ full_variable_list.clear();
 			std::string rulename;
 			lin >> rulename;
 			//std::cout<<"Rule name:"<<rulename<<" "<<line<<std::endl;
-			Rule *rule=new Rule(rulename,1);
 			
-			line=ruleBody(rule,lin,rule_sections[1]);
+				Rule *rule=new Rule(rulename,1);
 			
-			if(rule_sections.size()>2)ruleAlternate(rule,rule_sections[2]);
+				line=ruleBody(rule,lin,rule_sections[1]);
+			
+				if(rule_sections.size()>2)ruleAlternate(rule,rule_sections[2]);
 			
 			
 		}

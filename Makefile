@@ -2,15 +2,20 @@
 
 
 TARGET=ProGen3d
-OBJS=main.o  Grammar.o   Context.o   Mesh.o  PLYWriter.o  Scope.o 
+OBJS=main.o  Grammar.o   Context.o   Mesh.o  PLYWriter.o  Scope.o Solution.o
        
 CXX = gcc
-CXXFLAGS =  -g -O3 -I /usr/include/opencv4/ -I /usr/include -I /usr/include/atkmm-1.6/ -I /usr/include/pangomm-1.4/ -I /usr/include/freetype2/ -I /usr/include/cairomm-1.0/              -I /usr/lib/x86_64-linux-gnu/pangomm-1.4/include/               -I /usr/lib/x86_64-linux-gnu/sigc++-2.0/include/ -I /usr/include/sigc++-2.0/                 -I /usr/include/gtk-3.0/ -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pango-1.0 -I/usr/include/harfbuzz              -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/at-spi2-atk/2.0 -I/usr/include/at-spi-2.0 -I/usr/include/dbus-1.0              -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/include/atk-1.0   -L /usr/local/lib/
+CXXFLAGS =  -g -O3 -I /usr/include -I /usr/include/atkmm-1.6/ -I /usr/include/pangomm-1.4/ -I /usr/include/freetype2/ -I /usr/include/cairomm-1.0/ \
+             -I /usr/lib/x86_64-linux-gnu/pangomm-1.4/include/  \
+              -I /usr/lib/x86_64-linux-gnu/sigc++-2.0/include/ -I /usr/include/sigc++-2.0/   \
+              -I /usr/include/gtk-3.0/ -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/pango-1.0 -I/usr/include/harfbuzz \
+             -I/usr/include/cairo -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/at-spi2-atk/2.0 -I/usr/include/at-spi-2.0 -I/usr/include/dbus-1.0 \
+             -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/include/atk-1.0  -I /usr/local/include/opencv4/ -L /usr/local/lib/
              
              
 LIBS =                /lib/x86_64-linux-gnu/libGLU.a         /lib/x86_64-linux-gnu/libpng16.a                          /lib/x86_64-linux-gnu/libX11.a      
 LIBDYN = -lstdc++ -lgtk-3 -lpango-1.0 -lgdk-3 -lgdk_pixbuf-2.0 -lpangocairo-1.0    \
-  -lgio-2.0 -lgobject-2.0 -lglib-2.0  -lGLU -lGL   -lepoxy -ldl -lm -lpthread -lcairo -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui
+  -lgio-2.0 -lgobject-2.0 -lglib-2.0  -lGLU -lGL   -lepoxy -ldl -lm -lpthread -lcairo -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui  -lssl -lcrypto
 
 
 LIBSA =            			   /usr/lib/x86_64-linux-gnu/libgmodule-2.0.a  \
@@ -37,8 +42,9 @@ $(TARGET):$(OBJS)
 
 clean:
 	rm -f $(TARGET) *.o
+	
+	
 
 install: $(TARGET)
-	mv $(TARGET) $(DESTDIR)
-	cp *.png $(DESTDIR)
-	cp test.grammar $(DESTDIR)
+	install -d $(DESTDIR)/bin/
+	install -D $^ $(DESTDIR)/bin/
