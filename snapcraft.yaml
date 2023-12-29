@@ -23,6 +23,7 @@ parts:
       - libepoxy-dev
       - libglm-dev
       - libopencv-dev
+      - libssl-dev
     stage-packages:
       - libatk-bridge2.0-0
       - libatk1.0-0
