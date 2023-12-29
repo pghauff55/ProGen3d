@@ -74,6 +74,7 @@ parts:
       - libssl-dev
       - libopencv-dev
       - libopencv-contrib-dev
+      - libopencv-core-dev
        
       
 
