@@ -20,7 +20,7 @@
 
 
 
-
+extern void errorout(std::string error_str);
 std::vector<Variable *> variable_list;
 std::vector<Variable *> full_variable_list;
 
@@ -97,12 +97,12 @@ float Variable::getRandom(){
     
     
 int findVariable(std::string var_name){
-	////std::cout<<"Searching Back for "<<var_name<<std::endl;
+	//////std::cout<<<<"Searching Back for "<<var_name<<std::endl;
 	for(int i=variable_list.size()-1;i>=0;i--){
 	
 		if(variable_list[i]->var_name.compare(var_name)==0) {
 	
-			////std::cout<<"Found "<<var_name<<"="<<variable_list[i]->value<<std::endl;
+			//////std::cout<<<<"Found "<<var_name<<"="<<variable_list[i]->value<<std::endl;
 		return i;
 		}
 	
@@ -110,12 +110,12 @@ int findVariable(std::string var_name){
 	return -1;
 }
 int findVariableForward(std::string var_name){
-	////std::cout<<"Searching Forward for "<<var_name<<std::endl;
+	//////std::cout<<<<"Searching Forward for "<<var_name<<std::endl;
 	for(int i=0;i<variable_list.size();i++){
 	
 		if(variable_list[i]->var_name.compare(var_name)==0) {
 	
-			////std::cout<<"Found "<<var_name<<"="<<variable_list[i]->value<<std::endl;
+			//////std::cout<<<<"Found "<<var_name<<"="<<variable_list[i]->value<<std::endl;
 		return i;
 		}
 	
@@ -157,7 +157,7 @@ void addVariable(std::string var_name,float min,float max,bool integer){
 
 void addVariable(std::string var_name){
 	
-	////std::cout<<"Adding variable "<<var_name;
+	//////std::cout<<<<"Adding variable "<<var_name;
 	int index=findVariableForward(var_name);
 	if(index!=-1){
 	
@@ -165,10 +165,10 @@ void addVariable(std::string var_name){
 		var->instance_count=variable_list[index]->instance_count+1;
 		variable_list.push_back(var);
 		full_variable_list.push_back(var);
-		////std::cout<<" SUCCESS"<<var->instance_count<<std::endl;
+		//////std::cout<<<<" SUCCESS"<<var->instance_count<<std::endl;
 	}
 	//else 
-		////std::cout<<" FAILED"<<std::endl;
+		//////std::cout<<<<" FAILED"<<std::endl;
 }
     
     
@@ -182,14 +182,14 @@ std::string MathS2(std::string input){
 	
 	
 		//mathS::Assembler assembler;
-				//std::cout<<"IN:"<<input<<";";
+				////std::cout<<<<"IN:"<<input<<";";
 			bool remove_var=false;
 			//replace variables with floats
 		for(int i=variable_list.size()-1;i>=0;i--){
 			std::string str2 = variable_list[i]->var_name;
 					int pos=0;
 		      while((pos=input.find(str2))!=-1){
-				//  std::cout<<"===="<<str2;
+				//  //std::cout<<<<"===="<<str2;
 				  remove_var=true;
 				  input.replace(pos,str2.length(),std::to_string(variable_list[i]->value));	
 				
@@ -223,12 +223,12 @@ std::string replacevars(std::string input,bool remove_var){
 			
 			while((pos=input.find(ops[i]))!=-1){
 				input.replace(pos,1," ");
-				std::cout<<input<<":"<<pos<<":"<<ops[i]<<std::endl;
+				//std::cout<<<<input<<":"<<pos<<":"<<ops[i]<<std::endl;
 				pos_ops_list.push_back(std::make_pair(pos,i));
 			}
 		}
 		  if(pos_ops_list.size()==0){
-		std::cout<<":"<<input<<":"<<std::endl;
+		//std::cout<<<<":"<<input<<":"<<std::endl;
 			  for(int i=variable_list.size()-1;i>=0;i--){
 					if(variable_list[i]->max==variable_list[i]->min){
 						std::string str2 = variable_list[i]->var_name;
@@ -274,7 +274,7 @@ std::string replacevars(std::string input,bool remove_var){
 			}
 		
 	}
-		std::cout<<output<<std::endl;
+		//std::cout<<<<output<<std::endl;
 	return output;
 }
 
@@ -318,13 +318,13 @@ std::string Grammar::MathS(std::string input){
 				std::vector<std::string> div=breakup(mul[j],"/");
 				if(div.size()==2)out*=atof(div[0].c_str())/atof(div[1].c_str());
 				else out*=atof(div[0].c_str());
-						 std::cout<<out<<"+";
+						 //std::cout<<<<out<<"+";
 				}
 			sum+=out;
 			}
 		
 		
-		//std::cout<<"OUT="<<sum<<std::endl;
+		////std::cout<<<<"OUT="<<sum<<std::endl;
 		
 		
 	
@@ -372,7 +372,7 @@ void Token::performAction(Context *context){
 		
 		Scope *newScope = context->getCurrentScope();
 		
-		////std::cout<<"***001";
+		//////std::cout<<<<"***001";
 		glm::vec3 size;
 		
 		if(var_names[0]!=""){
@@ -394,16 +394,16 @@ void Token::performAction(Context *context){
 		}
 		else size.z=arguments[2];
 		
-		////std::cout << "S (" << size.x << ", " << size.y << ", " << size.z << ") ";
+		//////std::cout<< << "S (" << size.x << ", " << size.y << ", " << size.z << ") ";
 		
 		//size *= newScope->getSize();
 		//size = glm::vec3(abs(size.x), abs(size.y), abs(size.z));
 		
-		////std::cout << "S* (" << size.x << ", " << size.y << ", " << size.z << ") "<<std::endl;
+		//////std::cout<< << "S* (" << size.x << ", " << size.y << ", " << size.z << ") "<<std::endl;
 		newScope->S(size);
 		glm::vec3 pos = context->getCurrentScope()->getPosition();
     glm::vec3 contextSize = context->getCurrentScope()->getSize();
-    ////std::cout << " -- Current scope -> POS: (" << pos.x << ", " << pos.y << ", " << pos.z << ") SIZE: (" << contextSize.x << ", " << contextSize.y << ", " << contextSize.z << ") " << std::endl;
+    //////std::cout<< << " -- Current scope -> POS: (" << pos.x << ", " << pos.y << ", " << pos.z << ") SIZE: (" << contextSize.x << ", " << contextSize.y << ", " << contextSize.z << ") " << std::endl;
 		
 	}
 	else if(token_name=="T"){
@@ -432,17 +432,17 @@ void Token::performAction(Context *context){
 		
 	}
 	else if(token_name=="*"){
-		////std::cout<<"***002";
+		//////std::cout<<<<"***002";
 			if(var_name!=""){
 				int index=findVariable(var_name);
 				if(index!=-1 ){
 					if(variable_list[index]->max==variable_list[index]->min) removeVariable(var_name);
 				}
-			//	else //std::cout<<"not found";
+			//	else ////std::cout<<<<"not found";
 			}
 	}
 	else if(token_name=="+"){
-		////std::cout<<"***003";
+		//////std::cout<<<<"***003";
 			if(var_name!=""){
 				
 				 addVariable(var_name);
@@ -458,7 +458,7 @@ void Token::performAction(Context *context){
 		
 		if(var_names[0]!=""){
 			texindex=(int)atof(MathS2(var_name).c_str());
-			//std::cout<<"MathS2: "<<texindex<<" "<<std::endl;
+			////std::cout<<<<"MathS2: "<<texindex<<" "<<std::endl;
 			}
 			else texindex=(int)arguments[0];
 		int arg=0;
@@ -601,15 +601,16 @@ void Grammar::ReadTokens2(Rule *rule,std::string rule_str,int index_k){
 
 
 void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
+	try{
 	std::istringstream lin(rule_str);
 			
-			//std::cout<<"("<<index_k<<"): ";
+			////std::cout<<<<"("<<index_k<<"): ";
 			
 			std::string token_str;
 			float value;
 			
 			while(lin>>token_str){
-				//std::cout<<token_str;
+				////std::cout<<<<token_str;
 				Token *token;
 				if(token_str=="S" || token_str=="T" || token_str=="Sr" ){
 					token=new Token(token_str);
@@ -622,7 +623,7 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 						for(int i=0;i<3;i++){
 							lin>>token_str;
 							
-							//std::cout<<" "<<token_str;
+							////std::cout<<<<" "<<token_str;
 							
 							if(!isnumber(token_str)){
 								
@@ -637,14 +638,14 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 						}
 						lin>>token_str;
 						if(token_str!=")"){
-							//std::cout<<"Error-expected ')' 001 "<<std::endl;
-							exit(1);
+							////std::cout<<<<"Error-expected ')' 001 "<<std::endl;
+							throw(1);
 							}
 					rule->addToken(token,index_k);
 					}
 					else {
-						//std::cout<<"Error-expected '(' 001"<<std::endl;
-						exit(1);
+						////std::cout<<<<"Error-expected '(' 001"<<std::endl;
+						throw(1);
 						
 					}
 				}
@@ -664,7 +665,7 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 				
 					token->var_name=token_str;
 					
-					//std::cout<<" "<<token_str;
+					////std::cout<<<<" "<<token_str;
 					
 					
 					lin>>token_str;
@@ -680,8 +681,8 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 						
 						lin>>token_str;
 						if(token_str!=")"){
-							//std::cout<<"Error-expected ')' 002 "<<std::endl;
-							exit(1);
+							////std::cout<<<<"Error-expected ')' 002 "<<std::endl;
+							throw(1);
 						}
 					
 					
@@ -691,8 +692,8 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 					rule->addToken(token,index_k);
 					}
 					else {
-						//std::cout<<"Error-expected '(' 002"<<std::endl;
-						exit(1);
+						////std::cout<<<<"Error-expected '(' 002"<<std::endl;
+						throw(1);
 					}
 				}
 				else if(token_str=="I"){
@@ -705,15 +706,15 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 							token->addInstanceType(token_str);
 						}
 						else {
-							//std::cout<<"Error-expected ')' 003 "<<std::endl;
-							exit(1);
+							////std::cout<<<<"Error-expected ')' 003 "<<std::endl;
+							throw(1);
 						}
 						
 						
 						
 						lin>>token_str;
 						if(token_str!=")"){
-						//	std::cout<<"token_str: "<<token_str<<" ";
+						//	//std::cout<<<<"token_str: "<<token_str<<" ";
 							if(!isnumber(token_str)){
 								
 								token->var_names[0]=token_str;
@@ -729,7 +730,7 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 						
 				
 						if(token_str!=")"){
-							std::cout<<"token_str: "<<token_str<<" ";
+							//std::cout<<<<"token_str: "<<token_str<<" ";
 							//token->var_name=token_str;
 							     value=atof(token_str.c_str());
 							     token->addArgument(value);
@@ -737,7 +738,7 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 						}
 						
 						if(token_str!=")"){
-							std::cout<<"token_str: "<<token_str<<" ";
+							//std::cout<<<<"token_str: "<<token_str<<" ";
 							//token->var_name=token_str;
 							     value=atof(token_str.c_str());
 							     token->addArgument(value);
@@ -750,13 +751,16 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 						
 						}
 						else {
-							//std::cout<<"Error-expected ')' 003 "<<std::endl;
-							exit(1);
+							////std::cout<<<<"Error-expected ')' 003 "<<std::endl;
+							throw(1);
 						}
 						
 			
 					}
-					//else //{//std::cout<<"Missing ("<<std::endl;exit(1);}
+					else {
+						////std::cout<<<<"Missing ("<<std::endl;exit(1);
+						throw(1);
+						}
 					
 				}
 				else if(token_str=="*"){
@@ -768,12 +772,12 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 					rule->addToken(token,index_k);					
 				}
 				else if(token_str=="+"){
-					token=new Token(token_str);
-					lin>>token->var_name;
+					//token=new Token(token_str);
+					//lin>>token->var_name;
 					
 					
 					
-					rule->addToken(token,index_k);					
+					//rule->addToken(token,index_k);					
 				}
 				else if(token_str=="["){
 					token=new Token(token_str);
@@ -785,13 +789,13 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 					rule->addToken(token,index_k);
 				}
 				else if(token_str=="{"){
-					token=new Token(token_str);
-					rule->addToken(token,index_k);
+					//token=new Token(token_str);
+					//rule->addToken(token,index_k);
 					
 				}
 				else if(token_str=="}"){
-					token=new Token(token_str);
-					rule->addToken(token,index_k);
+					//token=new Token(token_str);
+					//rule->addToken(token,index_k);
 				}
 				else {
 					
@@ -803,10 +807,16 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 					
 				}
 			
-			////std::cout<<"//std::cout<<" "<<token_str;section("<<index_k<<"):"<<token->token_name<<std::endl;	
+			//////std::cout<<<<"////std::cout<<<<" "<<token_str;section("<<index_k<<"):"<<token->token_name<<std::endl;	
 				
 			
 			}
+}catch(int e_number){
+	
+	std::string error_str="Token Error "+std::to_string(e_number);
+	errorout(error_str);
+	
+}
 }
 
 
@@ -826,9 +836,9 @@ std::string Grammar::ruleBody(Rule *rule,std::istringstream &lin,std::string lin
 				
 				if(isnumber(token_str)){
 					rule->probability=atof(token_str.c_str());
-				//std::cout<<"PROBABILITY:"<<rule->probability<<std::endl;
+				////std::cout<<<<"PROBABILITY:"<<rule->probability<<std::endl;
 				}
-				//else {//std::cout<<"not number must be"<<std::endl;exit(1);}
+				//else {////std::cout<<<<"not number must be"<<std::endl;exit(1);}
 		}
 		else {
 		
@@ -854,7 +864,7 @@ std::string Grammar::ruleBody(Rule *rule,std::istringstream &lin,std::string lin
 						rule->var_counter++;
 					}
 				
-					//	//std::cout<<token_str;
+					//	////std::cout<<<<token_str;
 			 }
 			while(true);
 
@@ -863,9 +873,9 @@ std::string Grammar::ruleBody(Rule *rule,std::istringstream &lin,std::string lin
 					
 					if(isnumber(token_str)){
 						rule->probability=atof(token_str.c_str());
-					//std::cout<<"PROBABILITY:"<<rule->probability<<std::endl;
+					////std::cout<<<<"PROBABILITY:"<<rule->probability<<std::endl;
 					}
-					//else {//std::cout<<"not number must be"<<std::endl;exit(1);}
+					//else {////std::cout<<<<"not number must be"<<std::endl;exit(1);}
 			}
 		
 		}
@@ -891,14 +901,14 @@ std::string Grammar::ruleBody(Rule *rule,std::istringstream &lin,std::string lin
 		int num_sections=sections.size();
 		
 		if( line[line.length()-1]=='|'){
-			num_sections--;std::cout<<"CORRECTION | trailing"<<std::endl;
+			num_sections--;//std::cout<<<<"CORRECTION | trailing"<<std::endl;
 		}
 		 
 		 if(num_sections>3){
-			 std::cout<<"Too many sections "<<num_sections<<std::endl;
+			 //std::cout<<<<"Too many sections "<<num_sections<<std::endl;
 			 return "";
 		 }
-		std::cout<<"sections: "<<num_sections<<"{"<<line<<"}"<<std::endl;
+		////std::cout<<<<"sections: "<<num_sections<<"{"<<line<<"}"<<std::endl;
 		
 		if(num_sections==1){
 			ReadTokens(rule,line,1);
@@ -950,7 +960,10 @@ Grammar::Grammar(std::string filePath)
 
     std::ifstream fin(filePath);
     if (!fin.is_open()) {
-        std::cerr << "E: Could not open file " << filePath << std::endl;
+		std::stringstream ss;
+		
+        ss << "E: Could not open file " << filePath << std::endl;
+        errorout(ss.str());
         return;
     }
 
@@ -973,7 +986,7 @@ Grammar::Grammar(std::string filePath)
 			std::istringstream lin(rule_sections[0]+" ->");
 			std::string rulename;
 			lin >> rulename;
-			//std::cout<<"Rule name:"<<rulename<<" "<<line<<std::endl;
+			////std::cout<<<<"Rule name:"<<rulename<<" "<<line<<std::endl;
 			
 				Rule *rule=new Rule(rulename,1);
 			
@@ -993,10 +1006,11 @@ Grammar::Grammar(std::string filePath)
 		
 		tokens_new=Recurse(rule_list[0]);
 		
-	
-	std::cout<<"Finshed reading Grammar file..."<<std::endl;
+	std::stringstream ss;
+	ss<<"Finshed reading Grammar file..."<<std::endl;
+	errorout(ss.str());
 		
-	//exit(1);
+	
 	
 	
 	
@@ -1005,7 +1019,7 @@ Grammar::Grammar(std::string filePath)
 
 void Grammar::Reread()
 {
-   
+   try {
    
    for(int i=0;i<tokens_new.size();i++){
    delete tokens_new[i];
@@ -1039,7 +1053,7 @@ full_variable_list.clear();
 			std::istringstream lin(rule_sections[0]+" ->");
 			std::string rulename;
 			lin >> rulename;
-			//std::cout<<"Rule name:"<<rulename<<" "<<line<<std::endl;
+			////std::cout<<<<"Rule name:"<<rulename<<" "<<line<<std::endl;
 			
 				Rule *rule=new Rule(rulename,1);
 			
@@ -1060,9 +1074,13 @@ full_variable_list.clear();
 		tokens_new=Recurse(rule_list[0]);
 		
 	
-	std::cout<<"Finshed Re-reading Grammar file..."<<std::endl;
+	errorout("Finshed Re-reading Grammar file...");
 		
-	//exit(1);
+	}
+	
+	catch(...){
+		errorout("caught exeception reread grammar");
+	}
 	
 	
 	
@@ -1098,8 +1116,8 @@ void Grammar::update_token(Token *check_token){
 
 std::vector<Token *> Grammar::Recurse(Rule *rule){
 	
-		
-		////std::cout<<"Rule Name: "<<rule->rule_name;
+		try{
+		//////std::cout<<<<"Rule Name: "<<rule->rule_name;
 		
 		std::vector<Token *> new_tokens;
 		for(int i=0;i<rule->var_counter;i++){
@@ -1109,7 +1127,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 			addVariable(variable_list[index]->var_name);
 		}
 		
-		////std::cout<<"Rule Var Name: "<<rule->var_name;
+		//////std::cout<<<<"Rule Var Name: "<<rule->var_name;
 		
 		
 		//int index=findVariable
@@ -1129,7 +1147,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 			std::uniform_real_distribution<double> unif(0, 1);
 			roll=unif(rng);//rand()/(float)RAND_MAX;
 		
-		//std::cout<<"Roll<<roll<<std::endl;
+		////std::cout<<<<"Roll<<roll<<std::endl;
 		if(rule->probability>roll){
 			
 			std::vector<Token *> more_tokens=Recurse(rule->alternate);
@@ -1144,37 +1162,37 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 		else {
 	
 		for(int l=0;l<rule->repeat;l++){
-		                //std::cout<<"l_"<<l<<";"<<std::endl;
+		                ////std::cout<<<<"l_"<<l<<";"<<std::endl;
 						for(int j=0;j<rule->section_tokens[1].size();j++){
-							//std::cout<<"j_"<<j<<";";	
+							////std::cout<<<<"j_"<<j<<";";	
 							if(rule->section_tokens[1][j]->isRule()!=""){
-								   // //std::cout<<"RULE;";
+								   // ////std::cout<<<<"RULE;";
 								int index=findRule(rule->section_tokens[1][j]->token_name);
 								if(index!=-1){
 									Rule *fromtoken = rule_list[index];
 									
-									////std::cout<<"PROB"<<prob<<">"<<fromtoken->probability<<std::endl;
+									//////std::cout<<<<"PROB"<<prob<<">"<<fromtoken->probability<<std::endl;
 									
-										////std::cout<<"HERE009";
+										//////std::cout<<<<"HERE009";
 										std::vector<Token *> more_tokens=Recurse(fromtoken);
-										////std::cout<<"HERE007";
+										//////std::cout<<<<"HERE007";
 										for(int k=0;k<more_tokens.size();k++){
 											update_token(more_tokens[k]);
 											new_tokens.push_back(more_tokens[k]);
 										}
 									}
-									//std::cout<<"HERE008";
+									////std::cout<<<<"HERE008";
 							  
-						//std::cout<<"HERE0010";
+						////std::cout<<<<"HERE0010";
 							}
 							else {
-								    //std::cout<<"notRULE";
+								    ////std::cout<<<<"notRULE";
 								Token *check_token=new Token(rule->section_tokens[1][j]);
 								update_token(check_token);
 								new_tokens.push_back(check_token);
 							}
 							
-						//std::cout<<"HERE0011";	
+						////std::cout<<<<"HERE0011";	
 						}
 					
 				}
@@ -1193,51 +1211,51 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 	
 	
 	
-		////std::cout<<"REPEAT="<<rule->repeat<<std::endl;
+		//////std::cout<<<<"REPEAT="<<rule->repeat<<std::endl;
 			
 		for(int m=0;m<3;m++){
 		
-				//std::cout<<"m_"<<m<<std::endl<<std::endl;
+				////std::cout<<<<"m_"<<m<<std::endl<<std::endl;
 				if(m==1){
 					for(int l=0;l<rule->repeat;l++){
-		                //std::cout<<"l_"<<l<<";"<<std::endl;
+		                ////std::cout<<<<"l_"<<l<<";"<<std::endl;
 						for(int j=0;j<rule->section_tokens[m].size();j++){
-							//std::cout<<"j_"<<j<<";";	
+							////std::cout<<<<"j_"<<j<<";";	
 							if(rule->section_tokens[m][j]->isRule()!=""){
-								   // //std::cout<<"RULE;";
+								   // ////std::cout<<<<"RULE;";
 								int index=findRule(rule->section_tokens[m][j]->token_name);
 								if(index!=-1){
 									Rule *fromtoken = rule_list[index];
 									
-									////std::cout<<"PROB"<<prob<<">"<<fromtoken->probability<<std::endl;
+									//////std::cout<<<<"PROB"<<prob<<">"<<fromtoken->probability<<std::endl;
 									
 										std::vector<Token *> more_tokens=Recurse(fromtoken);
-										////std::cout<<"HERE007";
+										//////std::cout<<<<"HERE007";
 										for(int k=0;k<more_tokens.size();k++){
 											update_token(more_tokens[k]);
 											new_tokens.push_back(more_tokens[k]);
 										}
 									
-									//std::cout<<"HERE008";
+									////std::cout<<<<"HERE008";
 							  }
-						//std::cout<<"HERE0010";
+						////std::cout<<<<"HERE0010";
 							}
 							else {
-								    //std::cout<<"notRULE";
+								    ////std::cout<<<<"notRULE";
 								Token *check_token=new Token(rule->section_tokens[m][j]);
 								update_token(check_token);
 								new_tokens.push_back(check_token);
 							}
 							
-						//std::cout<<"HERE0011";	
+						////std::cout<<<<"HERE0011";	
 						}
-					//std::cout<<"HERE0012";
+					////std::cout<<<<"HERE0012";
 					}
-					//std::cout<<"HERE013";
-					//std::cout<<std::endl;
+					////std::cout<<<<"HERE013";
+					////std::cout<<<<std::endl;
 				}
 				else {
-					//std::cout<<"HERE001";
+					////std::cout<<<<"HERE001";
 						for(int j=0;j<rule->section_tokens[m].size();j++){
 						
 							if(rule->section_tokens[m][j]->isRule()!=""){
@@ -1245,12 +1263,12 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 								if(index!=-1){
 									Rule *fromtoken = rule_list[index];
 									std::vector<Token *> more_tokens=Recurse(fromtoken);
-									//std::cout<<"HERE006";
+									////std::cout<<<<"HERE006";
 									for(int k=0;k<more_tokens.size();k++){
 										update_token(more_tokens[k]);
 										new_tokens.push_back(more_tokens[k]);
 									}
-									//std::cout<<"HERE007";
+									////std::cout<<<<"HERE007";
 								}
 						
 							}
@@ -1272,7 +1290,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 		
 		
 		
-		//std::cout<<"HERE004";
+		////std::cout<<<<"HERE004";
 		
 	}
 	
@@ -1281,8 +1299,16 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 			
 			removeVariable(rule->var_names[i]);
 		}
-	//std::cout<<"HERE005";
-		return new_tokens;
+	return new_tokens;
+	}
+	catch(...){
+		
+		errorout("caught exception recurse grammar");
+		std::vector<Token *> empty;
+		return empty;
+	}
+	////std::cout<<<<"HERE005";
+		
 		
 }
 	
@@ -1293,12 +1319,12 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 
 
 int Grammar::findRule(std::string rule_name){
-	//std::cout<<"Searching for rule:  "<<rule_name<<std::endl;
+	////std::cout<<<<"Searching for rule:  "<<rule_name<<std::endl;
 	for(int i=0;i<rule_list.size();i++){
 	
 		if(rule_list[i]->rule_name.compare(rule_name)==0) {
 			
-			//std::cout<<"Found "<<rule_name<<std::endl;
+			////std::cout<<<<"Found "<<rule_name<<std::endl;
 		return i;
 		}
 	
@@ -1308,7 +1334,7 @@ int Grammar::findRule(std::string rule_name){
 
 
 void Grammar::addContext(){
-std::cout<<"Adding Context..."<<std::endl;
+//std::cout<<<<"Adding Context..."<<std::endl;
 //if(context!=NULL)delete context;
     this->context=new Context();
 }
@@ -1345,14 +1371,14 @@ Grammar::~Grammar(){
     for(int k=0;k<tokens_new.size();k++){
 		//tokens_new[k]->print();
 			
-			//std::cout<<k<<",";
+			////std::cout<<<<k<<",";
 			delete tokens_new[k];
 			
 	}		
 	
 	
 	//for(int i=0;i<rule_list.size();i++){
-	//	std::cout<<i<<",";
+	//	//std::cout<<<<i<<",";
 	 //delete rule_list[i];	
 	//}
 	

@@ -46,7 +46,7 @@ int primes[10][3] = {
   { 997169939, 842027887, 423882827 }
 };
 public:
-Noise2d(int,int);
+Noise2d(int,double);
 double Noise(int,int,int);
 double SmoothedNoise(int,int,int);
 double Interpolate(double,double,double);

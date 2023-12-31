@@ -252,7 +252,7 @@ GLfloat *Context::calc(const GLfloat *vertex_data,int tex_index){
 		if(texindexes[i]==tex_index)texcount++;
 	}
 	
-	std::cout<<"size:"<<primitives.size()<<"texindex:"<<tex_index<<" texcount:"<<texcount<<std::endl;
+	//std::cout<<"size:"<<primitives.size()<<"texindex:"<<tex_index<<" texcount:"<<texcount<<std::endl;
 	tex_count[tex_index]=texcount;
 	if(texcount==0)return NULL;
 	GLfloat *vertex_buffer=new GLfloat[NUM*8*texcount];

@@ -22,7 +22,7 @@ Solution::Solution(){
 	
 }
 float Solution::Process(std::string input){
-	std::cout<<"Process:"<<input<<std::endl;
+	//std::cout<<"Process:"<<input<<std::endl;
 		std::string A="";
 		int pos1=input.find("-");
 		if(pos1==0){
@@ -41,7 +41,7 @@ float Solution::Process(std::string input){
 	//std::cout<<A<<std::endl;	
 	  float afloat=process(A);
 	  if(afloat<0.000001 && afloat >-0.000001)afloat=0.0f;
-	  std::cout<<std::fixed<<"ret"<<afloat<<std::endl;
+	  //std::cout<<std::fixed<<"ret"<<afloat<<std::endl;
 		return afloat;
 }
 float Solution::process(std::string input){
@@ -53,7 +53,7 @@ float Solution::process(std::string input){
 		}
 	 	
 		
-		std::cout<<"process::"<<input<<std::endl;
+	//	std::cout<<"process::"<<input<<std::endl;
 	 	int pos[10];
 	 	
 	 	
@@ -65,14 +65,18 @@ float Solution::process(std::string input){
 		for(int j=0;j<4;j++){
 			if(input[0]==ops[j])return 0.0f;
 		}
-		
+		int J=0;
+	while(isnumeric && J<4){
 		for(int i=0;i<input.length();i++){
 			//std::cout<<input[i]<<std::endl;
-			for(int j=0;j<5;j++){
+			for(int j=0;j<2;j++){
+				int m;
 				//std::cout<<input[i]<<","<<ops[j]<<std::endl;
-				if(input[i]==ops[j]){
-					isnumeric=false;
-					if(j==4){//bracket first
+				if(j==0)m=4;
+				else m=J;
+				if(input[i]==ops[m]){
+					
+					if(m==4){//bracket first
 						pos[4]=i;
 						int bracket_counter=0;
 						bracket_counter++;
@@ -85,33 +89,34 @@ float Solution::process(std::string input){
 						pos[5]=i;
 						A=input.substr(pos[4]+1, pos[5]-1);
 						
-						std::cout<<A<<std::endl;  
+						//std::cout<<A<<std::endl;  
 						
 					   bracket=true;
 						
 					}
 					else {
-						pos[j]=i;
-						std::cout<<i<<","<<ops[j]<<std::endl;
+						isnumeric=false;
+						pos[m]=i;
+						//std::cout<<i<<","<<ops[m]<<std::endl;
 						if(bracket){
 							input.erase(pos[4],pos[5]+2);
 						}
 						else {
 							
-						A=input.substr(0, pos[j]);
-						input.erase(0, pos[j]+1);
+						A=input.substr(0, pos[m]);
+						input.erase(0, pos[m]+1);
 						}
 						
 						if(pos[0]!=-1){
 								
 								float afloat=process(A)+process(input);
-								std::cout<<A<<"+"<<input<<"="<<afloat<<std::endl;  
+								//std::cout<<A<<"+"<<input<<"="<<afloat<<std::endl;  
 							return afloat;
 							
 						}
 						else if(pos[1]!=-1){
 							float afloat=process(A)*process(input);
-									std::cout<<A<<"*"<<input<<"="<<afloat<<std::endl;  
+									//std::cout<<A<<"*"<<input<<"="<<afloat<<std::endl;  
 									return afloat;
 								}
 						else if(pos[2]!=-1){
@@ -122,7 +127,7 @@ float Solution::process(std::string input){
 								    afloat=process(A)/ret;
 									else afloat=0.0f;
 								
-								std::cout<<A<<"/"<<input<<"="<<afloat<<std::endl;  
+								//std::cout<<A<<"/"<<input<<"="<<afloat<<std::endl;  
 								
 									return afloat;
 								
@@ -130,7 +135,7 @@ float Solution::process(std::string input){
 						else if(pos[3]!=-1){
 								  
 								float afloat=pow(process(A),process(input));
-							  std::cout<<A<<"^"<<input<<"="<<afloat<<std::endl;  
+							 // std::cout<<A<<"^"<<input<<"="<<afloat<<std::endl;  
 								return afloat;
 						}
 						else
@@ -144,6 +149,9 @@ float Solution::process(std::string input){
 
 
 		}
+		J++;
+		bracket=false;
+	}
 		if(isnumeric==true)return atof(input.c_str());
 		
 							
@@ -156,7 +164,7 @@ float Solution::process(std::string input){
 
 
 
-Noise2d::Noise2d(int numOctaves,int persistence){
+Noise2d::Noise2d(int numOctaves,double persistence){
 	this->numOctaves=numOctaves;
 	this->persistence=persistence;
 }

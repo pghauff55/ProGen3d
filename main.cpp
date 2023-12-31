@@ -79,7 +79,7 @@ std::string portnum="pppp";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-                                                   char appname[]="ProGen3d 0.8a";                //////////////////////////////
+                                                   char appname[]="ProGen3d 0.8b";                //////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -114,16 +114,18 @@ extern std::vector<Variable *> full_variable_list;
 
 static GtkWidget *window;
 static GtkWidget *notebook,*layout,*drawing_area2,*layout3,*layout4;
+static GtkWidget *colorchooser1;
 static GtkWidget *gl_area;
-static GtkTextBuffer *mybuffer;
+static GtkTextBuffer *mybuffer,*errorbuffer;
 static GtkWidget *view;
 static GtkWidget *file_label;
-static GtkWidget *scale_slider3;
+static GtkWidget *scale_slider3,*scale_slider4;
 
 char const * filterPatterns[1] = { "*.grammar"  };
 
 float angle_view=0.0f;
 float scale_global=0.3f;
+float elevation_view=0.0f;
 
 std::vector<int> texture_list;
 std::vector<std::string> texture_filenames;
@@ -132,23 +134,23 @@ bool loggedin=false;
 bool play=true;
 
 void display( void );
-GtkWidget *labels[2000];
-GtkWidget *ruleslabel[200];
+GtkWidget *labels[10000];
+GtkWidget *ruleslabel[1000];
 bool setup_textures=true;
 bool setup_vars=true;
 bool setup_rules=true;
-GtkWidget *frames[40];
-GtkBox *token_box[40];
-GtkComboBoxText *combo1[40],*combo2[40],*combo3[40];
-GtkComboBoxText *token_label[40];
-GtkWidget *token_button[40];
-GtkWidget *token_button_add[40];
-GtkWidget *token_button_add_movedown[40];
-GtkWidget *token_button_add_moveup[40];
+GtkWidget *frames[140];
+GtkBox *token_box[140];
+GtkComboBoxText *combo1[140],*combo2[140],*combo3[140];
+GtkComboBoxText *token_label[140];
+GtkWidget *token_button[140];
+GtkWidget *token_button_add[140];
+GtkWidget *token_button_add_movedown[140];
+GtkWidget *token_button_add_moveup[140];
 int img_counter=0;
-GtkWidget *button_remove_img[30];
-GtkWidget *button_moveup_img[30];
-GtkWidget *button_movedown_img[30];
+GtkWidget *button_remove_img[50];
+GtkWidget *button_moveup_img[50];
+GtkWidget *button_movedown_img[50];
 GtkWidget *layout2;
 GtkWidget *genlabel1;
 GtkWidget *genlabel2;
@@ -160,10 +162,21 @@ GtkWidget *genlabelG1;
 GtkWidget *gencomboG1;
 GtkWidget *genlabelB1;
 GtkWidget *gencomboB1;
+ GtkWidget *entry1,*entry2;
+ 
+ GtkWidget *box6,*box,*paned,*vpaned,*box3,*box4,*box5,*box8,*box7,*box9,*box10,*box11;
+ 
+ GtkActionBar *actionbar,*actionbar3,*actionbar7,*actionbar5,*actionbar6;
+   GtkWidget *runbutton,*newbutton;
+  GtkWidget *savebutton;
+  GtkWidget *plybutton;
+  GtkWidget *playbutton3;
+  GtkWidget *stopbutton3;
+  GtkWidget *texture_filechooser;
 
- GtkActionBar *actionbar2;
-char *rulenames[200];
-GtkWidget *view2;
+ GtkActionBar *actionbar2,*actionbar4;
+char *rulenames[1000];
+GtkWidget *view2,*viewerror;
 
 GtkTextBuffer *buffer2;
 
@@ -275,6 +288,26 @@ static GLuint position_buffer,position_buffer1[50];
 static GLuint program;
 static GLuint vao,vao1[50];
 int tex_count[50];
+
+
+
+
+
+
+void errorout(std::string error_str){
+	GtkTextMark* mark;
+	GtkTextIter end;
+	
+	error_str+="\n";
+	gtk_text_buffer_get_end_iter(errorbuffer,&end);
+	gtk_text_buffer_insert(errorbuffer,&end,error_str.c_str(),error_str.length());
+	
+	
+	gtk_text_buffer_get_end_iter(errorbuffer,&end);
+	mark = gtk_text_buffer_create_mark    (errorbuffer, NULL, &end, 1);
+   gtk_text_view_scroll_to_mark((GtkTextView *)viewerror, mark, 0.0, 0, 0.0, 1.0);
+   gtk_text_buffer_delete_mark (errorbuffer, mark);
+}
 
 std::vector<std::string> breakup_into_lines(std::string input,std::string delimiter){
 		std::vector<std::string> output;
@@ -393,8 +426,9 @@ int OpenConnection(const char *hostname, int port)
 	if ( connect(sd, (struct sockaddr*)&addr, sizeof(addr)) != 0 )  /*initiate a connection on a socket*/
 	{
 		close(sd);
-		perror(hostname);
-		abort();
+		//perror(hostname);
+		//abort();
+		return -1;
 	}
 return sd;
 }
@@ -410,8 +444,9 @@ SSL_CTX* InitCTX(void)     /*creating and setting up ssl context structure*/
 	ctx = SSL_CTX_new(method);   /* Create new context */
 	if ( ctx == NULL )
 	{
-		ERR_print_errors_fp(stderr);
-		abort();
+		//ERR_print_errors_fp(stderr);
+		//abort();
+		return NULL;
 	}
 
 return ctx;
@@ -419,7 +454,9 @@ return ctx;
 void LoadCertificates(SSL_CTX* ctx, std::string CertFile, std::string KeyFile)   /* to load a certificate into an SSL_CTX structure*/
 {	/* set the local certificate from CertFile */
 	if ( SSL_CTX_use_certificate_file(ctx, CertFile.c_str(), SSL_FILETYPE_PEM) <= 0 )	{
-			std::cout<< "use certificate failed "<<CertFile<<std::endl;
+		std::stringstream ss;
+			ss<< "use certificate failed "<<CertFile<<std::endl;
+			errorout(ss.str());
 			//exit(0);
 	}	
 	/* set the private key from KeyFile (may be the same as CertFile) */
@@ -443,18 +480,20 @@ void ShowCerts(SSL* ssl)  /*show the ceritficates to server and match them but h
 	
 	cert = SSL_get_peer_certificate(ssl); /* get the server's certificate */
 	if ( cert != NULL )
-	{
-		std::cout<<"Server certificates:"<<std::endl;
+	{	
+		std::stringstream ss;
+		ss<<"Server certificates:"<<std::endl;
 		line = X509_NAME_oneline(X509_get_subject_name(cert), 0, 0);
-		std::cout<<"Subject: "<<line<<std::endl;
+		ss<<"Subject: "<<line<<std::endl;
 		free(line);       /* free the malloc'ed string */
 		line = X509_NAME_oneline(X509_get_issuer_name(cert), 0, 0);
-		std::cout<<"Issuer: "<<line<<std::endl;
+		ss<<"Issuer: "<<line<<std::endl;
 		free(line);       /* free the malloc'ed string */
 		X509_free(cert);     /* free the malloc'ed certificate copy */
+		errorout(ss.str());
 	}
 	else
-		std::cout<<"Info: No client certificates configured."<<std::endl;
+		errorout("Info: No client certificates configured.");
 
 }
 
@@ -506,7 +545,9 @@ int generateTexture(const char * filename)
     int picWidth,picHeight,n;
     unsigned char* image = stbi_load(filename, &picWidth, &picHeight, &n,STBI_rgb_alpha);
     if (image == NULL ) {
-        std::cout<<"Failed to load image: "<<stbi_failure_reason()<<std::endl;
+		std::stringstream ss;
+        ss<<"Failed to load image: "<<stbi_failure_reason()<<std::endl;
+        errorout(ss.str());
     }
     //Generate the image
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA , picWidth , picHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
@@ -528,6 +569,7 @@ int generateTexture(const char * filename)
 
 
 std::vector<std::string> globVector(const std::string& pattern){
+	try{
     glob_t glob_result;
     memset(&glob_result, 0, sizeof(glob_result));
     
@@ -535,9 +577,9 @@ std::vector<std::string> globVector(const std::string& pattern){
     while((return_value=glob(pattern.c_str(),GLOB_TILDE,NULL,&glob_result))!=0){
 		 
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
-		if(count++>20){
-			std::cout<<"glob_error"<<std::endl;
-			exit(0);
+		if(count++>30){
+			throw(1);
+			
 		}
 	}
     
@@ -548,13 +590,19 @@ std::vector<std::string> globVector(const std::string& pattern){
     }
     globfree(&glob_result);
     return files;
+    
+}catch(...){
+	errorout("glob error");
+	std::vector<std::string> out;
+	return out;
+}
 }
 
 
 void   setup(){
   
     
-    std::cout<<"setup"<<std::endl;
+    errorout("setup");
 
     
    
@@ -570,7 +618,7 @@ void   setup(){
 		grammar->addContext();
 	
 	
-	std::cout<<"Read files..."<<std::endl;
+	errorout("Read files...");
 	
 	
 if(loggedin==true){
@@ -591,8 +639,9 @@ LoadCertificates(ctx, "mycert.pem", "mycertkey.pem");
 	if ( SSL_connect(ssl) != FAIL )   /* perform the connection */
 	{    
 	
-	
-		std::cout<<"Connected with encryption "<< SSL_get_cipher(ssl)<<std::endl;
+		std::stringstream ss;
+		ss<<"Connected with encryption "<< SSL_get_cipher(ssl)<<std::endl;
+		errorout(ss.str());
 		ShowCerts(ssl);
 		/* get any certs */
 
@@ -689,7 +738,10 @@ LoadCertificates(ctx, "mycert.pem", "mycertkey.pem");
 else{
 	std::vector<std::string> files = globVector("./textures/*.png");
 	texture_filenames=files;
-	std::cout<<"files: "<<files.size()<<std::endl;
+	std::stringstream ss;
+	
+	ss<<"files: "<<files.size()<<std::endl;
+	errorout(ss.str());
 
 	
 	
@@ -698,7 +750,7 @@ else{
 	
 	int counter=0;
     for (int i=0;i<files.size();i++){
-		std::cout<<counter;
+		//std::cout<<counter;
 		counter++;
 		texid=generateTexture(files[i].c_str());
 		texture_list.push_back(texid);
@@ -738,11 +790,11 @@ else{
 		}
 		
 	//back_texture=load_texture("paper.png");	
-		std::cout<<"generate primitives"<<std::endl;
+		errorout("generate primitives");
 		grammar->context->genPrimitives();
 		
 		grammar->generateGeometry();
-		std::cout<<"Finished generating geometry..."<<std::endl;
+		errorout("Finished generating geometry...");
 
 
 gtk_label_set_text((GtkLabel *)file_label,(grammar_filename+"    tokens: "+std::to_string(grammar->tokens_new.size())).c_str());
@@ -765,8 +817,11 @@ gtk_label_set_text((GtkLabel *)file_label,(grammar_filename+"    tokens: "+std::
 			if(j==7 && mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
 		}
 	}
+	std::stringstream ss;
 	
-	std::cout<<"texture list size"<<texture_list.size()<<std::endl;
+	ss<<"texture list size"<<texture_list.size()<<std::endl;
+	errorout(ss.str());
+	
 	for(int i=0;i<texture_list.size();i++){
 		
 		float *my_vertex_data=grammar->context->calc(mydata,i);
@@ -827,7 +882,7 @@ create_shader (int  type)
     glShaderSource (shader, 1, &FRAGMENT_SOURCE2, NULL);
   }
   if (type== GL_VERTEX_SHADER){
-	  std::cout<<VERTEX_SOURCE<<std::endl;
+	  //std::cout<<VERTEX_SOURCE<<std::endl;
     glShaderSource (shader, 1, &VERTEX_SOURCE, NULL);
   }
   glCompileShader (shader);
@@ -1049,7 +1104,7 @@ void draw_box(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int tex
   mat4 projection = perspective(43.0, double(GLAREA_WIDTH)/double(GLAREA_HEIGHT), 0.01, 100.0);
   glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &projection[0][0]);
   
-  vec3 lightposition=vec3(1.1,5.7,-1.3);
+  vec3 lightposition=vec3(1.1,15.7,-1.3);
   glUniform3fv(glGetUniformLocation(program,"lightposition"),1,&lightposition[0]);
   
   //pos=position_vec;
@@ -1123,7 +1178,7 @@ void draw_buffer(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int 
   
  
   
-  vec3 position = vec3(5.0*cos(angle_view*M_PI/180.0),0,5.0*sin(angle_view*M_PI/180.0));
+  vec3 position = vec3(5.0*cos(angle_view*M_PI/180.0),5.0*cos(elevation_view*M_PI/180.0),5.0*sin(angle_view*M_PI/180.0));
   
   vec3 up = vec3(0,-1,0);
   mat4 view = lookAt(position, vec3(0.0,0.0,0.0), up);
@@ -1132,14 +1187,14 @@ void draw_buffer(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int 
   mat4 projection = perspective(43.0, double(GLAREA_WIDTH)/double(GLAREA_HEIGHT), 0.01, 100.0);
   glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &projection[0][0]);
   
-  vec3 lightposition=vec3(1.1,5.7,-1.3);
+  vec3 lightposition=vec3(1.1*scale_global,15.7*scale_global,-1.3*scale_global);
   glUniform3fv(glGetUniformLocation(program,"lightposition"),1,&lightposition[0]);
   
-  //pos=position_vec;
+  pos=position_vec;
   glUniform3fv(glGetUniformLocation(program,"pos"),1,&pos[0]);
-  glUniform3fv(glGetUniformLocation(program,"scale_vec"),1,&scale_vec[0]);  
+  //glUniform3fv(glGetUniformLocation(program,"scale_vec"),1,&scale_vec[0]);  
   
-  glm::vec4 ambientproduct=glm::vec4(0.7,0.7,0.7,1.0);
+  glm::vec4 ambientproduct=glm::vec4(0.8,0.8,0.8,1.0);
   glUniform4fv(glGetUniformLocation(program,"ambientproduct"),1,&ambientproduct[0]);
   
   glm::vec4 diffuseproduct=glm::vec4(0.5,0.5,0.5,1.0);
@@ -1276,8 +1331,9 @@ LoadCertificates(ctx, "mycert.pem", "mycertkey.pem");
 	if ( SSL_connect(ssl) != FAIL )   /* perform the connection */
 	{    
 	
-	
-		std::cout<<"Connected with encryption "<< SSL_get_cipher(ssl)<<std::endl;
+		std::stringstream ss;
+		ss<<"Connected with encryption "<< SSL_get_cipher(ssl)<<std::endl;
+		errorout(ss.str());
 		ShowCerts(ssl);
 		/* get any certs */
 
@@ -1306,14 +1362,46 @@ LoadCertificates(ctx, "mycert.pem", "mycertkey.pem");
 	SSL_CTX_free(ctx);        /* release */
 	
 }
+void new_activate(GtkButton *item) {
+	
+	
+
+   //GList *children, *iter;
+
+//children = gtk_container_get_children(GTK_CONTAINER(layout3));
+//for(iter = children; iter != NULL; iter = g_list_next(iter))
+ // gtk_widget_destroy(GTK_WIDGET(iter->data));
+//g_list_free(children);
+
+
+	
+	gtk_text_buffer_set_text(mybuffer,"",0);
+	
+	 grammar->lines.clear();
+	 grammar->rule_list.clear();
+	 variable_list.clear();
+ 
+ 
+      
+ 
+	
+	
+
+setup_vars=true;
+setup_rules=true;
+	
+	generate_widgets();
+	
+}
 
 void activate(GtkButton *item) {
+try{
+   //GList *children, *iter;
 
- for(int i=0;i<full_variable_list.size();i++){
-	gtk_container_remove((GtkContainer *)layout3,(GtkWidget *)labels[i]);
-	}
-
- 
+//children = gtk_container_get_children(GTK_CONTAINER(layout3));
+//for(iter = children; iter != NULL; iter = g_list_next(iter))
+  //gtk_widget_destroy(GTK_WIDGET(iter->data));
+//g_list_free(children);
 
 	GtkTextIter start, end;
 		gtk_text_buffer_get_start_iter(mybuffer, &start);
@@ -1340,11 +1428,11 @@ setup_vars=true;
 	generate_widgets();
 	
 
-		std::cout<<"generate primitives"<<std::endl;
+		errorout("generate primitives");
 		grammar->context->genPrimitives();
 		
 		grammar->generateGeometry();
-		std::cout<<"Finished generating geometry..."<<std::endl;
+		errorout("Finished generating geometry...");
 		init_buffer=false;
 
 
@@ -1411,7 +1499,13 @@ gtk_label_set_text((GtkLabel *)file_label,(grammar_filename+"    tokens: "+std::
 	
 	save_to_file(grammar_filename.c_str());
 
-
+}catch(...){
+	
+	std::string error_str="Error "+std::to_string(22);
+	GtkTextIter end;
+	gtk_text_buffer_get_end_iter(errorbuffer,&end);
+	gtk_text_buffer_insert(errorbuffer,&end,error_str.c_str(),error_str.length());
+}
 }
 
    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1431,6 +1525,13 @@ void scalesliderupdate3(GtkRange *range){
 	angle_view=  gtk_range_get_value (range);
 	
 }
+void scalesliderupdate4(GtkRange *range){
+	
+	
+	elevation_view=  gtk_range_get_value (range);
+	
+}
+
 
 void activate_moveup_alt_token(GtkWidget *item,int *user_data){
 	int framecounter=(*user_data);
@@ -1560,7 +1661,7 @@ void activate_movedown_token(GtkWidget *item,int *user_data){
 }
 void activate_add_alt_token(GtkWidget *item,int *user_data){
 	int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 		Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	for(int i=0;i<grammar->rule_list.size();i++){
@@ -1577,7 +1678,7 @@ void activate_add_alt_token(GtkWidget *item,int *user_data){
 }
 void activate_add_token(GtkWidget *item,int *user_data){
 	int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 		Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	for(int i=0;i<grammar->rule_list.size();i++){
@@ -1664,7 +1765,7 @@ void activate_remove_token(GtkWidget *item,int *user_data){
 }
 void activate_combo1_alt_changed(GtkWidget *item,int *user_data){
 	int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	for(int i=0;i<grammar->rule_list.size();i++){
@@ -1681,7 +1782,7 @@ void activate_combo1_alt_changed(GtkWidget *item,int *user_data){
 }
 void activate_combo1_changed(GtkWidget *item,int *user_data){
 	int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	for(int i=0;i<grammar->rule_list.size();i++){
@@ -1711,7 +1812,7 @@ void activate_combo1_changed(GtkWidget *item,int *user_data){
 }
 void activate_combo1_alt_changed_var(GtkWidget *item,int *user_data){
 	int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	for(int i=0;i<grammar->rule_list.size();i++){
@@ -1727,7 +1828,7 @@ void activate_combo1_alt_changed_var(GtkWidget *item,int *user_data){
 }
 void activate_combo1_changed_var(GtkWidget *item,int *user_data){
 	int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	for(int i=0;i<grammar->rule_list.size();i++){
@@ -1782,7 +1883,7 @@ activate_add_alt_changed (GtkComboBox *widget,
                int *     user_data){
 				   
 			int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	if(selected_rule_name=="")return;
@@ -1821,7 +1922,7 @@ activate_changed1 (GtkComboBox *widget,
                int *     user_data){
 				   
 			int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	if(selected_rule_name=="")return;
@@ -1853,7 +1954,7 @@ activate_changed2 (GtkComboBox *widget,
                int *     user_data){
 				   
 			int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	if(selected_rule_name=="")return;
@@ -1885,7 +1986,7 @@ activate_changed3 (GtkComboBox *widget,
                int *     user_data){
 				   
 			int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	if(selected_rule_name=="")return;
@@ -1916,7 +2017,7 @@ activate_alt_changed1 (GtkComboBox *widget,
                int *     user_data){
 				   
 			int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	if(selected_rule_name=="")return;
@@ -1935,7 +2036,7 @@ void activate_alt_changed2 (GtkComboBox *widget,
                int *     user_data){
 				   
 			int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	if(selected_rule_name=="")return;
@@ -1954,7 +2055,7 @@ void activate_alt_changed3 (GtkComboBox *widget,
                int *     user_data){
 				   
 			int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	if(selected_rule_name=="")return;
@@ -1974,7 +2075,7 @@ activate_add_changed (GtkComboBox *widget,
                int *     user_data){
 				   
 			int framecounter=(*user_data);
-	std::cout<<framecounter<<std::endl;
+	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	if(selected_rule_name=="")return;
@@ -2032,7 +2133,7 @@ activate_add_changed (GtkComboBox *widget,
 activate_vars_add (GtkComboBox *widget,
                int *     user_data){
 				   int framecounter=(*user_data);
-				   	std::cout<<framecounter<<std::endl;
+				   	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	if(selected_rule_name=="")return;
@@ -2054,7 +2155,7 @@ activate_vars_add (GtkComboBox *widget,
 activate_vars_remove (GtkComboBox *widget,
                int *     user_data){
 				   int framecounter=(*user_data);
-				   	std::cout<<framecounter<<std::endl;
+				   	//std::cout<<framecounter<<std::endl;
 	Rule *active_rule;
 	std::string selected_rule_name=gtk_combo_box_text_get_active_text((GtkComboBoxText *)rulescombo);
 	if(selected_rule_name=="")return;
@@ -2082,6 +2183,7 @@ activate_vars_remove (GtkComboBox *widget,
 void
  activate_buildrule(GtkComboBox *widget,
                int *     user_data){
+				   try{
 				   
 			   
 			   
@@ -2114,7 +2216,13 @@ void
 		
 	//	grammar->generateGeometry();
 	
-
+}catch(...){
+	
+	std::string error_str="Error "+std::to_string(22);
+	GtkTextIter end;
+	gtk_text_buffer_get_end_iter(errorbuffer,&end);
+	gtk_text_buffer_insert(errorbuffer,&end,error_str.c_str(),error_str.length());
+}
 
 }
  
@@ -2197,7 +2305,7 @@ void activate_add(GtkWidget *item) {
 	//std::cout<<active_rule->var_counter<<std::endl;
 	//variables
 	for(int i=0;i<active_rule->var_counter+1;i++){
-		std::cout<<i<<std::endl;
+		//std::cout<<i<<std::endl;
 		varscombo[i]=gtk_combo_box_text_new_with_entry();
 		varslabel[i]=gtk_combo_box_text_new();
 		vars_remove_button[i]=gtk_button_new_with_label("X");
@@ -2586,8 +2694,9 @@ int img_index=(*user_data);
 }
 
 void generate_widgets(){
+	try{
 if(setup_textures && loggedin==false){				 
-	std::cout<<"setup textures"<<std::endl;  
+	errorout("setup textures");  
 	
 	
 	int *mypointer;
@@ -2625,8 +2734,10 @@ else if(setup_textures && loggedin==true){
 	setup_textures=false;  
 }
 if(setup_vars){				   
-	std::cout<<"setup variables"<<std::endl;  
-	std::cout<<full_variable_list.size()<<std::endl;
+	std::stringstream ss;
+	ss<<"setup variables"<<std::endl;  
+	ss<<full_variable_list.size()<<std::endl;
+	errorout(ss.str());
 for(int i=0;i<full_variable_list.size();i++){
 		labels[i]=gtk_label_new ((full_variable_list[i]->var_name+":="+std::to_string(full_variable_list[i]->value)).c_str());
 		gtk_layout_put ((GtkLayout *)layout3,(GtkWidget *)labels[i],80,i*20);
@@ -2640,7 +2751,7 @@ for(int i=0;i<full_variable_list.size();i++){
 	setup_vars=false;
 }
 if(setup_rules){				
-	std::cout<<"setup rules"<<std::endl;     
+	errorout("setup rules");     
 for(int i=0;i<grammar->rule_list.size();i++){
 	
 	std::string rule_str=grammar->rule_list[i]->rule_name;
@@ -2651,6 +2762,11 @@ for(int i=0;i<grammar->rule_list.size();i++){
 	
 	}
 	setup_rules=false;
+}
+}catch(...){
+	
+	std::string error_str="Setup Error "+std::to_string(22);
+	errorout(error_str);
 }
 }
 
@@ -2706,7 +2822,7 @@ void activate_play(GtkButton *item) {
 			   
 void activate_saveas(GtkButton *item) {
 	
- 
+ try{
     GtkFileChooserNative *native;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
     gint res;
@@ -2745,7 +2861,11 @@ activate(NULL);
     }
 
     g_object_unref(native);
-
+}catch(...){
+	
+	std::string error_str="Error "+std::to_string(22);
+	errorout(error_str);
+}
 }
 
 
@@ -2983,6 +3103,7 @@ std::string tohexstr(unsigned short uchar){
 
 
 void activate_texture_filechooser(GtkButton *item) {
+	try{
 GtkFileChooserNative *native;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
     gint res;
@@ -3158,7 +3279,7 @@ GtkFileChooserNative *native;
 		gtk_widget_set_size_request((GtkWidget *)button_remove_img[i],20,20);
 		gtk_widget_set_size_request((GtkWidget *)button_moveup_img[i],20,20);
 		gtk_widget_set_size_request((GtkWidget *)button_movedown_img[i],20,20);
-		gtk_layout_put ((GtkLayout *)layout2,images[i],80+k*230,j*135);
+		gtk_layout_put ((GtkLayout *)layout2,images[i],80+k*230,130+j*135);
 		gtk_layout_put ((GtkLayout *)layout2,button_remove_img[i],220+k*230,130+j*135);
 		gtk_layout_put ((GtkLayout *)layout2,button_moveup_img[i],220+k*230,130+j*135+30);
 		gtk_layout_put ((GtkLayout *)layout2,button_movedown_img[i],220+k*230,130+j*135+60);
@@ -3209,20 +3330,28 @@ GtkFileChooserNative *native;
     }
 	 g_object_unref(native);
 
-   
+}   catch(...){
+	
+	std::string error_str="Error "+std::to_string(22);
+	errorout(error_str);
+}
 
 			  
 }	
 void activate_generate_image_button(GtkButton *item, gpointer userdata){
-	
-	int octaves=atoi(gtk_combo_box_text_get_active_text((GtkComboBoxText *)gencombo1));
-	int persistence=atoi(gtk_combo_box_text_get_active_text((GtkComboBoxText *)gencombo2));
+	try
+	{
+	int octaves=17;//atoi(gtk_combo_box_text_get_active_text((GtkComboBoxText *)gencombo1));
+	float persistence=4.0f;//atof(gtk_combo_box_text_get_active_text((GtkComboBoxText *)gencombo2));
 	Noise2d n2d(octaves,persistence);
 	int imgbyte_counter=0;
+	GdkRGBA color;
+	gtk_color_chooser_get_rgba ((GtkColorChooser *)colorchooser1,&color);
 	unsigned char colorRGB[3];
-	colorRGB[0]=(unsigned char)atoi(gtk_combo_box_text_get_active_text((GtkComboBoxText *)gencomboR1));
-	colorRGB[1]=(unsigned char)atoi(gtk_combo_box_text_get_active_text((GtkComboBoxText *)gencomboG1));
-	colorRGB[2]=(unsigned char)atoi(gtk_combo_box_text_get_active_text((GtkComboBoxText *)gencomboB1));;
+	std::cout<<128*color.red<<std::endl;
+	colorRGB[0]=(unsigned char)(color.red*255);
+	colorRGB[1]=(unsigned char)(color.green*255);
+	colorRGB[2]=(unsigned char)(color.blue*255);
 	double rawdata[128*128];
 	cv::Mat newtexture=cv::Mat::zeros(128,128,CV_8UC3);
 	double max=0.0,min=999999.0;
@@ -3238,8 +3367,8 @@ void activate_generate_image_button(GtkButton *item, gpointer userdata){
 	}
 	imgbyte_counter=0;
 	rawdata_counter=0;
-	for (int y = 0; y < n2d.numY; ++y) {
-		for (int x = 0; x < n2d.numX; ++x) {
+	for (int y = 0; y < n2d.numY; y++) {
+		for (int x = 0; x < n2d.numX; x++) {
 			for(int c=0;c<3;c++){
 				newtexture.data[imgbyte_counter]=(unsigned char)(double(colorRGB[c])*(rawdata[rawdata_counter]-min)/(max-min));
 				imgbyte_counter++;
@@ -3267,10 +3396,10 @@ void activate_generate_image_button(GtkButton *item, gpointer userdata){
 		gtk_widget_set_size_request((GtkWidget *)button_remove_img[i],20,20);
 		gtk_widget_set_size_request((GtkWidget *)button_moveup_img[i],20,20);
 		gtk_widget_set_size_request((GtkWidget *)button_movedown_img[i],20,20);
-		gtk_layout_put ((GtkLayout *)layout2,images[i],80+k*230,j*135);
-		gtk_layout_put ((GtkLayout *)layout2,button_remove_img[i],220+k*230,j*135);
-		gtk_layout_put ((GtkLayout *)layout2,button_moveup_img[i],220+k*230,j*135+30);
-		gtk_layout_put ((GtkLayout *)layout2,button_movedown_img[i],220+k*230,j*135+60);
+		gtk_layout_put ((GtkLayout *)layout2,images[i],80+k*230,130+j*135);
+		gtk_layout_put ((GtkLayout *)layout2,button_remove_img[i],220+k*230,130+j*135);
+		gtk_layout_put ((GtkLayout *)layout2,button_moveup_img[i],220+k*230,130+j*135+30);
+		gtk_layout_put ((GtkLayout *)layout2,button_movedown_img[i],220+k*230,130+j*135+60);
 		gtk_widget_show (images[i]);
 		gtk_widget_show (button_remove_img[i]);
 		gtk_widget_show (button_movedown_img[i]);
@@ -3283,9 +3412,16 @@ void activate_generate_image_button(GtkButton *item, gpointer userdata){
 			//		setup_textures=true;
 			//generate_widgets();
 }
+catch(...){
+	
+	std::string error_str="Error "+std::to_string(22);
+	errorout(error_str);
+}
+}
 			   
 void activateply(GtkButton *item) {
-GtkFileChooserNative *native;
+	try{
+GtkFileChooserNative *native=NULL;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
     gint res;
      GtkFileFilter *filter;
@@ -3312,18 +3448,26 @@ GtkFileChooserNative *native;
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
     if (res == GTK_RESPONSE_ACCEPT)
     {
-        char *filename;
+        char *filename=NULL;
         GtkFileChooser *chooser = GTK_FILE_CHOOSER(native);
         filename = gtk_file_chooser_get_filename(chooser);
 
          PLYWriter::writeMesh( filename, grammar->context->getScene());
          
-        g_free(filename);
+        if(filename!=NULL)g_free(filename);
+        else throw 2;
     }
+    else 
+    throw 555;
 
-    g_object_unref(native);
-
-			  
+    if(native!=NULL)g_object_unref(native);
+    else throw 1;
+}
+catch(...){
+	
+	std::string error_str="Error "+std::to_string(22);
+	errorout(error_str);
+}
 }		
 
 
@@ -3492,17 +3636,7 @@ draw_callback (GtkWidget *widget, cairo_t *cr, gpointer data)
 }
 
 
- GtkWidget *entry1,*entry2;
- 
- GtkWidget *box6,*box,*paned,*vpaned,*box3,*box4,*box5,*box8,*box7,*box9;
- 
- GtkActionBar *actionbar,*actionbar3,*actionbar4,*actionbar5,*actionbar6;
-   GtkWidget *runbutton;
-  GtkWidget *savebutton;
-  GtkWidget *plybutton;
-  GtkWidget *playbutton3;
-  GtkWidget *stopbutton3;
-  GtkWidget *texture_filechooser;
+
 
 
 void activate_skip(GtkButton *item) {
@@ -3512,6 +3646,7 @@ void activate_skip(GtkButton *item) {
    gtk_widget_show(view2);
     gtk_widget_show((GtkWidget *)actionbar);
   gtk_widget_show(runbutton);
+  gtk_widget_show(newbutton);
   gtk_widget_show((GtkWidget *)actionbar);
   gtk_widget_show((GtkWidget *)actionbar3);
   gtk_widget_show(playbutton3);
@@ -3610,6 +3745,8 @@ gtk_container_remove(GTK_CONTAINER (window), (GtkWidget *)box6);
    gtk_widget_show(view2);
     gtk_widget_show((GtkWidget *)actionbar);
   gtk_widget_show(runbutton);
+  gtk_widget_show(newbutton);
+  
   gtk_widget_show((GtkWidget *)actionbar);
   gtk_widget_show((GtkWidget *)actionbar3);
   gtk_widget_show(playbutton3);
@@ -3717,8 +3854,9 @@ void activate_app(GtkApplication *app){
   box4=gtk_box_new(GTK_ORIENTATION_VERTICAL, FALSE);
   box5=gtk_box_new(GTK_ORIENTATION_VERTICAL, FALSE);
   box9=gtk_box_new(GTK_ORIENTATION_VERTICAL, FALSE);
-  //box5 = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
-  
+  //box10 = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, FALSE);
+  box10=gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+  box11=gtk_paned_new(GTK_ORIENTATION_VERTICAL);
   //g_object_set (box, "margin", 12, NULL);
   //gtk_box_set_spacing (GTK_BOX (box), 6);
 //  g_object_set (paned, "margin", 12, NULL);
@@ -3729,6 +3867,7 @@ void activate_app(GtkApplication *app){
  actionbar4=(GtkActionBar *)gtk_action_bar_new ();
  actionbar5=(GtkActionBar *)gtk_action_bar_new ();
  actionbar6=(GtkActionBar *)gtk_action_bar_new ();
+ actionbar7=(GtkActionBar *)gtk_action_bar_new ();
 
   gtk_box_pack_start (GTK_BOX(box4), (GtkWidget *)actionbar2,0,0, 0);
     gtk_box_pack_start (GTK_BOX(box9), (GtkWidget *)actionbar6,0,0, 0);
@@ -3739,6 +3878,7 @@ void activate_app(GtkApplication *app){
   GtkWidget *scrollwin=gtk_scrolled_window_new (NULL,NULL);
   view = gtk_text_view_new();
   view2= gtk_text_view_new();
+  viewerror=gtk_text_view_new();
   	gtk_text_view_set_left_margin(GTK_TEXT_VIEW(view), 10);
 	gtk_text_view_set_right_margin(GTK_TEXT_VIEW(view), 10);
   gtk_container_add (GTK_CONTAINER (scrollwin), view);
@@ -3750,6 +3890,10 @@ void activate_app(GtkApplication *app){
   
   GtkWidget *scrollwin2 = gtk_scrolled_window_new(NULL, NULL);
   GtkWidget *scrollwin3 = gtk_scrolled_window_new(NULL, NULL);
+  GtkWidget *scrollwin4 = gtk_scrolled_window_new(NULL, NULL);
+  
+  
+  gtk_container_add (GTK_CONTAINER (scrollwin4), viewerror);
   
     
     gtk_widget_set_size_request((GtkWidget *)actionbar2, 950, 12);
@@ -3813,8 +3957,8 @@ gtk_notebook_append_page ((GtkNotebook *)notebook,
   
   g_signal_connect (G_OBJECT (drawing_area), "draw",
                     G_CALLBACK (draw_callback), NULL);
-   g_signal_connect (G_OBJECT (drawing_area2), "draw",
-                    G_CALLBACK (draw_callback2), NULL);
+   //g_signal_connect (G_OBJECT (drawing_area2), "draw",
+     //               G_CALLBACK (draw_callback2), NULL);
     
   GtkWidget *addbutton=gtk_button_new_with_label("Add");
   GtkWidget *buildbutton=gtk_button_new_with_label("Build");
@@ -3835,13 +3979,6 @@ gtk_combo_box_text_append((GtkComboBoxText *)gencombo1,NULL,"7");
 gtk_combo_box_text_append((GtkComboBoxText *)gencombo2,NULL,"0.5");
 gtk_combo_box_set_active((GtkComboBox *)gencombo1,0);
 gtk_combo_box_set_active((GtkComboBox *)gencombo2,0);
-GtkWidget *genlabelR1=gtk_label_new("R");
-GtkWidget *gencomboR1=gtk_combo_box_text_new_with_entry();
-GtkWidget *genlabelG1=gtk_label_new("G");
-GtkWidget *gencomboG1=gtk_combo_box_text_new_with_entry();
-GtkWidget *genlabelB1=gtk_label_new("B");
-GtkWidget *gencomboB1=gtk_combo_box_text_new_with_entry();
-
 
 gtk_widget_set_size_request((GtkWidget *)genlabel1,20,20);
 gtk_widget_set_size_request((GtkWidget *)genlabel2,20,20);
@@ -3849,33 +3986,16 @@ gtk_widget_set_size_request((GtkWidget *)gencombo1,20,20);
 gtk_widget_set_size_request((GtkWidget *)gencombo2,20,20);
 
 
-gtk_widget_set_size_request((GtkWidget *)genlabelR1,20,20);
-gtk_widget_set_size_request((GtkWidget *)genlabelG1,20,20);
-gtk_widget_set_size_request((GtkWidget *)genlabelB1,20,20);
-gtk_widget_set_size_request((GtkWidget *)gencomboR1,20,20);
-gtk_widget_set_size_request((GtkWidget *)gencomboG1,20,20);
-gtk_widget_set_size_request((GtkWidget *)gencomboB1,20,20);
 
 
-gtk_combo_box_text_append((GtkComboBoxText *)gencomboR1,NULL,"128");
-gtk_combo_box_text_append((GtkComboBoxText *)gencomboG1,NULL,"128");
-gtk_combo_box_text_append((GtkComboBoxText *)gencomboB1,NULL,"128");
-
-gtk_combo_box_set_active((GtkComboBox *)gencomboR1,0);
-gtk_combo_box_set_active((GtkComboBox *)gencomboG1,0);
-gtk_combo_box_set_active((GtkComboBox *)gencomboB1,0);
 
 gtk_layout_put ((GtkLayout *)layout2,genlabel1,80,10);
 gtk_layout_put ((GtkLayout *)layout2,genlabel2,80,60);
 gtk_layout_put ((GtkLayout *)layout2,gencombo1,180,10);
 gtk_layout_put ((GtkLayout *)layout2,gencombo2,180,60);
-
-gtk_layout_put ((GtkLayout *)layout2,genlabelR1,400,10);
-gtk_layout_put ((GtkLayout *)layout2,gencomboR1,450,10);
-gtk_layout_put ((GtkLayout *)layout2,genlabelG1,400,40);
-gtk_layout_put ((GtkLayout *)layout2,gencomboG1,450,40);
-gtk_layout_put ((GtkLayout *)layout2,genlabelB1,400,70);
-gtk_layout_put ((GtkLayout *)layout2,gencomboB1,450,70);
+colorchooser1=gtk_color_chooser_widget_new();
+gtk_widget_set_size_request((GtkWidget *)colorchooser1,120,50);
+gtk_layout_put ((GtkLayout *)layout2,colorchooser1,400,0);
 
 
  gtk_action_bar_pack_start (actionbar2,buildbutton);  
@@ -3914,10 +4034,12 @@ gtk_notebook_append_page ((GtkNotebook *)notebook,
   
   actionbar=(GtkActionBar *)gtk_action_bar_new ();
   runbutton=gtk_button_new_with_label("Run");
+  newbutton=gtk_button_new_with_label("New");
   savebutton=gtk_button_new_with_label("SaveAs");
   plybutton=gtk_button_new_with_label("Export PLY");
   GtkWidget *scale_slider=gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL,0.3,3.0,0.05);
    gtk_widget_set_hexpand (scale_slider, TRUE);
+  gtk_action_bar_pack_start (actionbar,newbutton);
   gtk_action_bar_pack_start (actionbar,runbutton);
   gtk_action_bar_pack_start (actionbar,savebutton);
   gtk_action_bar_pack_start (actionbar,plybutton);
@@ -3926,12 +4048,23 @@ gtk_notebook_append_page ((GtkNotebook *)notebook,
   gtk_widget_set_size_request((GtkWidget *)actionbar, 650,50);
     gtk_widget_set_size_request((GtkWidget *)gl_area,650, 1100);
   gtk_widget_set_size_request(runbutton,10, 30);
+  gtk_widget_set_size_request(newbutton,10, 30);
+  gtk_widget_set_size_request(scale_slider,400, 20);
   gtk_widget_set_size_request(texture_filechooser,10, 30);
   
+  
+  
+  scale_slider4=gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL,0.0,90.0,2.0);
+  gtk_widget_set_size_request(scale_slider4,20, 870);
   gtk_box_pack_start (GTK_BOX(box3), (GtkWidget *)actionbar,1,1, 0);
-  gtk_box_pack_start (GTK_BOX(box3), gl_area,1,1, 0);
-  
-  
+  gtk_box_pack_start (GTK_BOX(box3), (GtkWidget *)box10,1,1, 0);
+  gtk_paned_add1(GTK_PANED(box10),(GtkWidget *) actionbar7);
+  gtk_paned_add2(GTK_PANED(box10),(GtkWidget *)box11);
+  gtk_paned_add1 (GTK_PANED(box11), gl_area);
+  gtk_paned_add2 (GTK_PANED(box11),scrollwin4);
+  gtk_action_bar_pack_start (actionbar7,scale_slider4);
+  gtk_paned_set_position(GTK_PANED(box10),40);
+  gtk_paned_set_position(GTK_PANED(box11),1100);
    
   
 
@@ -3942,6 +4075,7 @@ gtk_notebook_append_page ((GtkNotebook *)notebook,
   stopbutton3=gtk_button_new_with_label("Stop");
   
   scale_slider3=gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL,0.0,360.0,2.0);
+  
    gtk_widget_set_hexpand (scale_slider3, TRUE);
   gtk_action_bar_pack_start (actionbar3,playbutton3);
   gtk_action_bar_pack_start (actionbar3,stopbutton3);
@@ -3962,14 +4096,15 @@ gtk_widget_set_size_request((GtkWidget *)actionbar3, 650,50);
  
    
   buffer2 = gtk_text_view_get_buffer (GTK_TEXT_VIEW (view2));
+  errorbuffer= gtk_text_view_get_buffer (GTK_TEXT_VIEW (viewerror));
     
     mybuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
     //g_signal_connect(drawing_area2,"motion_notify_event",G_CALLBACK(handle_mouse2),   NULL);
     g_signal_connect(generate_image_button,"clicked",G_CALLBACK(activate_generate_image_button),   NULL);
     g_signal_connect(addbutton,"clicked",G_CALLBACK(activate_addrule),   NULL);
     g_signal_connect(buildbutton,"clicked",G_CALLBACK(activate_buildrule),   NULL);
-    g_signal_connect(drawing_area,"motion_notify_event",G_CALLBACK(handle_mouse),   NULL);
-    g_signal_connect(drawing_area,"button_press_event",G_CALLBACK(mouse_press_callback),   NULL);
+   // g_signal_connect(drawing_area,"motion_notify_event",G_CALLBACK(handle_mouse),   NULL);
+   // g_signal_connect(drawing_area,"button_press_event",G_CALLBACK(mouse_press_callback),   NULL);
     
     g_signal_connect (mybuffer ,"changed", G_CALLBACK (txt_changed), NULL);  
     g_signal_connect (layout4 ,"focus", G_CALLBACK (rule_focus), NULL);  
@@ -3980,6 +4115,7 @@ gtk_widget_set_size_request((GtkWidget *)actionbar3, 650,50);
     g_signal_connect (perspective_transform_button,"clicked",G_CALLBACK (activate_perspective_transform_button), NULL);    
     g_signal_connect (rulescombo ,"changed", G_CALLBACK (activate_add), NULL);    
     g_signal_connect (runbutton ,"clicked", G_CALLBACK (activate), NULL);
+    g_signal_connect (newbutton ,"clicked", G_CALLBACK (new_activate), NULL);
     g_signal_connect (savebutton ,"clicked", G_CALLBACK (activate_saveas), NULL); 
     g_signal_connect (texture_filechooser,"clicked", G_CALLBACK (activate_texture_filechooser), NULL); 
     
@@ -3993,7 +4129,7 @@ gtk_widget_set_size_request((GtkWidget *)actionbar3, 650,50);
     
     g_signal_connect (scale_slider ,"value-changed", G_CALLBACK (scalesliderupdate), NULL); 
     g_signal_connect (scale_slider3 ,"value-changed", G_CALLBACK (scalesliderupdate3), NULL); 
-    
+    g_signal_connect (scale_slider4 ,"value-changed", G_CALLBACK (scalesliderupdate4), NULL); 
   
   /* We need to initialize and free GL resources, so we use
   * the realize and unrealize signals on the widget
