@@ -79,7 +79,7 @@ std::string portnum="pppp";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-                                                   char appname[]="ProGen3d 0.8b";                //////////////////////////////
+                                                   char appname[]="ProGen3d 0.95a";                //////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -799,6 +799,8 @@ else{
 
 gtk_label_set_text((GtkLabel *)file_label,(grammar_filename+"    tokens: "+std::to_string(grammar->tokens_new.size())).c_str());
 
+init_buffer=false;
+txt_changed(mybuffer,NULL);
 
 //grammar->context->getScene().calc_normals();
  float mydata[36*8];
@@ -1187,7 +1189,7 @@ void draw_buffer(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int 
   mat4 projection = perspective(43.0, double(GLAREA_WIDTH)/double(GLAREA_HEIGHT), 0.01, 100.0);
   glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &projection[0][0]);
   
-  vec3 lightposition=vec3(1.1*scale_global,15.7*scale_global,-1.3*scale_global);
+  vec3 lightposition=vec3(1.1*scale_global,-60.7*scale_global,-1.3*scale_global);
   glUniform3fv(glGetUniformLocation(program,"lightposition"),1,&lightposition[0]);
   
   pos=position_vec;
@@ -1366,12 +1368,12 @@ void new_activate(GtkButton *item) {
 	
 	
 
-   //GList *children, *iter;
+   GList *children, *iter;
 
-//children = gtk_container_get_children(GTK_CONTAINER(layout3));
-//for(iter = children; iter != NULL; iter = g_list_next(iter))
- // gtk_widget_destroy(GTK_WIDGET(iter->data));
-//g_list_free(children);
+children = gtk_container_get_children(GTK_CONTAINER(layout3));
+for(iter = children; iter != NULL; iter = g_list_next(iter))
+ gtk_widget_destroy(GTK_WIDGET(iter->data));
+g_list_free(children);
 
 
 	
@@ -1396,12 +1398,12 @@ setup_rules=true;
 
 void activate(GtkButton *item) {
 try{
-   //GList *children, *iter;
+   GList *children, *iter;
 
-//children = gtk_container_get_children(GTK_CONTAINER(layout3));
-//for(iter = children; iter != NULL; iter = g_list_next(iter))
-  //gtk_widget_destroy(GTK_WIDGET(iter->data));
-//g_list_free(children);
+children = gtk_container_get_children(GTK_CONTAINER(layout3));
+for(iter = children; iter != NULL; iter = g_list_next(iter))
+gtk_widget_destroy(GTK_WIDGET(iter->data));
+g_list_free(children);
 
 	GtkTextIter start, end;
 		gtk_text_buffer_get_start_iter(mybuffer, &start);
@@ -2280,6 +2282,8 @@ void activate_add(GtkWidget *item) {
 	}
 	if(found_rule==false)return;
     std::vector<std::string> token_names;
+    token_names.push_back("A");
+    token_names.push_back("D");
     token_names.push_back("T");
     token_names.push_back("S");
     token_names.push_back("R");
@@ -2409,7 +2413,7 @@ void activate_add(GtkWidget *item) {
 				token_label[frame_counter]=(GtkComboBoxText *)gtk_combo_box_text_new();
 				
 				
-				if( strn=="R" || strn=="S" || strn=="T" || strn=="I" || strn=="[" || strn=="]" ){
+				if( strn=="A" ||strn=="D" || strn=="R" || strn=="S" || strn=="T" || strn=="I" || strn=="[" || strn=="]" ){
 				
 					if(strn=="R"){
 						if(section_tokens[i]->integer==true)strn="R*";
@@ -2453,7 +2457,7 @@ void activate_add(GtkWidget *item) {
 				}
 	
 				
-				if(  strn=="S" || strn=="T"  ){
+				if(  strn=="A" || strn=="D" || strn=="S" || strn=="T"  ){
 					combo1[frame_counter]=(GtkComboBoxText *)gtk_combo_box_text_new_with_entry ();
 					combo2[frame_counter]=(GtkComboBoxText *)gtk_combo_box_text_new_with_entry ();
 					combo3[frame_counter]=(GtkComboBoxText *)gtk_combo_box_text_new_with_entry ();
@@ -2925,10 +2929,36 @@ void activate_choose_image_button(GtkButton *item) {
 
 }
 GtkTextTag *tag=NULL,*tag2=NULL,*boldtag=NULL;
+
+
+
+void
+txt_inserted (GtkTextBuffer *textbuffer,
+               GtkTextIter   *location,
+               gchar         *text,
+               gint           len,
+               gpointer       user_data){
+				   
+std::string txt(text);
+if(txt==" " || txt=="\n" || len >3 ){
+	init_buffer=false;
+	txt_changed(mybuffer,NULL);
+	
+setup_vars=true;
+setup_rules=true;
+	
+	generate_widgets();
+}
+
+}
+
+
 void
 txt_changed (GtkTextBuffer *textbuffer,
                gpointer       user_data){
 GtkTextIter start, end;
+
+
 
 bool keyword_initiated=false;
 char keyword[100];
@@ -2949,18 +2979,20 @@ if(init_buffer==false){
 	while((character=gtk_text_iter_get_char (&end))!=0){
 		
 		
-		if( !((character>='a' && character<='z') || (character>='A' && character<='Z')) ){
+		if( !( (character>='0' && character<='9') || (character>='a' && character<='z') || (character>='A' && character<='Z')) ){
 			keyword_initiated=false;
 			end_of_keyword=counter;
 			keyword[keyword_counter]=0;
 			keyword_counter=0;
 			bool matched=false;
 			if(matched==false){
-			 if('R'==keyword[0]  || 'S'==keyword[0] || 'T'==keyword[0] || 'I'==keyword[0] ){
+			 if('R'==keyword[0]  || 'S'==keyword[0] || 'T'==keyword[0] || 'I'==keyword[0] || 'A'==keyword[0] || 'D'==keyword[0] ){
 				 	 gtk_text_buffer_get_iter_at_offset (textbuffer, &end, end_of_keyword);
 					 gtk_text_buffer_get_iter_at_offset (textbuffer, &start, start_of_keyword);
+					 if(end_of_keyword-start_of_keyword<3){
 					 gtk_text_buffer_apply_tag (textbuffer, boldtag, &start, &end);
 					 matched=true;
+					}
 			 }
 			}
 			if(matched==false){
@@ -3965,12 +3997,12 @@ gtk_notebook_append_page ((GtkNotebook *)notebook,
   
   GtkWidget *evalbutton=gtk_button_new_with_label("Evaluate");
   
-  GtkWidget *generate_image_button=gtk_button_new_with_label("Generate");
+  //GtkWidget *generate_image_button=gtk_button_new_with_label("Generate");
   texture_filechooser=gtk_button_new_with_label("Open Texture");
 rulescombo=gtk_combo_box_text_new_with_entry();
 
 
-
+/*
 GtkWidget *genlabel1=gtk_label_new("Octaves");
 GtkWidget *genlabel2=gtk_label_new("Persistence");
 GtkWidget *gencombo1=gtk_combo_box_text_new_with_entry();
@@ -3996,13 +4028,13 @@ gtk_layout_put ((GtkLayout *)layout2,gencombo2,180,60);
 colorchooser1=gtk_color_chooser_widget_new();
 gtk_widget_set_size_request((GtkWidget *)colorchooser1,120,50);
 gtk_layout_put ((GtkLayout *)layout2,colorchooser1,400,0);
-
+*/
 
  gtk_action_bar_pack_start (actionbar2,buildbutton);  
  gtk_action_bar_pack_start (actionbar2,addbutton);    
  
  gtk_action_bar_pack_start (actionbar6,texture_filechooser);  
- gtk_action_bar_pack_start (actionbar6,generate_image_button);  
+ //gtk_action_bar_pack_start (actionbar6,generate_image_button);  
  
    
    gtk_action_bar_pack_start (actionbar2,rulescombo);
@@ -4100,13 +4132,14 @@ gtk_widget_set_size_request((GtkWidget *)actionbar3, 650,50);
     
     mybuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view));
     //g_signal_connect(drawing_area2,"motion_notify_event",G_CALLBACK(handle_mouse2),   NULL);
-    g_signal_connect(generate_image_button,"clicked",G_CALLBACK(activate_generate_image_button),   NULL);
+   // g_signal_connect(generate_image_button,"clicked",G_CALLBACK(activate_generate_image_button),   NULL);
     g_signal_connect(addbutton,"clicked",G_CALLBACK(activate_addrule),   NULL);
     g_signal_connect(buildbutton,"clicked",G_CALLBACK(activate_buildrule),   NULL);
    // g_signal_connect(drawing_area,"motion_notify_event",G_CALLBACK(handle_mouse),   NULL);
    // g_signal_connect(drawing_area,"button_press_event",G_CALLBACK(mouse_press_callback),   NULL);
     
     g_signal_connect (mybuffer ,"changed", G_CALLBACK (txt_changed), NULL);  
+    g_signal_connect (mybuffer ,"insert-text", G_CALLBACK (txt_inserted), NULL);  
     g_signal_connect (layout4 ,"focus", G_CALLBACK (rule_focus), NULL);  
     g_signal_connect (box9 ,"focus", G_CALLBACK (texture_focus), NULL);  
     g_signal_connect (layout3 ,"focus", G_CALLBACK (vars_focus), NULL); 

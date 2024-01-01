@@ -367,7 +367,7 @@ void Token::performAction(Context *context){
 		addVariable(var_name,arguments[0],arguments[1],integer);
 		
 	}
-	else if(token_name=="S" || token_name=="Sr"){
+	else if(token_name=="S" ){
 		
 		
 		Scope *newScope = context->getCurrentScope();
@@ -406,6 +406,45 @@ void Token::performAction(Context *context){
     //////std::cout<< << " -- Current scope -> POS: (" << pos.x << ", " << pos.y << ", " << pos.z << ") SIZE: (" << contextSize.x << ", " << contextSize.y << ", " << contextSize.z << ") " << std::endl;
 		
 	}
+	else if(token_name=="D" ){
+		
+		
+		Scope *newScope = context->getCurrentScope();
+		
+		//////std::cout<<<<"***001";
+		glm::vec3 size;
+		
+		if(var_names[0]!=""){
+				
+				size.x=atof(MathS2(var_names[0]).c_str());
+				
+				
+		}
+		else size.x=arguments[0];
+		
+		if(var_names[1]!=""){
+				size.y=atof(MathS2(var_names[1]).c_str());
+		}
+		else size.y=arguments[1];
+		
+		if(var_names[2]!=""){
+				
+				size.z=atof(MathS2(var_names[2]).c_str());
+		}
+		else size.z=arguments[2];
+		
+		//////std::cout<< << "S (" << size.x << ", " << size.y << ", " << size.z << ") ";
+		
+		//size *= newScope->getSize();
+		//size = glm::vec3(abs(size.x), abs(size.y), abs(size.z));
+		
+		//////std::cout<< << "S* (" << size.x << ", " << size.y << ", " << size.z << ") "<<std::endl;
+		newScope->D(size);
+		//glm::vec3 pos = context->getCurrentScope()->getPosition();
+    //glm::vec3 contextSize = context->getCurrentScope()->getSize();
+    //////std::cout<< << " -- Current scope -> POS: (" << pos.x << ", " << pos.y << ", " << pos.z << ") SIZE: (" << contextSize.x << ", " << contextSize.y << ", " << contextSize.z << ") " << std::endl;
+		
+	}
 	else if(token_name=="T"){
 		Scope *newScope = context->getCurrentScope();
 		glm::vec3 position;
@@ -429,6 +468,52 @@ void Token::performAction(Context *context){
 		
 				
 		newScope->T(position);
+		
+	}
+	else if(token_name=="A" ){
+		
+		
+		Scope *newScope = context->getCurrentScope();
+		
+		//////std::cout<<<<"***001";
+		float angle,axis;
+		
+		if(var_names[0]!=""){
+				
+				angle=atof(MathS2(var_names[0]).c_str());
+				
+				
+		}
+		else angle=arguments[0];
+		
+		if(var_names[1]!=""){
+				axis=atof(MathS2(var_names[1]).c_str());
+		}
+		else axis=arguments[1];
+		
+		
+		
+		//////std::cout<< << "S (" << size.x << ", " << size.y << ", " << size.z << ") ";
+		
+		//size *= newScope->getSize();
+		//size = glm::vec3(abs(size.x), abs(size.y), abs(size.z));
+		
+		//////std::cout<< << "S* (" << size.x << ", " << size.y << ", " << size.z << ") "<<std::endl;
+		int int_axis=axis;
+		if(int_axis==0){
+		newScope->Rx(angle);	
+		}
+		else if(int_axis==1){
+		newScope->Ry(angle);	
+		}
+		else {
+			newScope->Rz(angle);	
+		}
+		
+		
+		//glm::vec3 pos = context->getCurrentScope()->getPosition();
+    //glm::vec3 contextSize = context->getCurrentScope()->getSize();
+    //////std::cout<< << " -- Current scope -> POS: (" << pos.x << ", " << pos.y << ", " << pos.z << ") SIZE: (" << contextSize.x << ", " << contextSize.y << ", " << contextSize.z << ") " << std::endl;
 		
 	}
 	else if(token_name=="*"){
@@ -612,7 +697,7 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 			while(lin>>token_str){
 				////std::cout<<<<token_str;
 				Token *token;
-				if(token_str=="S" || token_str=="T" || token_str=="Sr" ){
+				if(token_str=="S" || token_str=="T" || token_str=="D" ){
 					token=new Token(token_str);
 					
 					lin>>token_str;
@@ -764,20 +849,50 @@ void Grammar::ReadTokens(Rule *rule,std::string rule_str,int index_k){
 					
 				}
 				else if(token_str=="*"){
-					token=new Token(token_str);
-					lin>>token->var_name;
-					
-					
-					
-					rule->addToken(token,index_k);					
-				}
-				else if(token_str=="+"){
 					//token=new Token(token_str);
 					//lin>>token->var_name;
 					
 					
 					
 					//rule->addToken(token,index_k);					
+				}
+				else if(token_str=="A"){
+					
+					token=new Token(token_str);
+					
+					lin>>token_str;
+					if(token_str=="("){
+						
+						
+						
+						for(int i=0;i<2;i++){
+							lin>>token_str;
+							
+							////std::cout<<<<" "<<token_str;
+							
+							if(!isnumber(token_str)){
+								
+								token->var_names[i]=token_str;
+							     value=0.0f;
+							}
+							else {
+								token->var_names[i]="";
+								value=atof(token_str.c_str());
+							}
+							token->addArgument(value);
+						}
+						lin>>token_str;
+						if(token_str!=")"){
+							////std::cout<<<<"Error-expected ')' 001 "<<std::endl;
+							throw(1);
+							}
+					rule->addToken(token,index_k);
+					}
+					else {
+						////std::cout<<<<"Error-expected '(' 001"<<std::endl;
+						throw(1);
+						
+					}			
 				}
 				else if(token_str=="["){
 					token=new Token(token_str);

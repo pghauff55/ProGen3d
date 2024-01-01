@@ -53,7 +53,7 @@ float Solution::process(std::string input){
 		}
 	 	
 		
-	//	std::cout<<"process::"<<input<<std::endl;
+		//std::cout<<"process::"<<input<<std::endl;
 	 	int pos[10];
 	 	
 	 	
@@ -68,10 +68,10 @@ float Solution::process(std::string input){
 		int J=0;
 	while(isnumeric && J<4){
 		for(int i=0;i<input.length();i++){
-			//std::cout<<input[i]<<std::endl;
+			////std::cout<<input[i]<<std::endl;
 			for(int j=0;j<2;j++){
 				int m;
-				//std::cout<<input[i]<<","<<ops[j]<<std::endl;
+				////std::cout<<input[i]<<","<<ops[j]<<std::endl;
 				if(j==0)m=4;
 				else m=J;
 				if(input[i]==ops[m]){
@@ -97,7 +97,7 @@ float Solution::process(std::string input){
 					else {
 						isnumeric=false;
 						pos[m]=i;
-						//std::cout<<i<<","<<ops[m]<<std::endl;
+						////std::cout<<i<<","<<ops[m]<<std::endl;
 						if(bracket){
 							input.erase(pos[4],pos[5]+2);
 						}
@@ -116,7 +116,7 @@ float Solution::process(std::string input){
 						}
 						else if(pos[1]!=-1){
 							float afloat=process(A)*process(input);
-									//std::cout<<A<<"*"<<input<<"="<<afloat<<std::endl;  
+									////std::cout<<A<<"*"<<input<<"="<<afloat<<std::endl;  
 									return afloat;
 								}
 						else if(pos[2]!=-1){
@@ -135,7 +135,7 @@ float Solution::process(std::string input){
 						else if(pos[3]!=-1){
 								  
 								float afloat=pow(process(A),process(input));
-							 // std::cout<<A<<"^"<<input<<"="<<afloat<<std::endl;  
+							  //std::cout<<A<<"^"<<input<<"="<<afloat<<std::endl;  
 								return afloat;
 						}
 						else

@@ -271,16 +271,70 @@ GLfloat *Context::calc(const GLfloat *vertex_data,int tex_index){
 			float Z=primitive_scopes[i]->position.z*SCALE;
 			
 			for (int j=0;j<NUM;j++){
-				if(primitives[i]->type=="CubeX")vertex_buffer[k*NUM*8+j*8]=(vertex_data[j*8]+0.5)*x+X;
-				else vertex_buffer[k*NUM*8+j*8]=vertex_data[j*8]*x+X;
+				glm::vec4 v1(0,0,0,1.0);
 				
-				vertex_buffer[k*NUM*8+j*8+1]=vertex_data[j*8+1]*y+Y;
-				if(primitives[i]->type=="CubeY")vertex_buffer[k*NUM*8+j*8+2]=(vertex_data[j*8+2]+0.5)*z+Z;
-				else vertex_buffer[k*NUM*8+j*8+2]=vertex_data[j*8+2]*z+Z;
 				
-				vertex_buffer[k*NUM*8+j*8+3]=vertex_data[j*8+3];
-				vertex_buffer[k*NUM*8+j*8+4]=vertex_data[j*8+4];
-				vertex_buffer[k*NUM*8+j*8+5]=vertex_data[j*8+5];
+				v1.x=vertex_data[j*8];
+				v1.y=vertex_data[j*8+1];
+				v1.z=vertex_data[j*8+2];
+				
+				
+				glm::mat4 transform;
+				if(primitives[i]->type=="CubeX"){
+					
+					if(v1.x>0.0){
+						v1.x=v1.x+0.5;
+						transform=primitive_scopes[i]->getTransform2();
+						x=primitive_scopes[i]->size2.x*SCALE;
+						y=primitive_scopes[i]->size2.y*SCALE;
+						z=primitive_scopes[i]->size2.z*SCALE;
+			
+					}
+					else {
+						v1.x=v1.x+0.5;
+						transform=primitive_scopes[i]->getTransform();
+					}
+				}
+				else if(primitives[i]->type=="CubeY"){
+					
+					if(v1.z>0.0){
+						v1.z=v1.z+0.5;
+						transform=primitive_scopes[i]->getTransform2();
+						x=primitive_scopes[i]->size2.x*SCALE;
+						y=primitive_scopes[i]->size2.y*SCALE;
+						z=primitive_scopes[i]->size2.z*SCALE;
+			
+					}
+					else {
+						v1.z=v1.z+0.5;
+						transform=primitive_scopes[i]->getTransform();
+					}
+				}
+				else {
+					if(v1.y>0.0){
+						transform=primitive_scopes[i]->getTransform2();
+						x=primitive_scopes[i]->size2.x*SCALE;
+						y=primitive_scopes[i]->size2.y*SCALE;
+						z=primitive_scopes[i]->size2.z*SCALE;
+			
+					}
+					else {
+						transform=primitive_scopes[i]->getTransform();
+					}
+				}
+				
+				
+				v1=transform*v1;
+				vertex_buffer[k*NUM*8+j*8]=v1.x;
+				vertex_buffer[k*NUM*8+j*8+1]=v1.y;
+				vertex_buffer[k*NUM*8+j*8+2]=v1.z;
+				
+				v1=transform*glm::vec4(vertex_data[j*8+3],vertex_data[j*8+4],vertex_data[j*8+5],1.0);
+				vertex_buffer[k*NUM*8+j*8+3]=v1.x;
+				vertex_buffer[k*NUM*8+j*8+4]=v1.y;
+				vertex_buffer[k*NUM*8+j*8+5]=v1.z;
+					
+					
 				if(vertex_data[j*8+3]==1.0f || vertex_data[j*8+3]==-1.0f ){
 					vertex_buffer[k*NUM*8+j*8+6]=vertex_data[j*8+6]*z;
 					vertex_buffer[k*NUM*8+j*8+7]=vertex_data[j*8+7]*y;
@@ -294,6 +348,7 @@ GLfloat *Context::calc(const GLfloat *vertex_data,int tex_index){
 					vertex_buffer[k*NUM*8+j*8+6]=vertex_data[j*8+6]*x;
 					vertex_buffer[k*NUM*8+j*8+7]=vertex_data[j*8+7]*y;
 				}
+				
 			}
 			k++;
 			//std::cout<<":"<<k;
