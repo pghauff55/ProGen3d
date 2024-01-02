@@ -75,15 +75,15 @@ parts:
       - libpsm-infinipath1
       - libblas3
       - libopenblas0-pthread
-
-environment:
-  "LD_LIBRARY_PATH": "$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack"
+    organize:
+        usr/lib/*-linux-gnu/blas/*: usr/lib/
+    environment:
+        "LD_LIBRARY_PATH": "$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack"
 
 
     
 apps:
   progen3d:
     command: ProGen3d
-    organize:
-      usr/lib/*-linux-gnu/blas/*: usr/lib/
+
   
