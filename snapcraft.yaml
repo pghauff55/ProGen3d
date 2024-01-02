@@ -9,8 +9,6 @@ architectures:
   - build-on: [amd64]
 parts:
   progen3d:
-  environment:
-      "LD_LIBRARY_PATH": "$LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack"
     plugin: make
     source-type: git
     source: https://github.com/pghauff55/ProGen3d.git
@@ -75,7 +73,8 @@ parts:
       - libopencv-contrib-dev
       - libopencv-core-dev
       - libpsm-infinipath1
-      
+      organize:
+      usr/lib/*-linux-gnu/blas/*: usr/lib/
 
 
     
