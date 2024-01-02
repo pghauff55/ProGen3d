@@ -24,6 +24,7 @@ parts:
       - libglm-dev
       - libopencv-dev
       - libssl-dev
+      - libopenblas-dev
     stage-packages:
       - libatk-bridge2.0-0
       - libatk1.0-0
