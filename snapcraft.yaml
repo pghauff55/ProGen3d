@@ -73,7 +73,11 @@ parts:
       - libopencv-contrib-dev
       - libopencv-core-dev
       - libpsm-infinipath1
-     
+      - libblas3
+      - libopenblas0-pthread
+
+environment:
+  "LD_LIBRARY_PATH": "$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack"
 
 
     
