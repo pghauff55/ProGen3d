@@ -25,6 +25,7 @@ parts:
       - libopencv-dev
       - libssl-dev
       - libopenblas-dev
+      - linlapack-dev
     stage-packages:
       - libatk-bridge2.0-0
       - libatk1.0-0
@@ -77,6 +78,7 @@ parts:
       - libopenblas0-pthread
     organize:
         usr/lib/*-linux-gnu/blas/*: usr/lib/
+        usr/lib/*-linux-gnu/lapack/*: usr/lib/
   
 
 
