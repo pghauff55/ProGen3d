@@ -72,7 +72,7 @@ parts:
       - libopencv-dev
       - libopencv-contrib-dev
       - libopencv-core-dev
-       
+      - libpsm-infinipath1
       
 
 
