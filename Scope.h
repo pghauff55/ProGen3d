@@ -21,6 +21,7 @@ public:
 	glm::vec3 position;
     glm::vec3 size;
     glm::vec3 size2;
+    glm::mat4 Transform,Transform2;
 private:
     float anglex,angley,anglez;
     glm::vec3 x, y, z;

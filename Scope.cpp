@@ -13,7 +13,8 @@ Scope::Scope()
 		this->anglex=0.0f;
 		this->angley=0.0f;
 		this->anglez=0.0f;
-		
+		this->Transform=glm::mat4(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, 1.0f, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		this->Transform2=glm::mat4(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, 1.0f, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 		}
 
 Scope::Scope(Scope *other)
@@ -27,25 +28,35 @@ Scope::Scope(Scope *other)
 		this->anglex=other->anglex;
 		this->angley=other->angley;
 		this->anglez=other->anglez;
+		this->Transform=other->Transform;
+		this->Transform2=other->Transform2;
 		
 		}
 
 void Scope::T(const glm::vec3 &translation)
 {
-	glm::vec3 translate(translation.x*size.x,translation.y*size.y,translation.z*size.z);
+	glm::vec3 translate(translation.x,translation.y,translation.z);
+	glm::mat4 translation2(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, 1.0f, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(translate, 1.0f));
 	
 	
+	Transform=Transform*translation2;
+	Transform2=Transform2*translation2;
     position += translate;
 }
 
 void Scope::S(const glm::vec3 &size_)
 {
     size *= size_;
+    glm::mat4 scale(glm::vec4(size_.x, 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, size_.y, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, size_.z, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    Transform=Transform*scale;
+    Transform2=Transform2*scale;
     size2=size;
 }
 void Scope::D(const glm::vec3 &size_)
 {
     size2 = size*size_;
+    glm::mat4 scale(glm::vec4(size_.x, 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, size_.y, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, size_.z, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    Transform2=Transform2*scale;
 }
 void Scope::Rx(float angle)
 {
@@ -56,10 +67,13 @@ void Scope::Rx(float angle)
     float c = glm::cos(anglex*M_PI/180.0f);
     float s = glm::sin(anglex*M_PI/180.0f);
     glm::mat3 rotation(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, c, s), glm::vec3(0.0f, -s, c));
-    glm::mat3 basis(x, y, z);
-    y = basis * rotation * glm::vec3(0.0f, 1.0f, 0.0f);
-    z = basis * rotation * glm::vec3(0.0f, 0.0f, 1.0f);
-
+    x = glm::vec3(1.0f, 0.0f, 0.0f);
+    y =  rotation * glm::vec3(0.0f, 1.0f, 0.0f);
+    z =  rotation * glm::vec3(0.0f, 0.0f, 1.0f);
+    glm::mat4 rotation2(glm::vec4(x, 0.0f), glm::vec4(y, 0.0f), glm::vec4(z, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    Transform=Transform*rotation2;
+    Transform2=Transform2*rotation2;
+    
 }
 
 void Scope::Ry(float angle)
@@ -70,10 +84,15 @@ void Scope::Ry(float angle)
     float c = glm::cos(angley*M_PI/180.0f);
     float s = glm::sin(angley*M_PI/180.0f);
     glm::mat3 rotation(glm::vec3(c, 0.0f, -s), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(s, 0.0f, c));
-    glm::mat3 basis(x, y, z);
-    x = basis * rotation * glm::vec3(1.0f, 0.0f, 0.0f);
-    z = basis * rotation * glm::vec3(0.0f, 0.0f, 1.0f);
-}
+    //glm::mat3 basis(x, y, z);
+    x =rotation * glm::vec3(1.0f, 0.0f, 0.0f);
+    y = glm::vec3(0.0f, 1.0f, 0.0f);
+    z =rotation * glm::vec3(0.0f, 0.0f, 1.0f);
+    glm::mat4 rotation2(glm::vec4(x, 0.0f), glm::vec4(y, 0.0f), glm::vec4(z, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    Transform=Transform*rotation2;
+    Transform2=Transform2*rotation2;
+
+    }
 
 void Scope::Rz(float angle)
 {
@@ -84,35 +103,25 @@ void Scope::Rz(float angle)
     float c = glm::cos(anglez*M_PI/180.0f);
     float s = glm::sin(anglez*M_PI/180.0f);
     glm::mat3 rotation(glm::vec3(c, s, 0.0f), glm::vec3(-s, c, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    glm::mat3 basis(x, y, z);
-    x = basis * rotation * glm::vec3(1.0f, 0.0f, 0.0f);
-    y = basis * rotation * glm::vec3(0.0f, 1.0f, 0.0f);
-    
+    //glm::mat3 basis(x, y, z);
+    x = rotation * glm::vec3(1.0f, 0.0f, 0.0f);
+    y = rotation * glm::vec3(0.0f, 1.0f, 0.0f);
+    z = glm::vec3(0.0f, 0.0f, 1.0f);
+    glm::mat4 rotation2(glm::vec4(x, 0.0f), glm::vec4(y, 0.0f), glm::vec4(z, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    Transform=Transform*rotation2;
+    Transform2=Transform2*rotation2;
 }
 
 glm::mat4 Scope::getTransform()
 {
-    glm::mat4 rotation(glm::vec4(x, 0.0f), glm::vec4(y, 0.0f), glm::vec4(z, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    glm::mat4 translation(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, 1.0f, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(position, 1.0f));
-    glm::mat4 scale(glm::vec4(size.x, 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, size.y, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, size.z, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    glm::mat4 transform = rotation * translation * scale;
-    //transform[3][0] = position.x;
-    //transform[3][1] = position.y;
-    //transform[3][2] = position.z;
+   
 
-    return transform;
+    return Transform;
 }
 glm::mat4 Scope::getTransform2()
 {
-    glm::mat4 rotation(glm::vec4(x, 0.0f), glm::vec4(y, 0.0f), glm::vec4(z, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    glm::mat4 translation(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, 1.0f, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(position, 1.0f));
-    glm::mat4 scale(glm::vec4(size2.x, 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, size2.y, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, size2.z, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    glm::mat4 transform = rotation * translation * scale;
-   // transform[3][0] = position.x;
-    //transform[3][1] = position.y;
-    //transform[3][2] = position.z;
-
-    return transform;
+    
+    return Transform2;
 }
 glm::vec3 Scope::getPosition() const
 {
