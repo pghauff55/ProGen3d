@@ -77,8 +77,7 @@ parts:
       - libopenblas0-pthread
     organize:
         usr/lib/*-linux-gnu/blas/*: usr/lib/
-    environment:
-        "LD_LIBRARY_PATH": "$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/blas:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/lapack"
+  
 
 
     
