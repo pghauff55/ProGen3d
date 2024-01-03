@@ -106,7 +106,7 @@ std::string username,password;
 static int SCREEN_WIDTH=1600;
 static int SCREEN_HEIGHT=1200;
 
-std::string grammar_filename("./test.grammar");
+std::string grammar_filename("/snap/progen3d/current/test.grammar");
 
 extern std::vector<Variable *> variable_list;
 extern std::vector<Variable *> full_variable_list;
@@ -736,7 +736,7 @@ LoadCertificates(ctx, "mycert.pem", "mycertkey.pem");
 	
 }
 else{
-	std::vector<std::string> files = globVector("./textures/*.png");
+	std::vector<std::string> files = globVector("/snap/progen3d/current/textures/*.png");
 	texture_filenames=files;
 	std::stringstream ss;
 	
@@ -2849,6 +2849,7 @@ void activate_saveas(GtkButton *item) {
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
+	 gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),"$HOME");
     gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "test.grammar");
 
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
@@ -2899,6 +2900,7 @@ void activate_choose_image_button(GtkButton *item) {
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
+	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),"$HOME");
     //gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "test.grammar");
 
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
@@ -3164,6 +3166,7 @@ GtkFileChooserNative *native;
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),"$HOME");
     //gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "texture.png");
      std::string filename;
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
@@ -3475,6 +3478,7 @@ GtkFileChooserNative *native=NULL;
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),"$HOME");
     gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "test.ply");
 
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
