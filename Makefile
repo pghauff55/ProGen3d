@@ -48,5 +48,5 @@ clean:
 install: $(TARGET)
 	mv ProGen3d $(DESTDIR)
 	mkdir $(DESTDIR)/textures
-	cp *.png $(DESTDIR)/textures
+	cp /textures/*.png $(DESTDIR)/textures
 	cp *.grammar $(DESTDIR)
