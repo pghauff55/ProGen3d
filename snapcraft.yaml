@@ -101,8 +101,10 @@ apps:
       - mount-observe
       - desktop-legacy
       - gsettings
-      - gnome-3-28-1804
+      - gnome-42-2204
       - wayland
+      - gtk-3-themes
+      - icon-themes
     slots:
       - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
