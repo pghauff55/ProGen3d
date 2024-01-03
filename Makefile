@@ -51,4 +51,4 @@ install: $(TARGET)
 	cp ./textures/*.png $(DESTDIR)/textures
 	cp *.grammar $(DESTDIR)
 	cp ./snap/gui/progen3d.desktop $(DESTDIR)
-	cp ./snap/gui/progen3d.jpg $(DESTDIR)
+	cp ./snap/gui/progen3d.png $(DESTDIR)
