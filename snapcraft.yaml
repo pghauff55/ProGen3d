@@ -87,7 +87,7 @@ parts:
 apps:
   progen3d:
     command: ProGen3d
-    desktop: progen3d.Desktop
+    desktop: progen3d.desktop
     plugs:
       - home
       - opengl
