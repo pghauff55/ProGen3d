@@ -98,6 +98,11 @@ apps:
       - opengl
       - desktop
       - x11
+      - mount-observe
+      - desktop-legacy
+      - gsettings
+      - gnome-3-28-1804
+      - wayland
     slots:
       - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
