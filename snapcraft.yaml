@@ -79,7 +79,6 @@ parts:
       - libopenblas0-pthread
       - locales-all
     organize:
-        usr/lib/*-linux-gnu/blas/*: usr/lib/
         usr/lib/*-linux-gnu/openblas-pthread/*: usr/lib/
   
 
