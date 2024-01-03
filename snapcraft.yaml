@@ -81,7 +81,11 @@ parts:
     organize:
         usr/lib/*-linux-gnu/openblas-pthread/*: usr/lib/
   
-
+slots:
+  dbus-progen3d:
+    interface: dbus
+    bus: session
+    name: au.org.progen3d
 
     
 apps:
@@ -94,6 +98,8 @@ apps:
       - opengl
       - desktop
       - x11
+    slots:
+      - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
   
 environment:
