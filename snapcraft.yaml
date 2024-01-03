@@ -76,6 +76,7 @@ parts:
       - libpsm-infinipath1
       - libblas3
       - libopenblas0-pthread
+      - locales-all
     organize:
         usr/lib/*-linux-gnu/blas/*: usr/lib/
         usr/lib/*-linux-gnu/lapack/*: usr/lib/
@@ -88,7 +89,6 @@ apps:
     command: ProGen3d
     plugs:
       - home
-    extensions: [gnome-3-38]
     common-id: com.github.pghauff55.ProGen3d
 
   
