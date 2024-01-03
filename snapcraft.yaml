@@ -86,9 +86,17 @@ parts:
     
 apps:
   progen3d:
-    command: ProGen3d
+    command: progen3d
+    desktop: progen3d.Desktop
     plugs:
       - home
+      - opengl
+      - desktop
+      - x11
     common-id: com.github.pghauff55.ProGen3d
+    
+environment:
+  LIBGL_DRIVERS_PATH: $SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/dri
+
 
   
