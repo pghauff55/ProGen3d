@@ -2849,7 +2849,7 @@ void activate_saveas(GtkButton *item) {
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
-	 gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),"$HOME");
+	 gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),g_get_home_dir());
     gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "test.grammar");
 
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
@@ -2900,7 +2900,7 @@ void activate_choose_image_button(GtkButton *item) {
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
-	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),"$HOME");
+	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),g_get_home_dir());
     //gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "test.grammar");
 
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
@@ -3166,7 +3166,7 @@ GtkFileChooserNative *native;
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
-		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),"$HOME");
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),g_get_home_dir());
     //gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "texture.png");
      std::string filename;
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
@@ -3478,7 +3478,7 @@ GtkFileChooserNative *native=NULL;
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
-		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),"$HOME");
+		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),g_get_home_dir());
     gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "test.ply");
 
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
