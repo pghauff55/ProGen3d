@@ -1,5 +1,5 @@
 name: progen3d
-version: "0.96a"
+version: "0.96c"
 summary: Grammar based 3d Procedural Generator
 description: 
   ProGen3d is a grammar based procedural generator with textures and can export to PLY format.
@@ -101,10 +101,7 @@ apps:
       - mount-observe
       - desktop-legacy
       - gsettings
-      - gnome-42-2204
       - wayland
-      - gtk-3-themes
-      - icon-themes
     slots:
       - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
