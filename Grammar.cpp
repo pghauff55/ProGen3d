@@ -350,10 +350,27 @@ std::string replacevars(std::string input){
 	return input;
 }
 
+std::string replacevars_ampersand(std::string input){
+	for(int i=0;i<variable_list.size();i++){
+			
+			std::string str2 = variable_list[i]->var_name;
+					
+			if(input.find("&"+str2)!=-1){
+				 
+				  input.replace(input.find("&"+str2),str2.length()+1,std::to_string(variable_list[i]->getRandom()));	
+				 break;
+			  }
+		
+		}
+	return input;
+}
+
+
+
 std::string Grammar::MathS(std::string input){
 	Solution X;
 		
-		return std::to_string(X.Process(replacevars(replacevars(replacevars(replacevars(input))))));	
+		return std::to_string(X.Process(replacevars_ampersand(replacevars(replacevars(replacevars(replacevars(input)))))));	
 		
 	
 }
@@ -515,25 +532,6 @@ void Token::performAction(Context *context){
     //glm::vec3 contextSize = context->getCurrentScope()->getSize();
     //////std::cout<< << " -- Current scope -> POS: (" << pos.x << ", " << pos.y << ", " << pos.z << ") SIZE: (" << contextSize.x << ", " << contextSize.y << ", " << contextSize.z << ") " << std::endl;
 		
-	}
-	else if(token_name=="*"){
-		//////std::cout<<<<"***002";
-			if(var_name!=""){
-				int index=findVariable(var_name);
-				if(index!=-1 ){
-					if(variable_list[index]->max==variable_list[index]->min) removeVariable(var_name);
-				}
-			//	else ////std::cout<<<<"not found";
-			}
-	}
-	else if(token_name=="+"){
-		//////std::cout<<<<"***003";
-			if(var_name!=""){
-				
-				 addVariable(var_name);
-				}
-				
-			
 	}
 	else if(token_name=="I"){
 	    glm::mat4 transform = context->getCurrentScope()->getTransform();
@@ -1204,7 +1202,7 @@ full_variable_list.clear();
 
 void Grammar::update_token(Token *check_token){
 
-						if(check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
+						if( check_token->token_name=="D" || check_token->token_name=="S" || check_token->token_name=="T"){ //replace variable with value
 										
 						for(int i=0;i<3;i++){
 								if(check_token->var_names[i]!=""){
@@ -1214,7 +1212,18 @@ void Grammar::update_token(Token *check_token){
 										check_token->var_names[i]="";
 									}
 						}
-					}
+						}
+						if( check_token->token_name=="A" ){ //replace variable with value
+										
+						for(int i=0;i<2;i++){
+								if(check_token->var_names[i]!=""){
+													
+										check_token->arguments[i]=atof(MathS(check_token->var_names[i]).c_str());
+													
+										check_token->var_names[i]="";
+									}
+						}
+						}
 						if(check_token->token_name=="I" ){
 							if(check_token->var_names[0]!=""){
 													
@@ -1275,8 +1284,10 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 				
 		}
 		else {
-	
+	    Variable *var=new Variable(rule->rule_name+"_count",0,0,true);
+		variable_list.push_back(var);
 		for(int l=0;l<rule->repeat;l++){
+						var->value=l;
 		                ////std::cout<<<<"l_"<<l<<";"<<std::endl;
 						for(int j=0;j<rule->section_tokens[1].size();j++){
 							////std::cout<<<<"j_"<<j<<";";	
@@ -1311,7 +1322,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 						}
 					
 				}
-		
+		removeVariable(rule->rule_name+"_count");	
 		}
 		
 		return new_tokens;
@@ -1332,7 +1343,10 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 		
 				////std::cout<<<<"m_"<<m<<std::endl<<std::endl;
 				if(m==1){
+					Variable *var=new Variable(rule->rule_name+"_count",0,0,true);
+					variable_list.push_back(var);
 					for(int l=0;l<rule->repeat;l++){
+						var->value=l;
 		                ////std::cout<<<<"l_"<<l<<";"<<std::endl;
 						for(int j=0;j<rule->section_tokens[m].size();j++){
 							////std::cout<<<<"j_"<<j<<";";	
@@ -1366,6 +1380,7 @@ std::vector<Token *> Grammar::Recurse(Rule *rule){
 						}
 					////std::cout<<<<"HERE0012";
 					}
+					removeVariable(rule->rule_name+"_count");	
 					////std::cout<<<<"HERE013";
 					////std::cout<<<<std::endl;
 				}

@@ -329,25 +329,25 @@ GLfloat *Context::calc(const GLfloat *vertex_data,int tex_index){
 				vertex_buffer[k*NUM*8+j*8+1]=v1.y;
 				vertex_buffer[k*NUM*8+j*8+2]=v1.z;
 				
-				v1=transform*glm::vec4(vertex_data[j*8+3],vertex_data[j*8+4],vertex_data[j*8+5],1.0);
+				v1=glm::normalize(transform*glm::vec4(vertex_data[j*8+3],vertex_data[j*8+4],vertex_data[j*8+5],1.0));
 				vertex_buffer[k*NUM*8+j*8+3]=v1.x;
 				vertex_buffer[k*NUM*8+j*8+4]=v1.y;
 				vertex_buffer[k*NUM*8+j*8+5]=v1.z;
 					
 					
-				if(vertex_data[j*8+3]==1.0f || vertex_data[j*8+3]==-1.0f ){
-					vertex_buffer[k*NUM*8+j*8+6]=vertex_data[j*8+6]*z;
-					vertex_buffer[k*NUM*8+j*8+7]=vertex_data[j*8+7]*y;
-				}
-				else if(vertex_data[j*8+4]==1.0f || vertex_data[j*8+4]==-1.0f){
-					vertex_buffer[k*NUM*8+j*8+6]=vertex_data[j*8+6]*x;
-					vertex_buffer[k*NUM*8+j*8+7]=vertex_data[j*8+7]*z;
+				//if(vertex_data[j*8+3]==1.0f || vertex_data[j*8+3]==-1.0f ){
+					vertex_buffer[k*NUM*8+j*8+6]=(vertex_data[j*8+6]+1.0)*texscales[i];//*z;
+					vertex_buffer[k*NUM*8+j*8+7]=(vertex_data[j*8+7]+1.0)*texscales[i];//*y;
+				//}
+				//else if(vertex_data[j*8+4]==1.0f || vertex_data[j*8+4]==-1.0f){
+				//	vertex_buffer[k*NUM*8+j*8+6]=vertex_data[j*8+6]*texscales[i];//*x;
+				//	vertex_buffer[k*NUM*8+j*8+7]=vertex_data[j*8+7]*texscales[i];//*z;
 					
-				}
-				else {
-					vertex_buffer[k*NUM*8+j*8+6]=vertex_data[j*8+6]*x;
-					vertex_buffer[k*NUM*8+j*8+7]=vertex_data[j*8+7]*y;
-				}
+				//}
+				//else {
+				//	vertex_buffer[k*NUM*8+j*8+6]=vertex_data[j*8+6]*texscales[i];//*x;
+				//	vertex_buffer[k*NUM*8+j*8+7]=vertex_data[j*8+7]*texscales[i];//*y;
+				//}
 				
 			}
 			k++;

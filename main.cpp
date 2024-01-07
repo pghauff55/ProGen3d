@@ -106,7 +106,7 @@ std::string username,password;
 static int SCREEN_WIDTH=1600;
 static int SCREEN_HEIGHT=1200;
 
-std::string grammar_filename("/snap/progen3d/current/test.grammar");
+std::string grammar_filename("./test.grammar");
 
 extern std::vector<Variable *> variable_list;
 extern std::vector<Variable *> full_variable_list;
@@ -128,6 +128,7 @@ float scale_global=0.3f;
 float elevation_view=0.0f;
 
 std::vector<int> texture_list;
+std::vector<float> texture_list_alpha;
 std::vector<std::string> texture_filenames;
 bool loggedin=false;
 
@@ -151,6 +152,7 @@ int img_counter=0;
 GtkWidget *button_remove_img[50];
 GtkWidget *button_moveup_img[50];
 GtkWidget *button_movedown_img[50];
+GtkWidget *scale_slider_alpha[50];
 GtkWidget *layout2;
 GtkWidget *genlabel1;
 GtkWidget *genlabel2;
@@ -231,15 +233,19 @@ const GLchar  *VERTEX_SOURCE =
 "uniform mat4 view;\n"
 "uniform mat4 model;\n"
 "uniform vec3 lightposition;\n"
-"uniform vec3 pos;\n"
-"uniform vec3 scale_vec;\n"
+//"uniform vec3 pos;\n"
+//"uniform vec3 scale_vec;\n"
 "void main(){\n"
 "       tex_coord.x=texture.x;	\n"
 "       tex_coord.y=texture.y;	\n"
-"    fN = (model*view*vec4(normal,1.0)).xyz ;\n"
-"    fV = - (model*view*vec4(position+pos, 1.0)).xyz;\n"
-"    fL = lightposition.xyz - (model*view*vec4(position+pos, 1.0)).xyz ;\n"
-"    gl_Position = projection * view *(   (model * vec4(position+pos, 1.0)) );\n"
+//"    fN = (model*view*vec4(normal,1.0)).xyz ;\n"
+"    fN = (view*vec4(normal,1.0)).xyz ;\n"
+//"    fV = - (model*view*vec4(position+pos, 1.0)).xyz;\n"
+"    fV = - (view*vec4(position, 1.0)).xyz;\n"
+//"    fL = lightposition.xyz - (model*view*vec4(position+pos, 1.0)).xyz ;\n"
+"    fL = (view*vec4(lightposition-position, 1.0)).xyz ;\n"
+//"    gl_Position = projection * view *(   (model * vec4(position+pos, 1.0)) );\n"
+"    gl_Position = projection * view *model*vec4(position, 1.0);\n"
 "}\n";
 
 
@@ -259,6 +265,7 @@ const GLchar *FRAGMENT_SOURCE2 =
 "uniform vec3 lightposition ;\n"
 "uniform float shinyness ;\n"
 "uniform sampler2D texture1;\n"
+"uniform float alpha;\n"
 "void main(){vec3 N = normalize(fN) ;\n"
 "vec3 V = normalize(fV) ;\n"
 "vec3 L = normalize(fL) ;\n"
@@ -269,7 +276,8 @@ const GLchar *FRAGMENT_SOURCE2 =
 "float Ks = pow(max(dot(N, H), 0.0), shinyness) ;\n"
 "vec4 specular = Ks*specularproduct ;\n"
 "if( dot(L, N) < 0.0 )specular = vec4(0.0, 0.0, 0.0, 1.0) ;\n"
-"gl_FragColor = texture(texture1, tex_coord)*(ambient + diffuse + specular) ;\n"
+//"if(alpha!=1.0)gl_FragColor = texture(texture1, tex_coord) ;\n"
+" gl_FragColor = texture(texture1, tex_coord) *vec4((ambient.xyz + diffuse.xyz + specular.xyz),alpha);\n"
 "}\n"; 
 
 
@@ -736,7 +744,7 @@ LoadCertificates(ctx, "mycert.pem", "mycertkey.pem");
 	
 }
 else{
-	std::vector<std::string> files = globVector("/snap/progen3d/current/textures/*.png");
+	std::vector<std::string> files = globVector("./textures/*.png");
 	texture_filenames=files;
 	std::stringstream ss;
 	
@@ -754,6 +762,7 @@ else{
 		counter++;
 		texid=generateTexture(files[i].c_str());
 		texture_list.push_back(texid);
+		texture_list_alpha.push_back(1.0);
 		 GError* err = NULL;
 		 cv::Mat newtexture = cv::imread(files[i].c_str(), cv::IMREAD_COLOR);
 		 cv::resize(newtexture, newtexture,cv::Size(128, 128),0,0, cv::INTER_LINEAR);
@@ -808,17 +817,17 @@ txt_changed(mybuffer,NULL);
 		mydata[i]=vertex_data[i]; 
 	}
 	
-	
+/*	
 	for(int i=0;i<36;i++){
 		for(int j=0;j<8;j++){
 			if(j==0 || j==2)mydata[i*8+j]*=0.5f;
 			if(j==1){
 				if(mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
 			}
-			if(j==6 && mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
-			if(j==7 && mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
+		//	if(j==6 && mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
+		//	if(j==7 && mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
 		}
-	}
+	} */
 	std::stringstream ss;
 	
 	ss<<"texture list size"<<texture_list.size()<<std::endl;
@@ -1008,13 +1017,14 @@ realize (GtkWidget *widget)
   glDetachShader (program, vertex);
   glDetachShader (program, fragment);
 
-
-  glEnable(GL_DEPTH_TEST);
-
-glDepthFunc(GL_LESS);  
+glEnable(GL_DEPTH_TEST);
+//glClearDepth(1.0);
+glDepthFunc(GL_LESS);
+//glDisable(GL_CULL_FACE);
+//glCullFace(GL_BACK_AND_FRONT);
 glEnable(GL_BLEND);
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   
-
+//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
 
 
@@ -1154,13 +1164,18 @@ void draw_buffer(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int 
   glUseProgram (program);
   glUniform1i(glGetUniformLocation(program, "texture1"), 0);
  
- 
+ if(angle_cube==0){
+	 glDepthFunc(GL_LESS);
+ }
+ else {
+	 glDepthFunc(GL_GREATER);
+ }
  
  position_vec=vec3(position_vec.x*scale_global,position_vec.y*scale_global,position_vec.z*scale_global);
  
   model = glm::mat4(1.0);
-  model = rotate(model, angle_cube, vec3(0,1,0));
-  model = translate(model,position_vec);
+  //model = rotate(model, angle_cube, vec3(0,1,0));
+  //model = translate(model,position_vec);
   vec3 scale_vec2=vec3(scale_vec.x*scale_global,scale_vec.y*scale_global,scale_vec.z*scale_global);
   model = scale(model,scale_vec2);
   
@@ -1192,8 +1207,8 @@ void draw_buffer(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int 
   vec3 lightposition=vec3(1.1*scale_global,-60.7*scale_global,-1.3*scale_global);
   glUniform3fv(glGetUniformLocation(program,"lightposition"),1,&lightposition[0]);
   
-  pos=position_vec;
-  glUniform3fv(glGetUniformLocation(program,"pos"),1,&pos[0]);
+  //pos=position_vec;
+  //glUniform3fv(glGetUniformLocation(program,"pos"),1,&pos[0]);
   //glUniform3fv(glGetUniformLocation(program,"scale_vec"),1,&scale_vec[0]);  
   
   glm::vec4 ambientproduct=glm::vec4(0.8,0.8,0.8,1.0);
@@ -1202,10 +1217,11 @@ void draw_buffer(float angle_cube,vec3 scale_vec,vec3 position_vec,vec3 pos,int 
   glm::vec4 diffuseproduct=glm::vec4(0.5,0.5,0.5,1.0);
   glUniform4fv(glGetUniformLocation(program,"diffuseproduct"),1,&diffuseproduct[0]);
   
-  glm::vec4 specularproduct=glm::vec4(0.3,0.3,0.3,1.0);
+  glm::vec4 specularproduct=glm::vec4(0.1,0.1,0.1,1.0);
   glUniform4fv(glGetUniformLocation(program,"specularproduct"),1,&specularproduct[0]);
-  float shinyness=128.0f;
+  float shinyness=16.0f;
   glUniform1f(glGetUniformLocation(program,"shinyness"),shinyness);
+  glUniform1f(glGetUniformLocation(program,"alpha"),texture_list_alpha[tex_index]);
   
   
   glBindVertexArray(vao1[tex_index]);
@@ -2618,7 +2634,13 @@ void activate_add(GtkWidget *item) {
 	
 	gtk_widget_show (layout);
 }
-
+void activate_scale_slider_alpha(GtkRange *range,int *data){
+	int index=(*data);
+	
+	texture_list_alpha[index]=gtk_range_get_value (range);
+	
+	
+}
 
 
  void
@@ -2632,12 +2654,14 @@ if(img_index==images.size()-1)return;
 	int tex=texture_list[img_index];
 	texture_list.erase(texture_list.begin()+img_index);
 	texture_list.insert(texture_list.begin()+img_index+1,tex);
-	
-		for(int i=0;i<img_counter;i++){
+	int *mypointer;
+	for(int i=0;i<img_counter;i++){
 		
 		int j=i%7;
 		int k=i/7;
 		gtk_layout_move ((GtkLayout *)layout2,images[i],80+k*230,130+j*135);
+		
+		gtk_range_set_value((GtkRange *)scale_slider_alpha[i],texture_list_alpha[i]);
 		
 	
 	}	
@@ -2656,14 +2680,15 @@ if(img_index==0)return;
 	int tex=texture_list[img_index];
 	texture_list.erase(texture_list.begin()+img_index);
 	texture_list.insert(texture_list.begin()+img_index-1,tex);
-	
-		for(int i=0;i<img_counter;i++){
+	int *mypointer;
+	for(int i=0;i<img_counter;i++){
 		
 		int j=i%7;
 		int k=i/7;
 		gtk_layout_move ((GtkLayout *)layout2,images[i],80+k*230,130+j*135);
 		
-	
+		gtk_range_set_value((GtkRange *)scale_slider_alpha[i],texture_list_alpha[i]);
+		
 	}
 }
 
@@ -2678,11 +2703,13 @@ int img_index=(*user_data);
 	gtk_container_remove((GtkContainer *)layout2,(GtkWidget *)button_remove_img[img_counter-1]);
 	gtk_container_remove((GtkContainer *)layout2,(GtkWidget *)button_movedown_img[img_counter-1]);
 	gtk_container_remove((GtkContainer *)layout2,(GtkWidget *)button_moveup_img[img_counter-1]);
+	gtk_container_remove((GtkContainer *)layout2,(GtkWidget *)scale_slider_alpha[img_counter-1]);
 	gtk_container_remove((GtkContainer *)layout2,(GtkWidget *)images[img_index]);
 	
 	//std::cout<<img_index<<std::endl;
 	images.erase(images.begin()+img_index);
 	texture_list.erase(texture_list.begin()+img_index);
+	texture_list_alpha.erase(texture_list_alpha.begin()+img_index);
 	int *mypointer;
 	img_counter--;
 	
@@ -2693,9 +2720,14 @@ int img_index=(*user_data);
 		int k=i/7;
 		gtk_layout_move ((GtkLayout *)layout2,images[i],80+k*230,130+j*135);
 		
-	
+		gtk_range_set_value((GtkRange *)scale_slider_alpha[i],texture_list_alpha[i]);
+		
 	}
 }
+
+
+
+
 
 void generate_widgets(){
 	try{
@@ -2712,22 +2744,27 @@ if(setup_textures && loggedin==false){
 		button_remove_img[i]=gtk_button_new_with_label("X");
 		button_moveup_img[i]=gtk_button_new_with_label("\u25b2");
 		button_movedown_img[i]=gtk_button_new_with_label("\u25bc");
+		scale_slider_alpha[i]=gtk_scale_new_with_range (GTK_ORIENTATION_VERTICAL,0.025,1.0,0.025);
+        gtk_widget_set_size_request(scale_slider_alpha[i],20,120);
 		gtk_widget_set_size_request((GtkWidget *)button_remove_img[i],20,20);
 		gtk_widget_set_size_request((GtkWidget *)button_moveup_img[i],20,20);
 		gtk_widget_set_size_request((GtkWidget *)button_movedown_img[i],20,20);
 		gtk_layout_put ((GtkLayout *)layout2,images[i],80+k*230,130+j*135);
-		gtk_layout_put ((GtkLayout *)layout2,button_remove_img[i],220+k*230,130+j*135);
-		gtk_layout_put ((GtkLayout *)layout2,button_moveup_img[i],220+k*230,130+j*135+30);
-		gtk_layout_put ((GtkLayout *)layout2,button_movedown_img[i],220+k*230,130+j*135+60);
+		gtk_layout_put ((GtkLayout *)layout2,scale_slider_alpha[i],210+k*230,130+j*135);
+		gtk_layout_put ((GtkLayout *)layout2,button_remove_img[i],250+k*230,130+j*135);
+		gtk_layout_put ((GtkLayout *)layout2,button_moveup_img[i],250+k*230,130+j*135+30);
+		gtk_layout_put ((GtkLayout *)layout2,button_movedown_img[i],250+k*230,130+j*135+60);
 		gtk_widget_show (images[i]);
+		gtk_widget_show (scale_slider_alpha[i]);
 		gtk_widget_show (button_remove_img[i]);
 		gtk_widget_show (button_movedown_img[i]);
 		gtk_widget_show (button_moveup_img[i]);
-		
+		gtk_range_set_value((GtkRange *)scale_slider_alpha[i],texture_list_alpha[i]);
 		mypointer=new int(i);
 		g_signal_connect (button_remove_img[i] ,"clicked", G_CALLBACK (activate_button_remove_img), mypointer); 
 		g_signal_connect (button_movedown_img[i] ,"clicked", G_CALLBACK (activate_button_movedown_img), mypointer); 
 		g_signal_connect (button_moveup_img[i] ,"clicked", G_CALLBACK (activate_button_moveup_img), mypointer); 
+		g_signal_connect (scale_slider_alpha[i] ,"value-changed", G_CALLBACK (activate_scale_slider_alpha), mypointer); 
 	
 	}
 	setup_textures=false;  
@@ -2849,7 +2886,6 @@ void activate_saveas(GtkButton *item) {
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
-	 gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),g_get_home_dir());
     gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "test.grammar");
 
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
@@ -2900,7 +2936,6 @@ void activate_choose_image_button(GtkButton *item) {
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
-	gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),g_get_home_dir());
     //gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "test.grammar");
 
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
@@ -3166,7 +3201,6 @@ GtkFileChooserNative *native;
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
-		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),g_get_home_dir());
     //gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "texture.png");
      std::string filename;
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
@@ -3478,7 +3512,6 @@ GtkFileChooserNative *native=NULL;
     gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(native), filter);
 
     // default file name
-		gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(native),g_get_home_dir());
     gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(native), "test.ply");
 
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
@@ -3934,6 +3967,8 @@ void activate_app(GtkApplication *app){
     
     gtk_widget_set_size_request((GtkWidget *)actionbar2, 950, 12);
 notebook=gtk_notebook_new ();
+//notebooktextview=gtk_notebook_new();
+
     file_label=gtk_label_new("");
     gtk_widget_set_size_request((GtkWidget *)actionbar3, 950, 12);
     gtk_box_pack_start(GTK_BOX(box),file_label, 0, 0, 0);
@@ -4213,7 +4248,7 @@ for(int i=0;i<100;i++)rulenames[i]=new char(40);//due to GTK combobox error
 	
 	
 	
-	 app= gtk_application_new ("au.org.progen3d", G_APPLICATION_FLAGS_NONE);
+	 app= gtk_application_new ("org.progen3d", G_APPLICATION_FLAGS_NONE);
 	
 	
        g_signal_connect (app ,"activate", G_CALLBACK (activate_app), NULL);
