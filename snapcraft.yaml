@@ -85,7 +85,7 @@ slots:
   dbus-progen3d:
     interface: dbus
     bus: session
-    name: com.progen3d
+    name: snap.progen3d.progen3d
 
     
 apps:
