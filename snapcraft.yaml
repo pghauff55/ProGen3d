@@ -85,7 +85,7 @@ slots:
   dbus-progen3d:
     interface: dbus
     bus: session
-    name: au.org.progen3d
+    name: com.progen3d
 
     
 apps:
