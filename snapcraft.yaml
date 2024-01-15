@@ -1,5 +1,5 @@
 name: progen3d
-version: "0.96c-1"
+version: "0.96c-2"
 summary: Grammar based 3d Procedural Generator
 description: 
   ProGen3d is a grammar based procedural generator with textures and can export to PLY format.
@@ -7,6 +7,7 @@ confinement: strict
 base: core22
 architectures:
   - build-on: [amd64]
+
 parts:
   progen3d:
     plugin: make
@@ -80,18 +81,25 @@ parts:
     organize:
         usr/lib/*-linux-gnu/openblas-pthread/*: usr/lib/
   
-
+slots:
+  dbus-progen3d:
+    interface: dbus
+    bus: session
+    name: snap.progen3d.progen3d
 
     
 apps:
   progen3d:
     command: progen3d
+
     desktop: progen3d.desktop
     plugs:
       - home
       - opengl
       - desktop
       - x11
+    slots:
+      - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
   
 environment:
