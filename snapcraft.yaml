@@ -92,7 +92,7 @@ apps:
   progen3d:
     command: ProGen3d
 
-    desktop: usr/share/applications/progen3d.desktop
+    desktop: progen3d.desktop
     plugs:
       - home
       - opengl
