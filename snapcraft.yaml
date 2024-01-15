@@ -1,4 +1,4 @@
-name: ProGen3d
+name: progen3d
 version: "0.96c-Ubuntu20.04"
 summary: Grammar based 3d Procedural Generator
 description: 
@@ -9,7 +9,7 @@ architectures:
   - build-on: [amd64]
 
 parts:
-  ProGen3d:
+  progen3d:
     plugin: make
     source-type: git
     source: https://github.com/pghauff55/ProGen3d.git
@@ -85,11 +85,11 @@ slots:
   dbus-ProGen3d:
     interface: dbus
     bus: session
-    name: snap.ProGen3d.ProGen3d
+    name: snap.progen3d.progen3d
 
     
 apps:
-  ProGen3d:
+  progen3d:
     command: ProGen3d
 
     desktop: ProGen3d.Desktop
@@ -103,7 +103,7 @@ apps:
       - gsettings
       - wayland
     slots:
-      - dbus-ProGen3d
+      - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
   
 environment:
