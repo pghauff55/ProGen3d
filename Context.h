@@ -3,6 +3,7 @@
 #include "Scope.h"
 #include "Mesh.h"
 
+#include <fstream>
 #include <stack>
 
 #include <GL/gl.h>
@@ -56,6 +57,7 @@ public:
     GLuint loadTexture(GLuint texid);
     void draw();
     GLfloat *calc(const GLfloat *,int texindex);
+    void PLY(const GLfloat *,const std::string &filename);
     void addPrimitive(std::string type,Scope *scope,int texindex,int rotate,float texscale);
     void genPrimitives();
 
