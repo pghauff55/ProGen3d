@@ -11,7 +11,7 @@ slots:
    dbus-daemon: # name this whatever you want
      interface: dbus
      bus: session
-     name: au.org.progen3d # adjust accordingly
+     name: snap.progen3d # adjust accordingly
 parts:
   progen3d:
     plugin: make
