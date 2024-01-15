@@ -82,7 +82,7 @@ parts:
         usr/lib/*-linux-gnu/openblas-pthread/*: usr/lib/
   
 slots:
-  dbus-ProGen3d:
+  dbus-progen3d:
     interface: dbus
     bus: session
     name: snap.progen3d.progen3d
