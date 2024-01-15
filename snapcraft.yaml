@@ -7,11 +7,6 @@ confinement: strict
 base: core22
 architectures:
   - build-on: [amd64]
-slots:
-   dbus-daemon: # name this whatever you want
-     interface: dbus
-     bus: session
-     name: snap.progen3d.progen3d # adjust accordingly
 parts:
   progen3d:
     plugin: make
@@ -91,7 +86,6 @@ parts:
 apps:
   progen3d:
     command: progen3d
-    slots: [ dbus-daemon ]
     desktop: progen3d.desktop
     plugs:
       - home
