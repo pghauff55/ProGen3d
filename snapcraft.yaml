@@ -82,7 +82,7 @@ parts:
         usr/lib/*-linux-gnu/openblas-pthread/*: usr/lib/
   
 slots:
-  dbus-daemon:
+  dbus-progen3d:
     interface: dbus
     bus: session
     name: com.progen3d
@@ -99,7 +99,7 @@ apps:
       - desktop
       - x11
     slots:
-      - dbus-daemon
+      - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
   
 environment:
