@@ -4,10 +4,10 @@
 Type=Application
 
 # The version of the desktop entry specification to which this file complies
-Version=0.96a
+Version=0.96c
 
 # The name of the application
-Name=progen3d
+Name=ProGen3d
 
 # A comment which can/will be used as a tooltip
 Comment=Procedural Generator for 3d Modeling
@@ -16,7 +16,7 @@ Comment=Procedural Generator for 3d Modeling
 
 
 # The executable of the application, possibly with arguments.
-Exec=progen3d
+Exec=ProGen3d
 
 # The name of the icon that will be used to display this entry
 Icon=progen3d.png
