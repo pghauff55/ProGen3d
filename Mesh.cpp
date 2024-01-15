@@ -77,8 +77,8 @@ Mesh Mesh::getInstance(const std::string &objId)
     }
 
     else if (objId != "Cube") {
-        std::cerr << "W: Unknown primitive object type." << std::endl;
-        std::cerr << "W: Defaulted to Cube." << std::endl;
+        //std::cerr << "W: Unknown primitive object type." << std::endl;
+        //std::cerr << "W: Defaulted to Cube." << std::endl;
     }
 
     return getCube();

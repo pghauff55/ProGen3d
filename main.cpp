@@ -817,17 +817,16 @@ txt_changed(mybuffer,NULL);
 		mydata[i]=vertex_data[i]; 
 	}
 	
-/*	
+	
 	for(int i=0;i<36;i++){
 		for(int j=0;j<8;j++){
 			if(j==0 || j==2)mydata[i*8+j]*=0.5f;
 			if(j==1){
 				if(mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
 			}
-		//	if(j==6 && mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
-		//	if(j==7 && mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
 		}
-	} */
+	}
+	
 	std::stringstream ss;
 	
 	ss<<"texture list size"<<texture_list.size()<<std::endl;
@@ -949,6 +948,8 @@ realize (GtkWidget *widget)
 			}
 		}
 	}
+	
+	
    
    /* We only use one VAO, so we always keep it bound */
   glGenVertexArrays (1, &vao);
@@ -3517,14 +3518,28 @@ GtkFileChooserNative *native=NULL;
     res = gtk_native_dialog_run(GTK_NATIVE_DIALOG(native));
     if (res == GTK_RESPONSE_ACCEPT)
     {
-        char *filename=NULL;
+        std::string filename;
         GtkFileChooser *chooser = GTK_FILE_CHOOSER(native);
         filename = gtk_file_chooser_get_filename(chooser);
-
-         PLYWriter::writeMesh( filename, grammar->context->getScene());
+ float mydata[36*8];
+    for(int i=0;i<36*8;i++){
+		mydata[i]=vertex_data[i]; 
+	}
+	
+	
+	for(int i=0;i<36;i++){
+		for(int j=0;j<8;j++){
+			if(j==0 || j==2)mydata[i*8+j]*=0.5f;
+			if(j==1){
+				if(mydata[i*8+j]<0)mydata[i*8+j]=0.0f;
+			}
+		}
+	}
+	
+         grammar->context->PLY(mydata,filename);
          
-        if(filename!=NULL)g_free(filename);
-        else throw 2;
+        //if(filename!=NULL)g_free(filename);
+        //else throw 2;
     }
     else 
     throw 555;

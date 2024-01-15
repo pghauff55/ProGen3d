@@ -54,7 +54,7 @@ void Scope::S(const glm::vec3 &size_)
 }
 void Scope::D(const glm::vec3 &size_)
 {
-    size2 = size*size_;
+    size2 *= size_;
     glm::mat4 scale(glm::vec4(size_.x, 0.0f, 0.0f, 0.0f), glm::vec4(0.0f, size_.y, 0.0f, 0.0f), glm::vec4(0.0f, 0.0f, size_.z, 0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
     Transform2=Transform2*scale;
 }

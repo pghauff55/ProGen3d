@@ -241,7 +241,7 @@ void Context::addPrimitive(std::string type,Scope *scope,int texindex, int rotat
 	
 }
 
-extern int tex_count[20];
+extern int tex_count[50];
 
 GLfloat *Context::calc(const GLfloat *vertex_data,int tex_index){
 	GLfloat SCALE=1.0f;
@@ -356,6 +356,101 @@ GLfloat *Context::calc(const GLfloat *vertex_data,int tex_index){
 	}
  return vertex_buffer;	
 }
+
+
+
+void Context::PLY(const GLfloat *vertex_data,const std::string &filename){
+	std::ofstream fout(filename);
+	    fout << "ply\n";
+	    
+    fout << "format binary_little_endian 1.0\n";
+    
+    
+		fout << "element vertex "<<primitives.size()*36<<"\n";
+		fout << "property float x\n";
+		fout << "property float y\n";
+		fout << "property float z\n";
+		fout << "element face "<<primitives.size()*12<<"\n";
+		fout << "property list uchar int vertex_index\n";
+	
+    fout << "end_header\n";
+    int vertex_counter=0;
+	for(int i=0;i<primitives.size();i++){
+			
+			
+			
+			for (int j=0;j<36;j++){
+				glm::vec4 v1(0,0,0,1.0);
+				
+				
+				v1.x=vertex_data[j*8];
+				v1.y=vertex_data[j*8+1];
+				v1.z=vertex_data[j*8+2];
+				
+				
+				glm::mat4 transform;
+				if(primitives[i]->type=="CubeX"){
+					
+					if(v1.x>0.0){
+						v1.x=v1.x+0.5;
+						transform=primitive_scopes[i]->getTransform2();
+						
+			
+					}
+					else {
+						v1.x=v1.x+0.5;
+						transform=primitive_scopes[i]->getTransform();
+					}
+				}
+				else if(primitives[i]->type=="CubeY"){
+					
+					if(v1.z>0.0){
+						v1.z=v1.z+0.5;
+						transform=primitive_scopes[i]->getTransform2();
+						
+			
+					}
+					else {
+						v1.z=v1.z+0.5;
+						transform=primitive_scopes[i]->getTransform();
+					}
+				}
+				else {
+					if(v1.y>0.0){
+						transform=primitive_scopes[i]->getTransform2();
+						
+			
+					}
+					else {
+						transform=primitive_scopes[i]->getTransform();
+					}
+				}
+				
+				
+				v1=transform*v1;
+				fout.write(reinterpret_cast<char*>(&v1.x), sizeof(float));
+				fout.write(reinterpret_cast<char*>(&v1.y), sizeof(float));
+				fout.write(reinterpret_cast<char*>(&v1.z), sizeof(float));
+				vertex_counter++;
+				
+				
+		}
+	}
+	for(int i=0;i<primitives.size()*36;i+=3){
+						unsigned char n=3;
+					    int i0 = i;
+						int i1 = i+1;
+						int i2 = i+2;
+						//std::cout<<i0<<" "<<i1<<" "<<i2<<std::endl;
+					   fout.write(reinterpret_cast<char*>(&n), sizeof(unsigned char));
+					   fout.write(reinterpret_cast<char*>(&i0), sizeof(int));
+					   fout.write(reinterpret_cast<char*>(&i1), sizeof(int));
+					   fout.write(reinterpret_cast<char*>(&i2), sizeof(int));
+	}
+	fout.close();
+}
+
+
 
 
 void Context::draw(){

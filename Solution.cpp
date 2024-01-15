@@ -8,6 +8,65 @@
 #include <cmath>
 #include <sstream>
 
+/*class nodeBSP{
+	
+	public:
+	nodeBSP(float Xpos,float Xneg,float Ypos,float Yneg,float Zpos,float Zneg,int index);
+	float Xpos,Xneg,Ypos,Yneg,Zpos,Zneg;
+	int index;
+}
+
+class BSP{
+	public:
+	BSP(int order,float Xpos,float Xneg,float Ypos,float Yneg,float Zpos,float Zneg);
+	add(glm::vec3 center);
+	find(glm::vec3 center);
+	private:
+	
+	
+	static int order;
+	
+	float Xpos,Xneg,Ypos,Yneg,Zpos,Zneg;
+	static std::vector<BSP *> nodes;
+	static int index_counter;
+	int index;
+	float Xpos,Xneg,Ypos,Yneg,Zpos,Zneg;
+};
+
+
+
+
+BSP::BSP(int order,float Xpos,float Xneg,float Ypos,float Yneg,float Zpos,float Zneg){
+	this->order=order;
+	this->index_counter=0;
+	this->nodes.push_back(new BSP(Xpos,0,Ypos,0,Zpos,0,this->index_counter++));
+	
+	
+}
+BSP::BSP(float Xpos,float Xneg,float Ypos,float Yneg,float Zpos,float Zneg,int index){
+	this->index=index;
+	
+}
+
+
+BSP::add(gml::vec3 center){
+	
+	this->centers.push_back(center);
+	
+}
+
+
+
+BSP::find(glm::vec3 find_center){
+	
+	
+}
+*/
+
+
+
+
+
 
 Solution::Solution(){
 	
@@ -38,7 +97,38 @@ float Solution::Process(std::string input){
 			
 		}
 		A+=input;
-	//std::cout<<A<<std::endl;	
+		
+		std::string start;
+	
+		pos1=A.find("cos(");
+		if(pos1!=-1){
+			
+			start=A.substr(0,pos1);
+			A.erase(0,pos1+4);
+			int pos2=A.find(")");
+			std::string B=A.substr(0,pos2);
+			A.erase(0,pos2+1);
+			float bfloat=cos(process(B));
+					
+			//std::cout<<start<<"cos("<<B<<")"<<A<<std::endl;
+			A=start+std::to_string(bfloat)+A;	
+		}
+		pos1=A.find("sin(");
+		if(pos1!=-1){
+			
+			start=A.substr(0,pos1);
+			A.erase(0,pos1+4);
+			int pos2=A.find(")");
+			std::string B=A.substr(0,pos2);
+			A.erase(0,pos2+1);
+			float bfloat=sin(process(B));
+					
+			//std::cout<<start<<"cos("<<B<<")"<<A<<std::endl;
+			A=start+std::to_string(bfloat)+A;	
+		}
+	
+	
+	
 	  float afloat=process(A);
 	  if(afloat<0.000001 && afloat >-0.000001)afloat=0.0f;
 	  //std::cout<<std::fixed<<"ret"<<afloat<<std::endl;
