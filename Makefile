@@ -1,7 +1,7 @@
 
 
 
-TARGET=ProGen3d
+TARGET=progen3d
 OBJS=main.o  Grammar.o   Context.o   Mesh.o  PLYWriter.o  Scope.o Solution.o
        
 CXX = gcc
@@ -46,7 +46,7 @@ clean:
 	
 
 install: $(TARGET)
-	mv ProGen3d $(DESTDIR)
+	mv progen3d $(DESTDIR)
 	mkdir $(DESTDIR)/textures
 	cp ./textures/*.png $(DESTDIR)/textures
 	cp *.grammar $(DESTDIR)
