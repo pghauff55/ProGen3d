@@ -80,7 +80,6 @@ parts:
       - locales-all
     organize:
         usr/lib/*-linux-gnu/openblas-pthread/*: usr/lib/
-        usr/lib/*-linux-gnu/*: usr/lib/
   
 slots:
   dbus-progen3d:
