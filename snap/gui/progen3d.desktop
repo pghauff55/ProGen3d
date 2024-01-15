@@ -16,7 +16,7 @@ Comment=Procedural Generator for 3d Modeling
 
 
 # The executable of the application, possibly with arguments.
-Exec=ProGen3d
+Exec=progen3d
 
 # The name of the icon that will be used to display this entry
 Icon=progen3d.png
