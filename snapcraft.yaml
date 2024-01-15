@@ -85,7 +85,7 @@ slots:
   dbus-daemon:
     interface: dbus
     bus: session
-    name: a11y.Bus
+    name: com.progen3d
 
     
 apps:
