@@ -91,7 +91,7 @@ slots:
 apps:
   progen3d:
     command: progen3d
-    extensions: [gnome-3-28]
+    extensions: [gnome-3-38]
     desktop: progen3d.desktop
     plugs:
       - home
