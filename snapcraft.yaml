@@ -99,6 +99,7 @@ apps:
       - x11
       - gtk-3-themes
       - icon-themes
+      - mount-observe
     slots:
       - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
