@@ -80,6 +80,7 @@ parts:
       - locales-all
     organize:
         usr/lib/*-linux-gnu/openblas-pthread/*: usr/lib/
+        /snap/progen3d/current/usr/share/icons/hicolor/*: /org/gtk/libgtk/icons/
   
 slots:
   dbus-progen3d:
@@ -93,11 +94,11 @@ apps:
     command: progen3d
     desktop: progen3d.desktop
     plugs:
-       home:
-       opengl:
-       desktop:
-       x11:
-       gtk-common-themes:
+       - home
+       - opengl
+       - desktop
+       - x11
+
     slots:
       - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
