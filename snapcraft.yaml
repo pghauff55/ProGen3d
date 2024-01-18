@@ -93,20 +93,11 @@ apps:
     command: progen3d
     desktop: progen3d.desktop
     plugs:
-      home:
-      opengl:
-      desktop:
-      x11:
-      gtk-3-themes:
-        interface: content
-        target: $SNAP/share/themes
-        default-provider: gtk-common-themes:gtk-3-themes
-      icon-themes:
-        interface: content
-        target: $SNAP/share/icons
-        default-provider: gtk-common-themes:icon-themes
-      
-
+       home:
+       opengl:
+       desktop:
+       x11:
+       gtk-common-themes:
     slots:
       - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
