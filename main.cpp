@@ -4263,7 +4263,7 @@ for(int i=0;i<100;i++)rulenames[i]=new char(40);//due to GTK combobox error
 	
 	
 	
-	 app= gtk_application_new ("com.progen3d", G_APPLICATION_FLAGS_NONE);
+	 app= gtk_application_new ("snap.progen3d.progen3d", G_APPLICATION_FLAGS_NONE);
 	
 	
        g_signal_connect (app ,"activate", G_CALLBACK (activate_app), NULL);
