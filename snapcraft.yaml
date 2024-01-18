@@ -27,9 +27,7 @@ parts:
       - libssl-dev
       - libopenblas-dev
       - liblapack-dev
-      - libsnapd-glib-dev
     stage-packages:
-      - libsnapd-glib1
       - libatk-bridge2.0-0
       - libatk1.0-0
       - libatspi2.0-0
@@ -100,6 +98,8 @@ apps:
       - opengl
       - desktop
       - x11
+      - gtk-3-themes
+      - icon-themes
     slots:
       - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
