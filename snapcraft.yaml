@@ -27,8 +27,9 @@ parts:
       - libssl-dev
       - libopenblas-dev
       - liblapack-dev
+      - libsnapd-glib-dev
     stage-packages:
-      - libglib-2.0
+      - libsnapd-glib1
       - libatk-bridge2.0-0
       - libatk1.0-0
       - libatspi2.0-0
