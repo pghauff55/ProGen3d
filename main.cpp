@@ -744,7 +744,7 @@ LoadCertificates(ctx, "mycert.pem", "mycertkey.pem");
 	
 }
 else{
-	std::vector<std::string> files = globVector("./textures/*.png");
+	std::vector<std::string> files = globVector("/snap/progen3d/current/textures/*.png");
 	texture_filenames=files;
 	std::stringstream ss;
 	
