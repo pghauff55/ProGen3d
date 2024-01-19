@@ -29,6 +29,9 @@ parts:
       - liblapack-dev
       - gnome-common
       - hicolor-icon-theme
+      - yaru-theme-gnome-shell
+      - libgdk-pixbuf2.0-0
+      - libgdk-pixbuf2.0-0-dev
     stage-packages:
       - libatk-bridge2.0-0
       - libatk1.0-0
@@ -80,6 +83,7 @@ parts:
       - libblas3
       - libopenblas0-pthread
       - locales-all
+      - libpixbufloader-svg
     organize:
         usr/lib/*-linux-gnu/openblas-pthread/*: usr/lib/
         /snap/gtk-common-themes/1535/share/icons/Yaru/16x16/status/*: /org/gtk/libgtk/icons/16x16/status/
