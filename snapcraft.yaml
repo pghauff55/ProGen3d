@@ -33,7 +33,8 @@ parts:
       - libgdk-pixbuf2.0-0
       - libgdk-pixbuf2.0-dev
       - mime-support
-      - shared-mime-info 
+      - shared-mime-info
+      - hicolor-icon-theme
     stage-packages:
       - libatk-bridge2.0-0
       - libatk1.0-0
