@@ -83,7 +83,7 @@ parts:
       - libblas3
       - libopenblas0-pthread
       - locales-all
-      - libpixbufloader-svg
+
     organize:
         usr/lib/*-linux-gnu/openblas-pthread/*: usr/lib/
         /snap/gtk-common-themes/1535/share/icons/Yaru/16x16/status/*: /org/gtk/libgtk/icons/16x16/status/
