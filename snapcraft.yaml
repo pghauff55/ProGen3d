@@ -34,7 +34,7 @@ parts:
       - libgdk-pixbuf2.0-dev
       - mime-support
       - shared-mime-info
-      - hicolor-icon-theme
+      
     stage-packages:
       - libatk-bridge2.0-0
       - libatk1.0-0
@@ -89,7 +89,7 @@ parts:
 
     organize:
         usr/lib/*-linux-gnu/openblas-pthread/*: usr/lib/
-        /snap/gtk-common-themes/1535/share/icons/Yaru/16x16/status/*: /org/gtk/libgtk/icons/16x16/status/
+
  
 slots:
   dbus-progen3d:
