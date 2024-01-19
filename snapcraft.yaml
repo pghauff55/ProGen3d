@@ -31,7 +31,7 @@ parts:
       - hicolor-icon-theme
       - yaru-theme-gnome-shell
       - libgdk-pixbuf2.0-0
-      - libgdk-pixbuf2.0-0-dev
+      - libgdk-pixbuf2.0-dev
     stage-packages:
       - libatk-bridge2.0-0
       - libatk1.0-0
