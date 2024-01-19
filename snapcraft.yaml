@@ -9,18 +9,6 @@ architectures:
   - build-on: [amd64]
 
 parts:
-  hicolor-icon-theme:
-    after: [progen3d]
-    plugin: autotools
-    autotools-configure-parameters:
-      - --prefix=/
-    source: git://anongit.freedesktop.org/xdg/default-icon-theme
-    source-type: git
-    override-build: |
-      snapcraftctl build
-      $SNAPCRAFT_STAGE/update-icon-cache.sh $SNAPCRAFT_PART_INSTALL/share/icons
-    build-packages:
-      - gnome-common
   progen3d:
     plugin: make
     source-type: git
@@ -39,6 +27,7 @@ parts:
       - libssl-dev
       - libopenblas-dev
       - liblapack-dev
+      - gnome-common
     stage-packages:
       - libatk-bridge2.0-0
       - libatk1.0-0
