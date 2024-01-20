@@ -4,7 +4,7 @@
 TARGET=progen3d
 OBJS=main.o  Grammar.o   Context.o   Mesh.o  PLYWriter.o  Scope.o Solution.o
        
-CXX = gcc
+CXX = g++
 CXXFLAGS =  -g -O3 -I /usr/include -I /usr/include/atkmm-1.6/ -I /usr/include/pangomm-1.4/ -I /usr/include/freetype2/ -I /usr/include/cairomm-1.0/ \
              -I /usr/lib/x86_64-linux-gnu/pangomm-1.4/include/  \
               -I /usr/lib/x86_64-linux-gnu/sigc++-2.0/include/ -I /usr/include/sigc++-2.0/   \
