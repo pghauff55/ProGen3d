@@ -104,11 +104,22 @@ apps:
     desktop: progen3d.desktop
 
     plugs:
-       - home
-       - opengl
-       - desktop
-       - x11
-       - gnome-3-38-2004
+       home:
+       opengl:
+       desktop:
+       x11:
+       gnome-3-38-2004:
+          default-provider: gnome-3-38-2004
+          interface: content
+          target: $SNAP/gnome-platform
+       gtk-3-themes:
+          default-provider: gtk-common-themes
+          interface: content
+          target: $SNAP/data-dir/themes
+       icon-themes:
+          default-provider: gtk-common-themes
+          interface: content
+          target: $SNAP/data-dir/icons
 
     slots:
       - dbus-progen3d
