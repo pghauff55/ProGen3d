@@ -104,10 +104,6 @@ apps:
     desktop: progen3d.desktop
 
     plugs:
-       home:
-       opengl:
-       desktop:
-       x11:
        gnome-3-38-2004:
           default-provider: gnome-3-38-2004
           interface: content
