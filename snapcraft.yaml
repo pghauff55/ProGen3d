@@ -102,12 +102,13 @@ apps:
   progen3d:
     command: progen3d
     desktop: progen3d.desktop
-    extensions: [gnome-3-38]
+
     plugs:
        - home
        - opengl
        - desktop
        - x11
+       - gnome-3-38-2004
 
     slots:
       - dbus-progen3d
