@@ -3,7 +3,7 @@ version: "0.96c-2"
 summary: Grammar based 3d Procedural Generator
 description: 
   ProGen3d is a grammar based procedural generator with textures and can export to PLY format.
-confinement: strict
+confinement: classic
 base: core22
 architectures:
   - build-on: [amd64]
