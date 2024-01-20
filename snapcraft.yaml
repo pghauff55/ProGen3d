@@ -102,21 +102,23 @@ apps:
   progen3d:
     command: progen3d
     desktop: progen3d.desktop
-
     plugs:
-       gnome-3-38-2004:
-          default-provider: gnome-3-38-2004
-          interface: content
-          target: $SNAP/gnome-platform
-       gtk-3-themes:
-          default-provider: gtk-common-themes
-          interface: content
-          target: $SNAP/data-dir/themes
-       icon-themes:
-          default-provider: gtk-common-themes
-          interface: content
-          target: $SNAP/data-dir/icons
-
+        gtk-3-themes:
+            interface: content
+            target: $SNAP/data-dir/themes
+            default-provider: gtk-common-themes
+        icon-themes:
+                interface: content
+                target: $SNAP/data-dir/icons
+                default-provider: gtk-common-themes
+        sound-themes:
+                interface: content
+                target: $SNAP/data-dir/sounds
+                default-provider: gtk-common-themes
+        platform_snap:
+                interface: content
+                target: $SNAP/gnome-platform
+                default-provider: gnome-3-34-1804
     slots:
       - dbus-progen3d
     common-id: com.github.pghauff55.ProGen3d
